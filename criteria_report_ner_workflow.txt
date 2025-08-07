@@ -1,0 +1,46 @@
+Criteria that the workflow has to comprise:
+
+1. Data Collection:
+	1.1. Origin of the data 
+		- rawText: Research abstracts taken from PubMed, related to breast cancer whose study type is RCT (randomized controlled trial), and are not meta-analysis or systematicreviews. This was achieved by using keywords such as “breast cancer,” “randomized controlled,”
+“randomised controlled,” “meta-analysis,” and “systematic review.”
+		- annotation_type: manual
+	1.2. Sample size:
+		- the corpus consists of 1011 annotated abstracts and 17739 entities and 26 entity categories
+2. Data preprocessing
+	2.1. Cleaning process
+	2.2. Annotation preparation (number of experts, instructions for entity recognition,
+quality analysis)*
+		- number of experts: 2
+		- instructions: section 3.2 Annotation process in original PICO dataset article ( https://aclanthology.org/2022.wiesp-1.4.pdf )
+
+	2.3. Transformation tool for compatibility with models input format (entity format,
+dealing with overlapping entities,etc.)
+		- format: IOB
+		- tool brat anntoconll.py script
+		- extra modifications: changes on how to deal with overlaps
+3. Experimental setup
+	3.1. How samples were allocated for training/validation/testing
+		- splits: train 80%, valid 40% test 40%
+		- availability site: huggingface | local files | zenodo
+	3.2. Definition of the specific metrics or statistics used to report results
+		f1-score and accuracy - mean, standard deviation
+		p-value
+		frequency of entities, number of files that they appear
+	3.3. Framework/scorer used for computing the metrics or statistics
+		- seqeval library to compute the micro macro avg f1 score designed to ner output
+		scipy for the statistical tests
+	3.4. Software environment 
+		- availability site: In GitHub
+		- pretrained models: longformer & biobert
+	3.5. Hardware environment
+		NVIDIA RTX A6000 with 48GiB of GDDR6 GPU
+	3.6. Clear description of the model (availability and version)
+		biobert - https://huggingface.co/dmis-lab/biobert-base-cased-v1.2 - 1.2
+		longformer - https://huggingface.co/allenai/longformer-base-4096 - 
+4. Training process
+	4.1. The range of hyperparameters considered, method to select the best hyperparameter configuration, and specification of all hyperparameters used to generate results
+		the hyperarameter names are learning_rate,weight_decay, per_device_train_batch_size, per_device_eval_batch_size
+		it was used the optuna framework
+	4.2. Exact number of evaluation runs
+		15 trials

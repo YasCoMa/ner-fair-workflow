@@ -1,0 +1,82 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%environment
+	export PROGRAMSPATH="/aloy/data/programs/"
+	export MOE_PATH="$PROGRAMSPATH/moe/"
+    export PATH=/opt/bin:$PATH
+	export PATH="$PROGRAMSPATH/moe/moe2020/bin:/opt/fpocket/bin:/opt/p2rank_2.4.2:/opt/structureChecking/bin:$PATH"
+    export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
+	export RBT_ROOT=/opt/rDock
+    # PATHS
+    export PATH=/opt/miniconda3/bin:$PATH
+    . /opt/miniconda3/etc/profile.d/conda.sh
+    conda activate matchct_env
+
+%files
+    container/nerworkflow.yml /opt/environment.yml
+
+%post
+    # bind paths
+    mkdir -p /aloy
+    mkdir -p /aloy/home
+    mkdir -p /aloy/data
+    mkdir -p /aloy/scratch
+    
+    # update apt
+    apt update -y
+
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    apt install -y build-essential  \
+                   gcc \
+                   graphviz \
+                   cmake \
+                   git \
+                   wget \
+                   curl \
+                   vim \
+                   bzip2 \
+                   libbz2-dev \
+                   file \
+                   libxrender-dev \
+                   libxext-dev \
+                   postgresql \
+                   postgresql-contrib \
+                   swig \
+                   python3-dev \
+                   libnetcdf-dev
+
+    apt install -y make git libpopt0 libpopt-dev g++
+    
+    DEBIAN_FRONTEND=noninteractive apt install -y ttf-mscorefonts-installer
+	
+	cd opt/
+	git clone https://github.com/CBDD/rDock.git
+	cd rDock
+	make
+	PREFIX=/opt make install
+	cd ../..
+	
+    # conda
+    mkdir -p /opt/miniconda3
+    cd /opt/miniconda3 
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -p /opt/miniconda3 -b -f
+    rm Miniconda3-latest-Linux-x86_64.sh
+    export PATH=/opt/miniconda3/bin:$PATH
+    export MAMBA_NO_LOW_SPEED_LIMIT=1  
+    export PIPENV_INSTALL_TIMEOUT=3600  
+    export PIP_DEFAULT_TIMEOUT=3600
+
+    # create and activate conda
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+    conda update conda -y
+    . /opt/miniconda3/etc/profile.d/conda.sh
+
+    # using mamba for speedup
+    conda install -q -y -n base -c conda-forge mamba
+    conda config --add channels conda-forge
+    mamba update -q -n base mamba
+    
+    conda env create --name matchct_env --file=/opt/environment.yml

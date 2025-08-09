@@ -33,7 +33,6 @@ class ExperimentValidationBySimilarity:
         self.gold_ann_index = index = faiss.IndexFlatL2( len( selfembeddings.embed_query("hello world") ) )
         self.gann_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ann_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) #  Snippets labeled
         
-   
     def _get_snippets_labels(self, pmid):
         anns = []
         f = f"{pmid}.ann"
@@ -49,7 +48,7 @@ class ExperimentValidationBySimilarity:
         return anns
     
     def _map_nctid_pmid(self):
-        omap = os.path.join( self.out, 'mapping_nct_pubmed.tsv')
+        omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
         f = open( omap, 'w' )
         f.write( 'pmid\tctid\ttext\tlabel\n' )
         f.close()
@@ -65,17 +64,18 @@ class ExperimentValidationBySimilarity:
                 if( len(ncts) > 0 ):
                     for nid in ncts:
                         tr = re.findall( r'([a-zA-Z0-9]+)', nid )
-                        ctid = tr[0]
-                        anns = self._get_snippets_labels( pmid )
-                        for a in anns:
-                            line = '\t'.join( [pmid, ctid]+a )
-                            with open( omap, 'a' ) as g:
-                                g.write( line+'\n' )
+                        if( len(tr) > 0 ):
+                            ctid = tr[0]
+                            anns = self._get_snippets_labels( pmid )
+                            for a in anns:
+                                line = '\t'.join( [pmid, ctid]+a )
+                                with open( omap, 'a' ) as g:
+                                    g.write( line+'\n' )
     
     def _retrieve_ct_studies(self, ids):
         studies = []
         for f in os.listdir('out/clinical_trials/'):
-            if( f.startswith('complete') ):
+            if( f.startswith('raw') ):
                 path = os.path.join( 'out/clinical_trials/', f )
                 dt = json.load( open( path, 'r' ) )
                 for s in dt:
@@ -129,7 +129,7 @@ class ExperimentValidationBySimilarity:
             
         criteria = inc + exc
         
-        return criteria, sex, age
+        return [criteria, sex, age]
     
     def _get_ct_info(self, s ):
         clabels = set()
@@ -234,7 +234,7 @@ class ExperimentValidationBySimilarity:
                         interv_groups.add(name)
                         itids.add(_id)
                     else:
-                        totid = _id)
+                        totid = _id
         except:
             pass   
         
@@ -274,12 +274,44 @@ class ExperimentValidationBySimilarity:
                 key = f'{gr}-{ntype}-{spec}'
                 if( not key in md):
                     md[key]=set()
-                md[key].add(val)           
+                md[key].add(val) 
+
+        # Participants
+        if( totp != -1 ):
+            md['total-participants'] = totp
+        if( intervp != -1 ):
+            md['intervention-participants'] = intervp
+        if( controlp != -1 ):
+            md['control-participants'] = controlp
+        if( len(age) > 0 ):
+            md['age'] = age
+        if( len(eligibility) > 0 ):
+            md['eligibility'] = eligibility
+        if( len(ethnicity) > 0 ):
+            md['ethnicity'] = ethnicity
+        if( len(condition) > 0 ):
+            md['condition'] = condition
+        if( len(location) > 0 ):
+            md['location'] = location
+        
+        # Intervention & Control
+        if( len(control_groups) > 0 ):
+            md['control'] = control_groups
+        if( len(interv_groups) > 0 ):
+            md['intervention'] = interv_groups
+        
+        # Outcome
+        if( len(outcomes) > 0 ):
+            md['outcome'] = outcomes
+        if( len(out_measures) > 0 ):
+            md['outcome-Measure'] = out_measures
+
+        return md
     
-    def embed_save_store(self):
+    def embed_save_pubmed(self):
         ctids = set()
         docs = []
-        omap = os.path.join( self.out, 'mapping_nct_pubmed.tsv')
+        omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
         df = pd.read_csv( omap, sep='\t' )
         for i in df.index:
             ctid = df.loc[i, 'ctid']
@@ -294,17 +326,65 @@ class ExperimentValidationBySimilarity:
             
         uuids = [str(uuid4()) for _ in range(len(documents))]
         self.gann_vs.add_documents(documents=documents, ids=uuids)
-        
+    
+    def embed_save_ncict(self):
+        ctids = set()
+        docs = []
+        omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
+        df = pd.read_csv( omap, sep='\t' )
+        ctids = set(df.ctid.unique())
         cts = self._retrieve_ct_studies(ctids)
+        for s in cts:
+            _id = s["protocolSection"]["identificationModule"]["nctId"]
+            snippets = self._get_ct_info(s)
+            for label in snippets:
+                text = snippets[label]
+                if( isinstance(text, set) ):
+                    for t in text:
+                        doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
+                        docs.append(doc)
+                else:
+                    doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
+                    docs.append(doc)
+            
+        uuids = [str(uuid4()) for _ in range(len(documents))]
+        self.gct_vs.add_documents(documents=documents, ids=uuids)
     
-    def send_query(self, snippet, pmid):
-        results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": pmid } )
+    def _send_query(self, snippet, ctid):
+        results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
         for res, score in results:
-            print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
-    
+            hit = res.page_content
+            label = res.metadata.label
+            results.append( { 'hit': hit, 'ct_label': label, 'score': score } )
+            #print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
+        return results
+
+    def perform_validation_gold(self):
+        res = os.path.join( self.out, 'gold_results_test_validation.tsv')
+        f = open(res, 'w')
+        f.write("ctid\tpmid\thuman_label\tfound_label\thuman_text\tfound_text\tscore\n")
+        f.close()
+
+        omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
+        df = pd.read_csv( omap, sep='\t' )
+        for i in df.index:
+            ctid = df.loc[i, 'ctid']
+            pmid = df,loc[i, 'pmid']
+            human_text = df.loc[i, 'text']
+            human_label = df.loc[i, 'label']
+            results = self._send_query(text, ctid)
+            for r in results:
+                found_text = r['hit']
+                found_label = r['ct_label']
+                score = r['score']
+                with open(res, 'a') as g:
+                    f.write( f"{ctid}\t{pmid}\t{human_label}\t{found_label}\t{human_text}\t{found_text}\t{score}\n")
+
     def run(self):
         self._map_nctid_pmid()
-        
+        self.embed_save_ncict()
+        self.perform_validation_gold()
+
 if( __name__ == "__main__" ):
     odir = './valout'
     i = ExperimentValidationBySimilarity( odir )

@@ -204,8 +204,6 @@ def generate_csv_comparison(path_data, type_metrics = ['sk', 'strict', 'default'
             f1_scores = f1_scores.drop(columns=['Just mean'])
             f1_scores.to_csv(f"{path_data}/f1_scores_{t}_{x}.csv", sep=',')
 
-
-
 def make_confusion_matrix(cf,
                           path_save,
                           group_names=None,

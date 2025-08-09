@@ -204,6 +204,141 @@ class InformationExtractionCT:
             f.write( f"{it}\t{nin}\t{nex}\t{nall}\n" )
         f.close()
         
+    def get_missing_cts(self):
+        outp = os.path.join( self.out, 'clinical_trials')
+        if( not os.path.isdir( outp ) ) :
+            os.makedirs( outp )
+
+        ids=set()
+        for f in os.listdir('out/clinical_trials/'):
+            if( f.startswith('complete') ):
+                path = os.path.join( 'out/clinical_trials/', f )
+                dt = json.load( open( path, 'r' ) )
+                for s in dt:
+                    ids.add(s['id'])
+        ids = set()
+        root = "https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=COMPLETED&countTotal=true&pageSize=1000"
+        r = requests.get(root)
+        dat = r.json()
+        tgone = 0
+        p = 0
+        lobj = []
+        total = dat["totalCount"]
+        print(total, 'studies')
+        ns = dat["nextPageToken"]
+        for s in tqdm(dat['studies']):
+            if( s['protocolSection']['identificationModule']['nctId'] not in ids ):
+                lobj.append(s)
+                
+        tgone += 1000
+        p += 1
+        ofile = os.path.join( outp, f"raw_completed_cts_page-{ p }.json" )
+        json.dump( lobj, open(ofile, 'w') )
+            
+        while( ns != None and ns != '' ):
+            lobj = []
+            r = requests.get( root+'&pageToken='+ns )
+            dat = r.json()
+            ns = None
+            if( "nextPageToken" in dat ):
+                ns = dat["nextPageToken"]
+                
+            for s in tqdm(dat['studies']):
+                if( s['protocolSection']['identificationModule']['nctId'] not in ids ):
+                    lobj.append(s)
+                
+            tgone += 1000
+            p += 1
+            ofile = os.path.join( outp, f"raw_completed_cts_page-{ p }.json" )
+            json.dump( lobj, open(ofile, 'w') )
+            print(ns, tgone, total)
+            time.sleep(1)
+    
+    def exploratory_analysis(self):
+        without_result=0
+        ids=set()
+        units = set()
+        params = set()
+        files = list( filter( lambda x: x.startswith('raw'), os.listdir('out/clinical_trials/') ))
+        for f in tqdm( files ) :
+            path = os.path.join( 'out/clinical_trials/', f )
+            dt = json.load( open( path, 'r' ) )
+            for s in tqdm(dt):
+                ids.add( s['protocolSection']['identificationModule']['nctId'] )
+                try:
+                    arr = s['resultsSection']['outcomeMeasuresModule']['outcomeMeasures']
+                    for it in arr:
+                        units.add( it['unitOfMeasure'] )
+                        params.add( it['paramType'] )
+                except:
+                    without_result+=1
+                    pass
+                        
+        print('total', len(ids))
+        print( 'with results', len(ids)-without_results )
+        
+    def make_mapping_ct_pubmed(self):
+        all_refs = set()
+        omap = os.path.join( self.out, 'complete_mapping_pubmed.tsv' )
+        gone = set()
+        if( os.path.isfile(omap) ):
+            fm = open( omap, 'r' )
+            for line in fm:
+                l = line.replace('\n','')
+                if( (len(l) > 2) and (not l.startswith('pmid') ) ):
+                    gone.add( l.split('\t')[0] )
+                    all_refs.add( l.split('\t')[1] )
+            fm.close()
+        else:
+            fm = open( omap, 'w' )
+            fm.write("ctid\tpmid\n")
+            fm.close()
+        
+        files = list( filter( lambda x: x.startswith('raw'), os.listdir('out/clinical_trials/') ))
+        for f in tqdm( files ) :
+            path = os.path.join( 'out/clinical_trials/', f )
+            dt = json.load( open( path, 'r' ) )
+            for s in dt:
+                _id = s['protocolSection']['identificationModule']['nctId']
+                if( not _id in gone ):
+                    try:
+                        pmids = set()
+                        ref = s['protocolSection']['referencesModule']['references']
+                        for r in ref:
+                            try:
+                                pmids.add(r['pmid'])
+                                all_refs.add(r['pmid'])
+                            except:
+                                pass
+                        for r in pmids:
+                            with open(omap, 'a') as fm:
+                                fm.write(f"{_id}\t{r}\n")
+                    except:
+                        pass
+                    
+        print('Total # of articles', len(all_refs) )
+
+        '''
+def find_study(id):
+    files = list( filter( lambda x: x.startswith('raw'), os.listdir('out/clinical_trials/') ))
+    for f in tqdm( files ) :
+        path = os.path.join( 'out/clinical_trials/', f )
+        dt = json.load( open( path, 'r' ) )
+        for s in dt:
+            _id = s['protocolSection']['identificationModule']['nctId']
+            if( _id == id ):
+                return s
+    return None
+        '''
+
+    def get_gold_ct_pubmed(self):
+        df = pd.read_csv('out/complete_mapping_pubmed.tsv', sep='\t')
+        os.system("grep -ic 'nct0' experiments/data/*.txt | grep -v ':0' > gold_pmids")
+        ids = list( filter( lambda x: x!='', open('gold_pmids').read().split('\n') ))
+        ids = list( map( lambda x: int(x.split('.txt')[0].split('/')[-1]), ids ))
+        f = df[ df.pmid.isin(ids) ] # now there are 129 articles out of the 160 that were curated by humans that are mapped into CTs
+        
+                    
     def check_coverage_picos(self):
         gold = list( filter( lambda x: x.endswith('.ann'), os.listdir('./PICO-Corpus/pico_corpus_brat_annotated_files/') ))
         gold = set( list( map( lambda x: x.split('.')[0], gold )) )
@@ -225,7 +360,10 @@ class InformationExtractionCT:
     def run(self):
         #self.get_clinical_trials()
         #self.get_overall_metrics()
-        self.check_coverage_picos()
+        #self.check_coverage_picos()
+        
+        #self.get_missing_cts()
+        self.make_mapping_ct_pubmed()
         
 if( __name__ == "__main__" ):
     odir = './out'

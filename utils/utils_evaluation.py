@@ -2,6 +2,7 @@ import os
 import re
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report as classification_report_sk

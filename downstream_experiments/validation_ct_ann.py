@@ -142,7 +142,7 @@ class ExperimentValidationBySimilarity:
         condition = set()
         out_measures = set()
         eligibility = set()
-        measures = set()
+        outcomes = set()
         location = set()
         age = set()
         gender = set()
@@ -190,7 +190,14 @@ class ExperimentValidationBySimilarity:
             for k in moutcomes:
                 outs = moutcomes[k]
                 for g in outs:
-                    out_measures.add( g['measure'] )
+                    outcomes.add( g['measure'] )
+        except:
+            pass
+        
+        try:
+            moutcomes = s['resultsSection']['outcomeMeasuresModule']['outcomeMeasuresModule']['outcomeMeasures']
+            for g in moutcomes:
+                out_measures.add( g['title'] )
         except:
             pass
         
@@ -245,7 +252,29 @@ class ExperimentValidationBySimilarity:
             pass     
         
         # abs or percent values => bin
-        # mean, median, sd, q1, q3 => cont         
+        # mean, median, sd, q1, q3 => cont  
+        md = {}
+        arr = s['resultsSection']['outcomeMeasuresModule']['outcomeMeasures']
+        for it in arr:
+            ntype = 'bin'
+            spec = 'abs'
+            if( it['unitOfMeasure'].lower().find('number')==-1 and it['unitOfMeasure'].lower().find('percentage')==-1 and it['unitOfMeasure'].lower().find('count')==-1 ):
+                ntype = 'cont'
+                spec = it['paramType'].lower()
+            else:
+                if( it['unitOfMeasure'].lower().find('percentage')==-1 ):
+                    spec = 'percent'
+                
+            ms = it['classes'][0][categories][0]['measurements']
+            for m in ms:
+                val = m['value']
+                gr = 'iv'
+                if( m['groupId'] in cids ):
+                    gr='cv'
+                key = f'{gr}-{ntype}-{spec}'
+                if( not key in md):
+                    md[key]=set()
+                md[key].add(val)           
     
     def embed_save_store(self):
         ctids = set()

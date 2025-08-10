@@ -353,7 +353,7 @@ class ExperimentValidationBySimilarity:
                     doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
                     docs.append(doc)
             
-        uuids = [str(uuid4()) for _ in range(len(documents))]
+        uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
         self.gct_vs.add_documents(documents=documents, ids=uuids)
     
     def _send_query(self, snippet, ctid):

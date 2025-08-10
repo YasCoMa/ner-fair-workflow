@@ -386,7 +386,7 @@ class ExperimentValidationBySimilarity:
         self.perform_validation_gold()
 
 if( __name__ == "__main__" ):
-    odir = './valout'
+    odir = '/aloy/home/ymartins/match_clinical_trial/valout'
     i = ExperimentValidationBySimilarity( odir )
     i.run()
                         

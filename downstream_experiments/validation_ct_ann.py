@@ -334,27 +334,33 @@ class ExperimentValidationBySimilarity:
         self.gann_vs.add_documents(documents=documents, ids=uuids)
     
     def embed_save_ncict(self):
-        ctids = set()
-        docs = []
-        omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
-        df = pd.read_csv( omap, sep='\t' )
-        ctids = set(df.ctid.unique())
-        cts = self._retrieve_ct_studies(ctids)
-        for s in cts:
-            _id = s["protocolSection"]["identificationModule"]["nctId"]
-            snippets = self._get_ct_info(s)
-            for label in snippets:
-                text = snippets[label]
-                if( isinstance(text, set) ):
-                    for t in text:
-                        doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
+        path = os.path.join(self.out, 'ctdoc_faiss.index')
+        
+        if( os.path.exists(path) ):
+            self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
+        else:
+            ctids = set()
+            docs = []
+            omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
+            df = pd.read_csv( omap, sep='\t' )
+            ctids = set(df.ctid.unique())
+            cts = self._retrieve_ct_studies(ctids)
+            for s in cts:
+                _id = s["protocolSection"]["identificationModule"]["nctId"]
+                snippets = self._get_ct_info(s)
+                for label in snippets:
+                    text = snippets[label]
+                    if( isinstance(text, set) ):
+                        for t in text:
+                            doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
+                            docs.append(doc)
+                    else:
+                        doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
                         docs.append(doc)
-                else:
-                    doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
-                    docs.append(doc)
-            
-        uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
-        self.gct_vs.add_documents(documents=docs, ids=uuids)
+                
+            uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
+            self.gct_vs.add_documents(documents=docs, ids=uuids)
+            self.gct_vs.save_local(path)
     
     def _send_query(self, snippet, ctid):
         results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )

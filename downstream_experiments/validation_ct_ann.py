@@ -27,7 +27,7 @@ class ExperimentValidationBySimilarity:
         if( not os.path.isdir( self.out ) ) :
             os.makedirs( self.out )
             
-        self.embeddings = OllamaEmbeddings(model="llama3")
+        self.embeddings = OllamaEmbeddings(model="mxbai-embed-large")
         self.gold_ct_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
         self.gct_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ct_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) # original CT info
         self.gold_ann_index = index = faiss.IndexFlatL2( len( selfembeddings.embed_query("hello world") ) )

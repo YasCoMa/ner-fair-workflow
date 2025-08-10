@@ -44,7 +44,7 @@ class ExperimentValidationBySimilarity:
             l = line.replace('\n','').split('\t')
             label = l[1].split(' ')[0]
             term = l[2]
-            anns.append( [label, term] )
+            anns.append( [term, label] )
         f.close()
         
         return anns
@@ -81,7 +81,8 @@ class ExperimentValidationBySimilarity:
                 path = os.path.join( self.ctDir, f )
                 dt = json.load( open( path, 'r' ) )
                 for s in dt:
-                    if( s['id'] in ids ):
+                    _id = s["protocolSection"]["identificationModule"]["nctId"]
+                    if( _id in ids ):
                         studies.append(s)
         return studies
         

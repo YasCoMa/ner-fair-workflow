@@ -115,7 +115,7 @@ class ExperimentValidationBySimilarity:
             for k in keys:
                 if(k in s['protocolSection']['eligibilityModule']):
                     age.add( s['protocolSection']['eligibilityModule'][k])
-            if( 'sex' in s['protocolSection']['eligibilityModule'])::
+            if( 'sex' in s['protocolSection']['eligibilityModule']):
                 gender = s['protocolSection']['eligibilityModule']['sex']
                 if( gender.lower() == 'all' ):
                     sex.add( 'male' )

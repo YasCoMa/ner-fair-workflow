@@ -363,7 +363,9 @@ class ExperimentValidationBySimilarity:
     
     def _send_query(self, snippet, ctid):
         results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
-        for res, score in results:
+        for r in results:
+            res = r[0]
+            score = r[1]
             hit = res.page_content
             label = res.metadata['label']
             results.append( { 'hit': hit, 'ct_label': label, 'score': score } )

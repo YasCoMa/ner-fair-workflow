@@ -375,7 +375,7 @@ class ExperimentValidationBySimilarity:
         df = pd.read_csv( omap, sep='\t' )
         for i in df.index:
             ctid = df.loc[i, 'ctid']
-            pmid = df,loc[i, 'pmid']
+            pmid = df.loc[i, 'pmid']
             human_text = df.loc[i, 'text']
             human_label = df.loc[i, 'label']
             results = self._send_query(text, ctid)
@@ -388,7 +388,7 @@ class ExperimentValidationBySimilarity:
 
     def run(self):
         #self._map_nctid_pmid()
-        self.embed_save_ncict()
+        #self.embed_save_ncict()
         self.perform_validation_gold()
 
 if( __name__ == "__main__" ):

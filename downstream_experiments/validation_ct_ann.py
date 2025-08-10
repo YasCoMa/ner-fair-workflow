@@ -362,10 +362,10 @@ class ExperimentValidationBySimilarity:
             self.gct_vs.save_local(path)
     
     def _send_query(self, snippet, ctid):
-        results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
-        for r in results:
-            res = r[0]
-            score = float(1 - r[1]) # score is actually distance, the higher it is, less it is the match
+        results = []
+        rs = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
+        for res, score in rs:
+            score = float(1 - score) # score is actually distance, the higher it is, less it is the match
             hit = res.page_content
             label = res.metadata['label']
             results.append( { 'hit': hit, 'ct_label': label, 'score': score } )

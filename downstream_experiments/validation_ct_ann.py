@@ -23,7 +23,7 @@ class ExperimentValidationBySimilarity:
         self.ctDir = ''
         self.goldDir = 'experiments/data/'
         
-        self.out = outdir
+        self.out = fout
         if( not os.path.isdir( self.out ) ) :
             os.makedirs( self.out )
             

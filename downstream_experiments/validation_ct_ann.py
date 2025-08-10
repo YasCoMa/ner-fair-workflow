@@ -354,7 +354,7 @@ class ExperimentValidationBySimilarity:
                     docs.append(doc)
             
         uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
-        self.gct_vs.add_documents(documents=documents, ids=uuids)
+        self.gct_vs.add_documents(documents=docs, ids=uuids)
     
     def _send_query(self, snippet, ctid):
         results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )

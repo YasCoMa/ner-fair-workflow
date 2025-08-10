@@ -20,8 +20,8 @@ Experiment on gold dataset of annotated PICO entities
 
 class ExperimentValidationBySimilarity:
     def __init__(self, fout):
-        self.ctDir = ''
-        self.goldDir = 'experiments/data/'
+        self.ctDir = '/aloy/home/ymartins/match_clinical_trial/out/clinical_trials/'
+        self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
         
         self.out = fout
         if( not os.path.isdir( self.out ) ) :
@@ -74,9 +74,9 @@ class ExperimentValidationBySimilarity:
     
     def _retrieve_ct_studies(self, ids):
         studies = []
-        for f in os.listdir('out/clinical_trials/'):
+        for f in os.listdir(self.ctDir):
             if( f.startswith('raw') ):
-                path = os.path.join( 'out/clinical_trials/', f )
+                path = os.path.join( self.ctDir, f )
                 dt = json.load( open( path, 'r' ) )
                 for s in dt:
                     if( s['id'] in ids ):

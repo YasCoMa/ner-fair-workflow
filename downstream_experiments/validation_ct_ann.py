@@ -257,27 +257,30 @@ class ExperimentValidationBySimilarity:
         # abs or percent values => bin
         # mean, median, sd, q1, q3 => cont  
         md = {}
-        arr = s['resultsSection']['outcomeMeasuresModule']['outcomeMeasures']
-        for it in arr:
-            ntype = 'bin'
-            spec = 'abs'
-            if( it['unitOfMeasure'].lower().find('number')==-1 and it['unitOfMeasure'].lower().find('percentage')==-1 and it['unitOfMeasure'].lower().find('count')==-1 ):
-                ntype = 'cont'
-                spec = it['paramType'].lower()
-            else:
-                if( it['unitOfMeasure'].lower().find('percentage')==-1 ):
-                    spec = 'percent'
-                
-            ms = it['classes'][0][categories][0]['measurements']
-            for m in ms:
-                val = m['value']
-                gr = 'iv'
-                if( m['groupId'] in cids ):
-                    gr='cv'
-                key = f'{gr}-{ntype}-{spec}'
-                if( not key in md):
-                    md[key]=set()
-                md[key].add(val) 
+        try:
+            arr = s['resultsSection']['outcomeMeasuresModule']['outcomeMeasures']
+            for it in arr:
+                ntype = 'bin'
+                spec = 'abs'
+                if( it['unitOfMeasure'].lower().find('number')==-1 and it['unitOfMeasure'].lower().find('percentage')==-1 and it['unitOfMeasure'].lower().find('count')==-1 ):
+                    ntype = 'cont'
+                    spec = it['paramType'].lower()
+                else:
+                    if( it['unitOfMeasure'].lower().find('percentage')==-1 ):
+                        spec = 'percent'
+                    
+                ms = it['classes'][0]['categories'][0]['measurements']
+                for m in ms:
+                    val = m['value']
+                    gr = 'iv'
+                    if( m['groupId'] in cids ):
+                        gr='cv'
+                    key = f'{gr}-{ntype}-{spec}'
+                    if( not key in md):
+                        md[key]=set()
+                    md[key].add(val) 
+        except:
+            pass
 
         # Participants
         if( totp != -1 ):
@@ -384,7 +387,7 @@ class ExperimentValidationBySimilarity:
                     f.write( f"{ctid}\t{pmid}\t{human_label}\t{found_label}\t{human_text}\t{found_text}\t{score}\n")
 
     def run(self):
-        self._map_nctid_pmid()
+        #self._map_nctid_pmid()
         self.embed_save_ncict()
         self.perform_validation_gold()
 

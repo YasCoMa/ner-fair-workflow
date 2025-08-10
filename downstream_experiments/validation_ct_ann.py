@@ -335,7 +335,6 @@ class ExperimentValidationBySimilarity:
     
     def embed_save_ncict(self):
         path = os.path.join(self.out, 'ctdoc_faiss.index')
-        
         if( os.path.exists(path) ):
             self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
         else:
@@ -366,7 +365,7 @@ class ExperimentValidationBySimilarity:
         results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
         for res, score in results:
             hit = res.page_content
-            label = res.metadata.label
+            label = res.metadata['label']
             results.append( { 'hit': hit, 'ct_label': label, 'score': score } )
             #print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
         return results

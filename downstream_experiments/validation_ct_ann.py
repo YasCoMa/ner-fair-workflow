@@ -172,8 +172,8 @@ class ExperimentValidationBySimilarity:
         
         params = self._treat_eligibility(s)
         eligibility.update( params[0] )
-        gender.update( list(parms[1]) )
-        age.update( list(parms[2]) )
+        gender.update( list(params[1]) )
+        age.update( list(params[2]) )
         
         try:
             mconds = s['protocolSection']['conditionsModule']

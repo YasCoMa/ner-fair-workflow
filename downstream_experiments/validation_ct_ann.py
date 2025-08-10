@@ -30,7 +30,7 @@ class ExperimentValidationBySimilarity:
         self.embeddings = OllamaEmbeddings(model="mxbai-embed-large")
         self.gold_ct_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
         self.gct_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ct_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) # original CT info
-        self.gold_ann_index = index = faiss.IndexFlatL2( len( selfembeddings.embed_query("hello world") ) )
+        self.gold_ann_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
         self.gann_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ann_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) #  Snippets labeled
         
     def _get_snippets_labels(self, pmid):
@@ -179,7 +179,7 @@ class ExperimentValidationBySimilarity:
             pass
         
         try:
-            locs = ['protocolSection']['contactsLocationsModule']['locations']
+            locs = s['protocolSection']['contactsLocationsModule']['locations']
             for l in locs:
                 location.update( [ l[k] for k in ['facility', 'city', 'country'] ] )
         except:

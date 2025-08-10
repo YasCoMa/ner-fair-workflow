@@ -1,6 +1,7 @@
 import os
 import re
 import faiss
+import pandas as pd
 from uuid import uuid4
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.docstore.in_memory import InMemoryDocstore

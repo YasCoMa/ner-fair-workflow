@@ -384,7 +384,7 @@ class ExperimentValidationBySimilarity:
                 found_label = r['ct_label']
                 score = r['score']
                 with open(res, 'a') as g:
-                    f.write( f"{ctid}\t{pmid}\t{human_label}\t{found_label}\t{human_text}\t{found_text}\t{score}\n")
+                    g.write( f"{ctid}\t{pmid}\t{human_label}\t{found_label}\t{human_text}\t{found_text}\t{score}\n")
 
     def run(self):
         #self._map_nctid_pmid()

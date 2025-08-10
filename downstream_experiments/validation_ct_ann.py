@@ -365,7 +365,7 @@ class ExperimentValidationBySimilarity:
         results = self.gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
         for r in results:
             res = r[0]
-            score = r[1]
+            score = float(1 - r[1]) # score is actually distance, the higher it is, less it is the match
             hit = res.page_content
             label = res.metadata['label']
             results.append( { 'hit': hit, 'ct_label': label, 'score': score } )

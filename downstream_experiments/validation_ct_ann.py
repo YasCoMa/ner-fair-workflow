@@ -394,7 +394,7 @@ class ExperimentValidationBySimilarity:
 
     def run(self):
         #self._map_nctid_pmid()
-        #self.embed_save_ncict()
+        self.embed_save_ncict()
         self.perform_validation_gold()
 
 if( __name__ == "__main__" ):

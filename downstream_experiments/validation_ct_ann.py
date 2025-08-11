@@ -93,8 +93,8 @@ class ExperimentValidationBySimilarity:
     
     def __load_mapping_pmid_nctid(self):
         mapp = {}
-        path = os.path.join( self.out, 'mapping_ct_pubmed.json' )
-        if( not os.path.isfile(path) ):
+        opath = os.path.join( self.out, 'mapping_ct_pubmed.json' )
+        if( not os.path.isfile(opath) ):
             for f in tqdm( os.listdir( self.inPredDir ) ):
                 if( f.endswith('.txt') ):
                     pmid = f.split('_')[0]
@@ -112,10 +112,10 @@ class ExperimentValidationBySimilarity:
                                 mapp[pmid].add(ctid)
             for k in mapp:
                 mapp[k] = list(mapp[k])
-            json.dump( mapp, open(path, 'w') )
+            json.dump( mapp, open(opath, 'w') )
         else:
-            mapp = json.load( open(path, 'r') )
-            for k in mapp:
+            mapp = json.load( open(opath, 'r') )
+              for k in mapp:
                 mapp[k] = set(mapp[k])
         return mapp
 
@@ -419,9 +419,9 @@ class ExperimentValidationBySimilarity:
         ctids = set()
         for v in mapp.values():
             ctids = ctids.union(v)
-        print('CTs', len(ctids) ) # 20696
-        cts = self._retrieve_ct_studies(ctids)
-        for s in tqdm(cts):
+        print('CTs', len(ctids) ) # 21504 
+        cts = self._retrieve_ct_studies(ctids) # available 20696
+        for s in tqdm(cts): 
             _ = self._get_ct_info(s)
 
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):

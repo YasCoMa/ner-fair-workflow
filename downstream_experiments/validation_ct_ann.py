@@ -92,7 +92,7 @@ class ExperimentValidationBySimilarity:
     
     def __load_mapping_pmid_nctid(self):
         mapp = {}
-        for f in os.listdir( self.inPredDir ):
+        for f in tqdm( os.listdir( self.inPredDir ) ):
             if( f.endswith('.txt') ):
                 pmid = f.split('_')[0]
                 if( pmid not in mapp ):
@@ -406,6 +406,7 @@ class ExperimentValidationBySimilarity:
     
     def _extract_info_ct(self):
         mapp = self.__load_mapping_pmid_nctid()
+        print('Articles', len(mapp))
         ctids = set()
         for v in mapp.values():
             ctids = ctids.union(v)

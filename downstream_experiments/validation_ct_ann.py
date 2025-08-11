@@ -72,7 +72,7 @@ class ExperimentValidationBySimilarity:
                 ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
                 if( len(ncts) > 0 ):
                     for nid in ncts:
-                        tr = re.findall( r'([a-zA-Z0-9]+)', nid )
+                        tr = re.findall( r'(NCT[0-9]+)', nid )
                         if( len(tr) > 0 ):
                             ctid = tr[0]
                             anns = self._get_snippets_labels( pmid )
@@ -93,8 +93,8 @@ class ExperimentValidationBySimilarity:
     
     def __load_mapping_pmid_nctid(self):
         mapp = {}
-        path = os.path.join( self.out, 'mapping_ct_pubmed.json' )
-        if( not os.path.isfile(path) ):
+        opath = os.path.join( self.out, 'mapping_ct_pubmed.json' )
+        if( not os.path.isfile(opath) ):
             for f in tqdm( os.listdir( self.inPredDir ) ):
                 if( f.endswith('.txt') ):
                     pmid = f.split('_')[0]
@@ -106,15 +106,18 @@ class ExperimentValidationBySimilarity:
                     ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
                     if( len(ncts) > 0 ):
                         for nid in ncts:
-                            tr = re.findall( r'([a-zA-Z0-9]+)', nid )
+                            tr = re.findall( r'(NCT[0-9]+)', nid )
                             if( len(tr) > 0 ):
-                                ctid = tr[0]
-                                mapp[pmid].add(ctid)
+                                for t in tr:
+                                    if( t.startswith('NCT') ):
+                                        ctid = t
+                                        mapp[pmid].add(ctid)
             for k in mapp:
                 mapp[k] = list(mapp[k])
-            json.dump( mapp, open(path, 'w') )
+            json.dump( mapp, open(opath, 'w') )
+            print( opath, os.path.exists(opath) )
         else:
-            mapp = json.load( open(path, 'r') )
+            mapp = json.load( open(opath, 'r') )
             for k in mapp:
                 mapp[k] = set(mapp[k])
         return mapp

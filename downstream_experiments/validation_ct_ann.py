@@ -110,9 +110,13 @@ class ExperimentValidationBySimilarity:
                             if( len(tr) > 0 ):
                                 ctid = tr[0]
                                 mapp[pmid].add(ctid)
+            for k in mapp:
+                mapp[k] = list(mapp[k])
             json.dump( mapp, open(path, 'w') )
         else:
             mapp = json.load( open(path, 'r') )
+            for k in mapp:
+                mapp[k] = set(mapp[k])
         return mapp
 
     def _map_nctid_pmid_general(self):

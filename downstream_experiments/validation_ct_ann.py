@@ -90,7 +90,7 @@ class ExperimentValidationBySimilarity:
         
         return anns
     
-    def _map_nctid_pmid_general(self):
+    def __load_mapping_pmid_nctid(self):
         mapp = {}
         for f in os.listdir( self.inPredDir ):
             if( f.endswith('.txt') ):
@@ -107,7 +107,12 @@ class ExperimentValidationBySimilarity:
                         if( len(tr) > 0 ):
                             ctid = tr[0]
                             mapp[pmid].add(ctid)
-        
+
+        return mapp
+
+    def _map_nctid_pmid_general(self):
+        mapp = self.__load_mapping_pmid_nctid()
+
         for f in os.listdir( self.outPredDir ):
             if( f.startswith('general_mapping_') ):
                 fname = f.split('.')[0].replace('results_','')
@@ -399,6 +404,15 @@ class ExperimentValidationBySimilarity:
         uuids = [str(uuid4()) for _ in range(len(documents))]
         self.gann_vs.add_documents(documents=documents, ids=uuids)
     
+    def _extract_info_ct(self):
+        mapp = self.__load_mapping_pmid_nctid()
+        ctids = set()
+        for v in mapp.values():
+            ctids = ctids.union(v)
+        cts = self._retrieve_ct_studies(ctids)
+        for s in tqdm(cts):
+            _ = self._get_ct_info(s)
+
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
         if( os.path.exists(path) ):
@@ -475,7 +489,8 @@ class ExperimentValidationBySimilarity:
     
     def run(self):
         #self.perform_validation_gold()
-        self.perform_validation_allct()
+        self._extract_info_ct()
+        #self.perform_validation_allct()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

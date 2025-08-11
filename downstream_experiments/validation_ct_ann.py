@@ -417,12 +417,12 @@ class ExperimentValidationBySimilarity:
     
     def _extract_info_ct(self):
         mapp = self.__load_mapping_pmid_nctid()
-        print('Articles', len(mapp)) #25548
+        print('Articles', len(mapp)) # 68744
         ctids = set()
         for v in mapp.values():
             ctids = ctids.union(v)
-        print('CTs', len(ctids) ) # 21504 
-        cts = self._retrieve_ct_studies(ctids) # available 20696
+        print('CTs', len(ctids) ) # 51769
+        cts = self._retrieve_ct_studies(ctids) # available 50068
         for s in tqdm(cts): 
             _ = self._get_ct_info(s)
 

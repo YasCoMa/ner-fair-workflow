@@ -1,0 +1,17 @@
+model experiment elements:
+
+NLPExperiment owl:subclassof MLExperiment
+
+classes:
+	MLExperiment
+	NLPExperiment
+	NLPTask
+	Dataset
+	TrainSplit
+	ValidationSplit
+	TestSplit
+	targetEntity
+
+relations:
+	owl:subClassOf - NLPExperiment => MLExperiment
+	

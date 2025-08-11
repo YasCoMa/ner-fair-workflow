@@ -7,7 +7,7 @@ from Bio import Entrez
 import xml.etree.ElementTree as ET
 
 class ProcessPubmed:
-    def __init__(self, outdir, predDir='./predicion_input'):
+    def __init__(self, outdir, predDir='./prediction_input'):
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(filename='log_preprocess_pubmed.log', level=logging.INFO)
         
@@ -198,7 +198,7 @@ class ProcessPubmed:
             for line in fm:
                 l = line.replace('\n','')
                 if( (len(l) > 2) and (not l.startswith('pmid') ) ):
-                    gone.add( int( l.split('\t')[0] ) )
+                    gone.add( l.split('\t')[0] )
             fm.close()
         else:
             fm = open( omap, 'w' )
@@ -207,62 +207,109 @@ class ProcessPubmed:
     
         inmap = os.path.join( self.out, 'complete_mapping_pubmed.tsv' )
         df = pd.read_csv( inmap, sep='\t')
-        allids = set(df['pmid'].values)
-        df = df[ ~df['pmid'].isin(gone) ]
-        ids = [ str(id) for id in set(df['pmid'].values) ]
+        allids = set( [ str(id) for id in df['pmid'].unique() ] )
+        ids = allids - gone
         interval = 500
         k = 0
         c = 1
+        self.logger.info( f"\tIt will obtain {len(ids)}/{len(allids)}" )
         while (k < len(ids) ):
-            rids = ids[k:k+interval]
+            rids = list(ids)[k:k+interval]
             self.logger.info( f"\tRetrieving and parsing chunk {k}/{len(ids)}" )
             ftmp = os.path.join( self.out, f'gr-{c}_tempFile.xml' )
             fetch = Entrez.efetch(db='pubmed', resetmode='text' ,id = (','.join(rids)), rettype='abstract')
-            with open( ftmp, 'wb') as f:
-                f.write(fetch.read())
             try:
-                lines = self._parse_paper_group( ftmp )
-                if( len(lines) > 0 ):
-                    lines = list( map( lambda x: ("\t".join(x)), lines ))
-                    with open( omap, 'a' ) as fm:
-                        fm.write( "\n".join(lines)+"\n" )
+                with open( ftmp, 'wb') as f:
+                    f.write(fetch.read())
+                try:
+                    lines = self._parse_paper_group( ftmp )
+                    if( len(lines) > 0 ):
+                        lines = list( map( lambda x: ("\t".join(x)), lines ))
+                        with open( omap, 'a' ) as fm:
+                            fm.write( "\n".join(lines)+"\n" )
+                except:
+                    pass
             except:
                 pass
             k += interval
             c+=1
     
-    def generate_txt_inputs(self):
-        inmap = os.path.join( self.out, 'abstract_info_pubmed.tsv' )
+    def generate_prediction_inputs(self):
+        inmap = os.path.join( self.out, 'group_abstract_info_pubmed.tsv' )
         df = pd.read_csv( inmap, sep='\t')
+        df = df[ ~df['text'].isna() ]
+        all_pmids = len( df.pmid.unique())
+        pmids_with_ctid = df[ df['text'].str.contains('NCT0') ].pmid.unique()
+        df = df[ df.pmid.isin(pmids_with_ctid) ]
+        print('All pmids', all_pmids )
+        print('Pubmed ids with mapped ctid', len(df.pmid.unique()) )
+        '''
+All pmids 376984
+Pubmed ids with mapped ctid 68718
+Combinations pmid+label_abstract_piece : 320285
+        '''
+
+        '''
         ids = set( df.pmid.unique() )
         df = df[ df.text.str.contains('randomised') ]
         rctids = set( df.pmid.unique() )
         print( len(rctids), '/', len(ids), 'are randomized' )
+        '''
         txts = {}
         for i in df.index:
-            pmid = df.iloc[i,'pmid']
-            lab = df.iloc[i, 'label']
-            fname = f"{pmid}_{lab.lower()}.txt"
-            if( not fname in txts):
-                txts[fname] = []
-            text = df.iloc[i, 'text']
-            txts[fname].append(text)
+            pmid = df.loc[i,'pmid']
+            lab = str(df.loc[i, 'label']).replace(' ', '-').replace('/', '-').replace(',', '-').replace('nan', '')
+            fname = f"{pmid}_{lab}.txt"
+            #if( not fname in txts):
+            #    txts[fname] = []
+            text = df.loc[i, 'text']
+            #txts[fname].append(text)
+            txts[fname] = text
         
-        for fname in txts:
-            text = ' '.join( txts[fname] )
+        for fname in tqdm(txts):
+            #text = ' '.join( txts[fname] )
+            text = txts[fname]
             opath = os.path.join( self.pred, fname )
             f = open(opath, 'w')
             f.write(text)
             f.close()
-        
+    
+    def check_abstracts_mapped_coverage(self):
+        omap = os.path.join( self.out, 'group_abstract_info_pubmed.tsv' )
+        pgone = set()
+        fm = open( omap, 'r' )
+        for line in fm:
+            l = line.replace('\n','')
+            if( (len(l) > 2) and (not l.startswith('pmid') ) ):
+                pgone.add( l.split('\t')[0] )
+        fm.close()
+    
+        inmap = os.path.join( self.out, 'complete_mapping_pubmed.tsv' )
+        df = pd.read_csv( inmap, sep='\t')
+        callids = set( [ str(id) for id in df['ctid'].unique() ] )
+        pallids = set( [ str(id) for id in df['pmid'].unique() ] )
+        ids = pallids - pgone
+        print( 'All mapped CTs', len(callids) )
+        print( 'All mapped pubmeds', len(pallids) )
+        print( 'Missing pubmeds', len(ids) )
+        print( 'All pubmeds with abstract parsed', len(pgone), ' - ', ( len(pgone)/len(pallids) ) )
+        '''
+        All mapped CTs 116603
+        All mapped pubmeds 401674
+        Missing pubmeds 21104
+        All pubmeds with abstract parsed 380570  -  0.947
+        '''
+    
     def run(self):
         #self.get_abstracts()
-        self.get_grouped_abstracts()
+        #self.get_grouped_abstracts()
         #self.complete_publication_type()
-        #self.generate_txt_inputs()
+        self.generate_prediction_inputs()
+        
+        #elf.check_abstracts_mapped_coverage()
         
 if( __name__ == "__main__" ):
     odir = './out'
-    i = ProcessPubmed( odir )
+    i = ProcessPubmed( odir, predDir='/aloy/home/ymartins/match_clinical_trial/experiments/new_data/' )
     i.run()
 

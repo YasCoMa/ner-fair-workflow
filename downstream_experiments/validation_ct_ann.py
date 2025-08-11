@@ -72,7 +72,7 @@ class ExperimentValidationBySimilarity:
                 ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
                 if( len(ncts) > 0 ):
                     for nid in ncts:
-                        tr = re.findall( r'([a-zA-Z0-9]+)', nid )
+                        tr = re.findall( r'(NCT[0-9]+)', nid )
                         if( len(tr) > 0 ):
                             ctid = tr[0]
                             anns = self._get_snippets_labels( pmid )
@@ -106,16 +106,18 @@ class ExperimentValidationBySimilarity:
                     ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
                     if( len(ncts) > 0 ):
                         for nid in ncts:
-                            tr = re.findall( r'([a-zA-Z0-9]+)', nid )
+                            tr = re.findall( r'(NCT[0-9]+)', nid )
                             if( len(tr) > 0 ):
-                                ctid = tr[0]
-                                mapp[pmid].add(ctid)
+                                for t in tr:
+                                    if( t.startswith('NCT') ):
+                                        ctid = t
+                                        mapp[pmid].add(ctid)
             for k in mapp:
                 mapp[k] = list(mapp[k])
             json.dump( mapp, open(opath, 'w') )
         else:
             mapp = json.load( open(opath, 'r') )
-              for k in mapp:
+            for k in mapp:
                 mapp[k] = set(mapp[k])
         return mapp
 

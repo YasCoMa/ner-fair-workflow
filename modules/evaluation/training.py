@@ -109,7 +109,7 @@ class Training:
         self.flag_tokenizer = None
 
         if( self.model_checkpoint.lower().find('longformer') != -1 ):
-            self.tokenizer = LongformerTokenizerFast(self.model_checkpoint, add_prefix_space=True)
+            self.tokenizer = LongformerTokenizerFast.from_pretrained(self.model_checkpoint, add_prefix_space=True)
             self.flag_tokenizer = 'LongFormer'
             
     def _load_input_data(self):
@@ -305,7 +305,7 @@ class Training:
 
             This function takes a tuple of predictions and labels, converts the predictions to labels, filters out special tokens,
             and then computes the accuracy, F1 score, and classification report. The results are returned in a dictionary.
-
+    
             Args:
                 p (tuple): A tuple containing two elements:
                     - predictions (numpy.ndarray): A 2D array of predicted probabilities for each label.

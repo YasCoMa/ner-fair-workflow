@@ -59,7 +59,7 @@ class Prediction:
             self.outDir = self.config["outpath"]
             self.inpath = self.config["input_prediction"]
             self.infile = None
-            self.inpath = None
+            self.indir = None
             if( os.path.isfile(self.inpath) ):
                 self.infile = self.inpath
             elif( os.path.isdir(self.inpath) ):
@@ -69,12 +69,14 @@ class Prediction:
             raise Exception("Mandatory fields not found in config. file")
 
     def _setup_out_folders(self):
+        task = 'ner'
+        model_name = self.model_checkpoint.split("/")[-1]
         fout = '.'
         if self.outDir is not None:
             fout = self.outDir
         self.outDir = f"{fout}/{model_name}-finetuned-{task}"
 
-        self.out = os.path.join( self.outDir, "results", "prediction" )
+        self.out = os.path.join( self.outDir, "prediction" )
         if( not os.path.exists(self.out) ):
             os.makedirs( self.out )
 
@@ -123,8 +125,10 @@ class Prediction:
                     path = os.path.join(self.indir, f)
                     file_name = path.split("/")[-1].split(".")[0]
                     raw_text = self.__read_txt_file(path)
-                    doc = nlp(raw_text)
-                    sentences = [sent.text.strip() for sent in doc.sents]
+                    #doc = nlp(raw_text)
+                    #sentences = [sent.text.strip() for sent in doc.sents]
+                    
+                    sentences = [raw_text]
                     indata[file_name] = {}
                     for s in sentences:
                         sid = str(uuid4())
@@ -133,8 +137,10 @@ class Prediction:
             path = self.infile
             file_name = path.split("/")[-1].split(".")[0]
             raw_text = self.__read_txt_file(path)
-            doc = nlp(raw_text)
-            sentences = [sent.text.strip() for sent in doc.sents]
+            #doc = nlp(raw_text)
+            #sentences = [sent.text.strip() for sent in doc.sents]
+            
+            sentences = [raw_text]
             indata[file_name] = {}
             for s in sentences:
                 sid = str(uuid4())
@@ -147,10 +153,10 @@ class Prediction:
     def _load_models(self):
         save_path = self.outDir
         model_files = []
-        aux_directories = [os.path.join(save_path, d) for d in os.listdir(save_path) if d.startswith('trained_model_')]
+        aux_directories = [os.path.join(save_path, d) for d in os.listdir(save_path) if d.startswith('trained_')]
         aux_directories.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         
-        for directory in aux_directories:    
+        for directory in aux_directories:
             model_files.append([os.path.join(directory, d) for d in os.listdir(directory)][0])
 
         self.models = model_files
@@ -158,28 +164,29 @@ class Prediction:
     def _get_predictions(self):
         logging.info("[Prediction step] Task (Get predictions for new data) started -----------")
 
-        for inf in self.input:
-            for i, model_file in enumerate( self.models ):
-                path = os.path.join( self.out, f'{inf}_{i}.txt' )
-                f = open( path, 'w')
-                f.close()
+        keys_order = ['score', 'start', 'end','entity_group', 'word']
+        for i, model_file in enumerate( self.models ):
+            print(f"EVALUATING... model {i+1}")        
+            classifier = pipeline("ner", model=model_file, aggregation_strategy = 'average')
 
-            sentences = self.input[inf]
-            for sid in sentences:
-                st = sentences[sid]
-                ms = []
-                for i, model_file in enumerate( self.models ):
-                    #print(i, model_file)
-                    print(f"EVALUATING... model {i+1}")        
-                    classifier = pipeline("ner", model=model_file, aggregation_strategy = 'average')
-                    ms.append( classifier(st) )
+            path = os.path.join( self.out, f'results_model_{i}.txt' )
+            f = open( path, 'w')
+            #f.write('\t'.join([key for key in ['input_file', 'sentence_id', 'sentence']+keys_order])+'\n')
+            f.write('\t'.join([key for key in ['input_file']+keys_order])+'\n')
+            f.close()
+            for inf in self.input:
+                sentences = self.input[inf]
+                for sid in sentences:
+                    st = sentences[sid]
+                    try:
+                        predictions = classifier(st)
 
-                keys_order = ['score', 'start', 'end','entity_group', 'word']
-                for i, predictions in enumerate(ms):
-                    with open( path, 'a') as f:
-                        f.write('\t'.join([key for key in ['input_file', 'sentence_id', 'sentence']+keys_order])+'\n')
-                        for item in predictions:
-                            f.write('\t'.join( [inf, sid, st]+[str(item.get(key, '')) for key in keys_order])+'\n')
+                        with open( path, 'a') as f:
+                            for item in predictions:
+                                #f.write('\t'.join( [inf, sid, st]+[str(item.get(key, '')) for key in keys_order])+'\n')
+                                f.write('\t'.join( [inf]+[str(item.get(key, '')) for key in keys_order])+'\n')
+                    except:
+                        pass
 
         logging.info("[Prediction step] Task (Get predictions for new data) ended -----------")
 
@@ -191,7 +198,6 @@ class Prediction:
 
     def run(self):
         self._setup_seed()
-        self._setup_model()
         self._load_input_data()
         self._load_models()
         self._get_predictions()

@@ -139,7 +139,7 @@ def compute_objective(predictions, labels, label_list):
     
     return f1_score(true_labels, true_predictions, zero_division=0)
 
-def generate_csv_comparison(path_data, type_metrics = ['sk', 'strict', 'default'], type_level = ['token_level', 'word_level']):
+def generate_csv_comparison(path_data, type_metrics = ['sk', 'strict', 'default'], type_level = ['token_level', 'word_level'], target_tags=[]):
     '''
     Generate csv files to compare the results reported with classification_report using different libraries (sklearn/seqeval)
     with the results reported in https://aclanthology.org/2022.wiesp-1.4.pdf
@@ -184,23 +184,17 @@ def generate_csv_comparison(path_data, type_metrics = ['sk', 'strict', 'default'
             f1_scores = f1_scores[['Support'] + [col for col in f1_scores.columns if col != 'Support']]
 
             #Sort the index of the rows
+            categories = list( map( lambda x: x[2:] if( x[:2].lower() in ['o-', 'b-', 'i-', 'e-']) else x, target_tags ) )
+            aux = []
+            for c in categories:
+                if( c not in aux ):
+                    aux.append(c)
+            categories = aux
             if t != 'sk':
-                f1_scores = f1_scores.reindex(['total-participants', 'intervention-participants','control-participants', 'age', 'eligibility', 'ethinicity', 'condition', 'location', 'intervention', 'control', 'outcome', 'outcome-Measure', 'iv-bin-abs', 'cv-bin-abs', 'iv-bin-percent', 'cv-bin-percent', 'iv-cont-mean', 'cv-cont-mean', 'iv-cont-median', 'cv-cont-median', 'iv-cont-sd', 'cv-cont-sd', 'iv-cont-q1', 'cv-cont-q1', 'iv-cont-q3', 'cv-cont-q3', 'micro avg', 'macro avg', 'weighted avg'])
+                f1_scores = f1_scores.reindex( categories + [ 'micro avg', 'macro avg', 'weighted avg'])
             else:
-                f1_scores = f1_scores.reindex(['total-participants', 'intervention-participants','control-participants', 'age', 'eligibility', 'ethinicity', 'condition', 'location', 'intervention', 'control', 'outcome', 'outcome-Measure', 'iv-bin-abs', 'cv-bin-abs', 'iv-bin-percent', 'cv-bin-percent', 'iv-cont-mean', 'cv-cont-mean', 'iv-cont-median', 'cv-cont-median', 'iv-cont-sd', 'cv-cont-sd', 'iv-cont-q1', 'cv-cont-q1', 'iv-cont-q3', 'cv-cont-q3', 'accuracy', 'macro avg', 'weighted avg'])
+                f1_scores = f1_scores.reindex( categories + [ 'accuracy', 'macro avg', 'weighted avg'])
             
-            #Add manually the values of the paper
-            biobert = [0.94, 0.85, 0.88, 0.8, 0.74, 0.88, 0.8, 0.76, 0.84, 0.76, 0.81, 0.84, 0.8, 0.82, 0.87, 0.88, 0.81, 0.86, 0.75, 0.79, 0.83, 0.82, 0, 0, 0, 0, None, None, None]
-            longformer = [0.95, 0.85, 0.88, 0.87, 0.88, 0.79, 0.79, 0.87, 0.84, 0.81, 0.85, 0.9, 0.82, 0.82, 0.86, 0.85, 0.84, 0.86, 0.69, 0.73, 0.89, 0.89, 0, 0, 0, 0, None, None, None]
-        
-            f1_scores['BioBERT_paper'] = biobert
-            f1_scores['Mean diff BioBERT'] = (f1_scores['Just mean'] - f1_scores['BioBERT_paper']).round(4)
-            f1_scores['Max diff BioBERT'] = (f1_scores['Max'] - f1_scores['BioBERT_paper']).round(4)
-
-            f1_scores['Longformer_paper'] = longformer
-            f1_scores['Mean diff Longformer'] = (f1_scores['Just mean'] - f1_scores['Longformer_paper']).round(4)
-            f1_scores['Max diff Longformer'] = (f1_scores['Max'] - f1_scores['Longformer_paper']).round(4)
-
             f1_scores = f1_scores.drop(columns=['Just mean'])
             f1_scores.to_csv(f"{path_data}/f1_scores_{t}_{x}.csv", sep=',')
 
@@ -356,7 +350,12 @@ def generate_reports(predictions, labels, label_list, save_path, i, target_tags)
     aux_true_predictions = [label.split('-',1)[1] if len(label.split('-')) > 1 else label for full_pred in true_predictions for label in full_pred]
     
     #categories = ['O', 'total-participants', 'intervention-participants', 'control-participants', 'age', 'eligibility', 'ethinicity', 'condition', 'location', 'intervention', 'control', 'outcome', 'outcome-Measure', 'iv-bin-abs', 'cv-bin-abs', 'iv-bin-percent', 'cv-bin-percent', 'iv-cont-mean', 'cv-cont-mean', 'iv-cont-median', 'cv-cont-median', 'iv-cont-sd', 'cv-cont-sd', 'iv-cont-q1', 'cv-cont-q1', 'iv-cont-q3', 'cv-cont-q3']
-    categories = list( set(map( lambda x: x if( x[:2].lower() not in ['o-', 'b-', 'i-', 'e-']) else x[2:], target_tags ) ))
+    categories = list( map( lambda x: x[2:] if( x[:2].lower() in ['o-', 'b-', 'i-', 'e-']) else x, target_tags ) )
+    aux = []
+    for c in categories:
+        if( c not in aux ):
+            aux.append(c)
+    categories = aux
     cm = np.array(confusion_matrix(aux_true_labels, aux_true_predictions, labels=categories, normalize='true')).reshape(len(categories), len(categories))
     make_confusion_matrix(cm, f"{save_path}/cm_{i}.png", categories=categories, cmap='viridis', figsize=(20,20), title='Confusion matrix', cbar = False, percent = False)
 

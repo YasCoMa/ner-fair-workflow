@@ -93,22 +93,26 @@ class ExperimentValidationBySimilarity:
     
     def __load_mapping_pmid_nctid(self):
         mapp = {}
-        for f in tqdm( os.listdir( self.inPredDir ) ):
-            if( f.endswith('.txt') ):
-                pmid = f.split('_')[0]
-                if( pmid not in mapp ):
-                    mapp[pmid] = set()
-                path = os.path.join( self.inPredDir, f)
-                abs = open(path).read()
-                tokens = abs.split(' ')
-                ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
-                if( len(ncts) > 0 ):
-                    for nid in ncts:
-                        tr = re.findall( r'([a-zA-Z0-9]+)', nid )
-                        if( len(tr) > 0 ):
-                            ctid = tr[0]
-                            mapp[pmid].add(ctid)
-
+        path = os.path.join( self.out, 'mapping_ct_pubmed.json' )
+        if( not os.path.isfile(path) ):
+            for f in tqdm( os.listdir( self.inPredDir ) ):
+                if( f.endswith('.txt') ):
+                    pmid = f.split('_')[0]
+                    if( pmid not in mapp ):
+                        mapp[pmid] = set()
+                    path = os.path.join( self.inPredDir, f)
+                    abs = open(path).read()
+                    tokens = abs.split(' ')
+                    ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
+                    if( len(ncts) > 0 ):
+                        for nid in ncts:
+                            tr = re.findall( r'([a-zA-Z0-9]+)', nid )
+                            if( len(tr) > 0 ):
+                                ctid = tr[0]
+                                mapp[pmid].add(ctid)
+            json.dump( mapp, open(path, 'w') )
+        else:
+            mapp = json.load( open(path, 'r') )
         return mapp
 
     def _map_nctid_pmid_general(self):
@@ -135,7 +139,7 @@ class ExperimentValidationBySimilarity:
     
     def _retrieve_ct_studies(self, ids):
         studies = []
-        for f in os.listdir(self.ctDir):
+        for f in tqdm( os.listdir(self.ctDir) ):
             if( f.startswith('raw') ):
                 path = os.path.join( self.ctDir, f )
                 dt = json.load( open( path, 'r' ) )
@@ -407,10 +411,11 @@ class ExperimentValidationBySimilarity:
     
     def _extract_info_ct(self):
         mapp = self.__load_mapping_pmid_nctid()
-        print('Articles', len(mapp))
+        print('Articles', len(mapp)) #25548
         ctids = set()
         for v in mapp.values():
             ctids = ctids.union(v)
+        print('CTs', len(ctids) ) # 20696
         cts = self._retrieve_ct_studies(ctids)
         for s in tqdm(cts):
             _ = self._get_ct_info(s)

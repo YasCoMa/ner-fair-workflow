@@ -22,8 +22,8 @@ def exec(subset):
         try:
             text = open(text_file).read()
             predictions = classifier(text)
-
-            with open( path, 'a') as f:
+            path_partial = path.split('.')[0]+f'-part-task-{task_id}.tsv'
+            with open( path_partial, 'a') as f:
                 for item in predictions:
                     #f.write('\t'.join( [inf, sid, st]+[str(item.get(key, '')) for key in keys_order])+'\n')
                     f.write('\t'.join( [fname]+[str(item.get(key, '')) for key in keys_order])+'\n')

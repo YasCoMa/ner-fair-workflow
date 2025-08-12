@@ -128,9 +128,9 @@ class ExperimentValidationBySimilarity:
             if( f.startswith('results_') ):
                 fname = f.split('.')[0].replace('results_','')
                 omap = os.path.join( self.out, f'general_mapping_{label_exp}_{fname}_nct_pubmed.tsv')
-                f = open( omap, 'w' )
-                f.write( 'pmid\tctid\ttext\tlabel\n' )
-                f.close()
+                g = open( omap, 'w' )
+                g.write( 'pmid\tctid\ttext\tlabel\n' )
+                g.close()
                 
                 path = os.path.join( self.outPredDir, f)
                 self.predictions_df = pd.read_csv(path, sep='\t')

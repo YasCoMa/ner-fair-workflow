@@ -513,7 +513,7 @@ class ExperimentValidationBySimilarity:
     
     def run(self):
         #self.perform_validation_gold()
-        self._extract_info_ct()
+        #self._extract_info_ct()
         #self.perform_validation_allct()
         self.perform_validation_biobert_allct()
 

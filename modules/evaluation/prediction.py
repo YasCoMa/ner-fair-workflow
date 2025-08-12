@@ -270,9 +270,9 @@ class Prediction:
                 config = self.config_path
                 prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
 
-                test_path_partial = path.split('.')[0]+f'-part-task-1.tsv'
+                test_path_partial = os.path.join( job_path, f'part-task-1.tsv' )
                 if( os.path.exists(test_path_partial) ):
-                    path_partial = path.split('.')[0]+f'-part-task-*.tsv'
+                    path_partial = os.path.join( job_path, f'part-task-*.tsv' )
                     cmdStr = 'for i in '+path_partial+'; do cat $i; done | sort -u >> '+path
                     execAndCheck(cmdStr)
 

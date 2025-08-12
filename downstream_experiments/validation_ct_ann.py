@@ -133,6 +133,7 @@ class ExperimentValidationBySimilarity:
                 g.close()
                 
                 path = os.path.join( self.outPredDir, f)
+                print('---- in ', path)
                 self.predictions_df = pd.read_csv(path, sep='\t')
                 for pmid in mapp:
                     cts = mapp[pmid]

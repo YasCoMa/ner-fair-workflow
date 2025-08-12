@@ -33,6 +33,9 @@ class Training:
 
         self.fready = os.path.join( self.logdir, "tasks_training.ready")
         self.ready = os.path.exists( self.fready )
+        if(self.ready):
+            self.logger.info("----------- Training step skipped since it was already computed -----------")
+            self.logger.info("----------- Training step ended -----------")
     
     def _setup_gpu(self):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -56,7 +59,9 @@ class Training:
         if( not os.path.exists(self.logdir) ):
             os.makedirs( self.logdir )
         logf = os.path.join( self.logdir, "training.log" )
-        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a" )
+        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S' )
+        self.logger = logging.getLogger('training')
 
         with open( args.parameter_file, 'r' ) as g:
             self.config = json.load(g)
@@ -76,7 +81,7 @@ class Training:
                 if( self.optimization_file == "" ):
                     self.optimization_file = None
 
-            logging.info("----------- Training step started -----------")
+            self.logger.info("----------- Training step started -----------")
         except:
             raise Exception("Mandatory fields not found in config. file")
 
@@ -113,7 +118,7 @@ class Training:
             self.flag_tokenizer = 'LongFormer'
             
     def _load_input_data(self):
-        logging.info("[Training step] Task (Loading input dataset) started -----------")
+        self.logger.info("[Training step] Task (Loading input dataset) started -----------")
         task = 'ner'
 
         '''
@@ -134,10 +139,10 @@ class Training:
         label_all_tokens = True
         print("TOKENIZING...")
         self.tokenized_datasets = datasets.map(tokenize_and_align_labels, batched=True, fn_kwargs={"flag_tokenizer": self.flag_tokenizer, "tokenizer": self.tokenizer, "label_all_tokens": label_all_tokens } )
-        logging.info("[Training step] Task (Loading input dataset) ended -----------")
+        self.logger.info("[Training step] Task (Loading input dataset) ended -----------")
 
     def _manage_optimization(self):
-        logging.info("[Training step] Task (Manage hyperparameter optimization) started -----------")
+        self.logger.info("[Training step] Task (Manage hyperparameter optimization) started -----------")
         device = self.device
         BATCH_SIZE = self.batch_size
         LEARNING_RATE = self.learning_rate
@@ -230,10 +235,10 @@ class Training:
                                     'per_device_train_batch_size': BATCH_SIZE,
                                     'per_device_eval_batch_size': BATCH_SIZE
                                     }
-        logging.info("[Training step] Task (Manage hyperparameter optimization) ended -----------")
+        self.logger.info("[Training step] Task (Manage hyperparameter optimization) ended -----------")
 
     def __generate_learning_curves(self, path_data):
-        logging.info("[Training step] Task (Generating learning curve plots) started -----------")
+        self.logger.info("[Training step] Task (Generating learning curve plots) started -----------")
         '''
         Generate learning curves plots and F1-scores evolution during training on validation set.
 
@@ -285,10 +290,10 @@ class Training:
         plt.title("F1-score on validation set over epochs")
         plt.savefig(f"{path_data}/eval_f1.png")
         plt.close()
-        logging.info("[Training step] Task (Generating learning curve plots) ended -----------")
+        self.logger.info("[Training step] Task (Generating learning curve plots) ended -----------")
 
     def _train(self):
-        logging.info("[Training step] Task (Training model) started -----------")
+        self.logger.info("[Training step] Task (Training model) started -----------")
         device = self.device
         BATCH_SIZE = self.batch_size
         LEARNING_RATE = self.learning_rate
@@ -348,11 +353,11 @@ class Training:
         if 'weight_decay' not in list(hyperparameters_loaded.keys()):
             hyperparameters_loaded['weight_decay'] = WEIGHT_DECAY
         
-        logging.info(f"\tTraining with hyperparameters: \n {hyperparameters_loaded}")
+        self.logger.info(f"\tTraining with hyperparameters: \n {hyperparameters_loaded}")
         #TRAINING
 
         for i in range(5):
-            logging.info("\t\tTRAINING... round {i}")
+            self.logger.info("\t\tTRAINING... round {i}")
             #Define the model
             model = AutoModelForTokenClassification.from_pretrained( self.model_checkpoint, num_labels=len( self.label_list), label2id=self.labelxids, id2label=self.idsxlabel)
     
@@ -398,14 +403,14 @@ class Training:
             pd.DataFrame(trainer.state.log_history).to_csv(f"{save_path}/log_history_{i}.csv") #Save the logs of the training
 
             #Evaluate the model
-            logging.info("\t\tEVALUATING... round{i}")
+            self.logger.info("\t\tEVALUATING... round{i}")
             predictions, labels, _ = trainer.predict(tokenized_datasets["test"])
 
             predictions = np.argmax(predictions, axis=2)
             generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
         
         generate_csv_comparison( self.out_report, type_level=['token_level'])
-        logging.info("[Training step] Task (Training model) ended -----------")
+        self.logger.info("[Training step] Task (Training model) ended -----------")
 
         self.__generate_learning_curves(save_path)
 
@@ -413,7 +418,7 @@ class Training:
         f = open( self.fready, 'w')
         f.close()
 
-        logging.info("----------- Training step ended -----------")
+        self.logger.info("----------- Training step ended -----------")
 
     def run(self):
         self._setup_seed()
@@ -427,6 +432,3 @@ if( __name__ == "__main__" ):
     i = Training( )
     if( not i.ready ):
         i.run()
-    else:
-        logging.info("----------- Training step skipped since it was already computed -----------")
-        logging.info("----------- Training step ended -----------")

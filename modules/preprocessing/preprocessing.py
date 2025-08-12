@@ -19,6 +19,9 @@ class Preprocessing:
 
         self.fready = os.path.join( self.logdir, "tasks_data_preprocessing.ready")
         self.ready = os.path.exists( self.fready )
+        if(self.ready):
+            self.logger.info("----------- Preprocessing step skipped since it was already computed -----------")
+            self.logger.info("----------- Preprocessing step ended -----------")
 
     def _get_arguments(self):
         parser = argparse.ArgumentParser(description='Preprocessing step')
@@ -34,7 +37,9 @@ class Preprocessing:
         with open( args.parameter_file, 'r' ) as g:
             self.config = json.load(g)
         logf = os.path.join( self.logdir, "preprocessing.log" )
-        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a" )
+        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S' )
+        self.logger = logging.getLogger('preprocessing')
 
         try:
             self.dataDir = self.config["data_text_path"]
@@ -42,7 +47,8 @@ class Preprocessing:
             self.treat_overlap = self.config["eliminate_overlappings"]
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
 
-            logging.info("----------- Preprocessing step started -----------")
+            self.logger.info("----------- Preprocessing step started -----------")
+
         except:
             raise Exception("Mandatory fields not found in config. file")
 
@@ -60,7 +66,7 @@ class Preprocessing:
             os.makedirs( self.tmp )
 
     def _transform_format(self):
-        logging.info("[Preprocessing step] Task (Format transformation) started -----------")
+        self.logger.info("[Preprocessing step] Task (Format transformation) started -----------")
 
         data_path = self.dataDir
 
@@ -103,10 +109,10 @@ class Preprocessing:
         data_df = pd.DataFrame(data)
         data_df.to_csv(opath, index=None)
 
-        logging.info("[Preprocessing step] Task (Format transformation) ended -----------")
+        self.logger.info("[Preprocessing step] Task (Format transformation) ended -----------")
 
     def _add_sentence_id_save(self):
-        logging.info("[Preprocessing step] Task (Sentence identification) started -----------")
+        self.logger.info("[Preprocessing step] Task (Sentence identification) started -----------")
         opath = os.path.join(self.tmp, 'tmp.csv')
         data_df = pd.read_csv(opath)
 
@@ -130,10 +136,10 @@ class Preprocessing:
         data_df['End'] = data_df['End'].astype(int)
         opath = os.path.join(self.tmp, 'data_added_sentenceId.csv')
         data_df.to_csv( opath, index=False)
-        logging.info("[Preprocessing step] Task (Sentence identification) ended -----------")
+        self.logger.info("[Preprocessing step] Task (Sentence identification) ended -----------")
 
     def _split(self):
-        logging.info("[Preprocessing step] Task (Split indexes) started -----------")
+        self.logger.info("[Preprocessing step] Task (Split indexes) started -----------")
         opath = os.path.join(self.tmp, 'data_added_sentenceId.csv')
         data_df = pd.read_csv(opath)
 
@@ -172,12 +178,12 @@ class Preprocessing:
         test_df = data_df[data_df['File_ID'].isin(list(test))]
         not_in_train_df = data_df[data_df['File_ID'].isin(list(not_in_train))]
 
-        logging.info("[Preprocessing step] Task (Split indexes) ended -----------")
+        self.logger.info("[Preprocessing step] Task (Split indexes) ended -----------")
 
         return data_df, train_df, test_df, valid_df, not_in_train_df
 
     def _gen_freq_stats(self, data_df, train_df, test_df, valid_df, not_in_train_df):
-        logging.info("[Preprocessing step] Task (Get entity frequency) started -----------")
+        self.logger.info("[Preprocessing step] Task (Get entity frequency) started -----------")
 
         #Create a copy of the dataframe
         data2_df = data_df.copy()
@@ -218,10 +224,10 @@ class Preprocessing:
         df_counter = df_counter.reindex(['total-participants', 'intervention-participants', 'control-participants', 'age', 'eligibility', 'ethinicity', 'condition', 'location', 'intervention', 'control', 'outcome', 'outcome-Measure', 'iv-bin-abs', 'cv-bin-abs', 'iv-bin-percent', 'cv-bin-percent', 'iv-cont-mean', 'cv-cont-mean', 'iv-cont-median', 'cv-cont-median', 'iv-cont-sd', 'cv-cont-sd', 'iv-cont-q1', 'cv-cont-q1', 'iv-cont-q3', 'cv-cont-q3'])
         df_counter.to_csv(opath)
 
-        logging.info("[Preprocessing step] Task (Get entity frequency) ended -----------")
+        self.logger.info("[Preprocessing step] Task (Get entity frequency) ended -----------")
 
     def _process_group_sentences(self, data_df, train_df, test_df, valid_df, not_in_train_df):
-        logging.info("[Preprocessing step] Task (Generate statistics and group sentences for the final datasets) started -----------")
+        self.logger.info("[Preprocessing step] Task (Generate statistics and group sentences for the final datasets) started -----------")
 
         # ---------------- Statistics of each dataset
         train_info = GenerateInfoDF(train_df)
@@ -251,10 +257,10 @@ class Preprocessing:
 
         df_processed.to_csv( os.path.join(self.out, 'full_data_v01.csv'), sep=' ', index=False)
 
-        logging.info("[Preprocessing step] Task (Generate statistics and group sentences for the final datasets) ended -----------")
+        self.logger.info("[Preprocessing step] Task (Generate statistics and group sentences for the final datasets) ended -----------")
 
     def _gen_final_dataset(self):
-        logging.info("[Preprocessing step] Task (Generate final dataset compatible with transformers models) started -----------")
+        self.logger.info("[Preprocessing step] Task (Generate final dataset compatible with transformers models) started -----------")
         tag_values = self.target_tags
 
         #Load data from csv files if the notebook is restarted
@@ -308,13 +314,13 @@ class Preprocessing:
         dataset2.save_to_disk( os.path.join(self.out, "dataset_train_test_split_v0.1") )
         data_dataset.save_to_disk( os.path.join(self.out, "dataset_full_nosplit_v0.1") )
 
-        logging.info("[Preprocessing step] Task (Generate final dataset compatible with transformers models) ended -----------")
+        self.logger.info("[Preprocessing step] Task (Generate final dataset compatible with transformers models) ended -----------")
 
     def _mark_as_done(self):
         f = open( self.fready, 'w')
         f.close()
 
-        logging.info("----------- Preprocessing step ended -----------")
+        self.logger.info("----------- Preprocessing step ended -----------")
 
     def run(self):
         self._transform_format()
@@ -329,6 +335,3 @@ if( __name__ == "__main__" ):
     i = Preprocessing( )
     if( not i.ready ):
         i.run()
-    else:
-        logging.info("----------- Preprocessing step skipped since it was already computed -----------")
-        logging.info("----------- Preprocessing step ended -----------")

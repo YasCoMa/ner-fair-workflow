@@ -1,0 +1,15 @@
+{
+    "PATH": {
+        "TMP": "'/aloy/scratch/ymartins/updatedbs/tmp_jobs/'",
+        "SINGULARITY_IMAGE": "'/aloy/home/ymartins/Documents/cc_update/cc_image/cc.simg'",
+    },
+    "HPC": {
+    	"system" : "'sge'",
+    	"host": "'pac-one-head'",
+    	"queue": "'all.q'",
+    	"username": "'ymartins'",
+        "password": "'Kalinka1*_KfG&317'"
+    }
+
+}
+

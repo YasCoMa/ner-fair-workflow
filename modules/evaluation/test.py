@@ -24,6 +24,9 @@ class Test:
 
         self.fready = os.path.join( self.logdir, "tasks_test.ready")
         self.ready = os.path.exists( self.fready )
+        if(self.ready):
+            self.logger.info("----------- Test step skipped since it was already computed -----------")
+            self.logger.info("----------- Test step ended -----------")
     
     def _setup_gpu(self):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -47,7 +50,9 @@ class Test:
         if( not os.path.exists(self.logdir) ):
             os.makedirs( self.logdir )
         logf = os.path.join( self.logdir, "test.log" )
-        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a" )
+        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S' )
+        self.logger = logging.getLogger('test')
 
         with open( args.parameter_file, 'r' ) as g:
             self.config = json.load(g)
@@ -58,7 +63,7 @@ class Test:
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
-            logging.info("----------- Test step started -----------")
+            self.logger.info("----------- Test step started -----------")
         except:
             raise Exception("Mandatory fields not found in config. file")
 
@@ -99,7 +104,7 @@ class Test:
             self.flag_tokenizer = 'LongFormer'
             
     def _load_input_data(self):
-        logging.info("[Test step] Task (Loading input dataset) started -----------")
+        self.logger.info("[Test step] Task (Loading input dataset) started -----------")
         task = 'ner'
         '''
         data_files = { 'train': '', 'valid': '', 'test': '' }
@@ -119,10 +124,10 @@ class Test:
         label_all_tokens = True
         print("TOKENIZING...")
         self.tokenized_datasets = self.datasets.map(tokenize_and_align_labels, batched=True, fn_kwargs={"flag_tokenizer": self.flag_tokenizer, "tokenizer": self.tokenizer, "label_all_tokens": label_all_tokens })
-        logging.info("[Test step] Task (Loading input dataset) started -----------")
+        self.logger.info("[Test step] Task (Loading input dataset) started -----------")
 
     def __annotate_samples(self, dataset, labels, criteria = 'first_label'):
-        logging.info("[Test step] Task (Sentence annotation) started -----------")
+        self.logger.info("[Test step] Task (Sentence annotation) started -----------")
 
         '''
         Annotate the sentences in the dataset with the predicted labels.
@@ -158,12 +163,12 @@ class Test:
                 annotated_sentence_filtered = [max(set(annotated_sentence[i]), key=annotated_sentence[i].count) for i in range(len(annotated_sentence)) if len(annotated_sentence[i])>0]
 
             annotated_sentences.append(annotated_sentence_filtered)
-        logging.info("[Test step] Test (Sentence annotation) ended -----------")
+        self.logger.info("[Test step] Test (Sentence annotation) ended -----------")
 
         return annotated_sentences
 
     def _get_predictions(self):
-        logging.info("[Test step] Task (Get predictions for test set) started -----------")
+        self.logger.info("[Test step] Task (Get predictions for test set) started -----------")
         device = self.device
         save_path = self.outDir
         tokenizer = self.tokenizer
@@ -207,14 +212,14 @@ class Test:
         for i in range(len(model_files)):
             dataset_dict[f'Predicted_label_{i}'] = models_predictions[i]
 
-        logging.info("[Test step] Task (Get predictions for test set) ended -----------")
+        self.logger.info("[Test step] Task (Get predictions for test set) ended -----------")
 
         return dataset_dict
 
     def _save_most_common_predictions(self, dataset_dict):
         save_path = self.outDir
         
-        logging.info("[Test step] Task (Save most common predicted labels for a token across the models) started -----------")
+        self.logger.info("[Test step] Task (Save most common predicted labels for a token across the models) started -----------")
         dataset_annotated = Dataset.from_dict(dataset_dict)
 
         model_files = [file for file in os.listdir(save_path) if file.startswith("model_")]
@@ -247,13 +252,13 @@ class Test:
         # Compute the classification reports with most common predictions
         most_common_predictions = [[ self.labelxids[id] for id in lab] for lab in most_common_predictions]
         generate_reports(most_common_predictions,  dataset_annotated['true_labels'], self.label_list, self.out_report, 'most_common', self.target_tags)
-        logging.info("[Test step] Task (Save most common predicted labels for a token across the models) ended -----------")
+        self.logger.info("[Test step] Task (Save most common predicted labels for a token across the models) ended -----------")
 
     def _mark_as_done(self):
         f = open( self.fready, 'w')
         f.close()
 
-        logging.info("----------- Test step ended -----------")
+        self.logger.info("----------- Test step ended -----------")
 
     def run(self):
         self._setup_seed()
@@ -267,6 +272,3 @@ if( __name__ == "__main__" ):
     i = Test( )
     if( not i.ready ):
         i.run()
-    else:
-        logging.info("----------- Test step skipped since it was already computed -----------")
-        logging.info("----------- Test step ended -----------")

@@ -14,7 +14,11 @@ from spacy.lang.en import English
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
 sys.path.append( root_path )
+from utils.commons import *
 from utils.utils_evaluation import *
+
+#sys.path.append("/aloy/data/utilities/labresource_update_singularity/pipeline-update-uniprot-ppidb/")
+#from updatedbs.util.commons import *
 
 class Prediction:
     def __init__(self):
@@ -26,6 +30,9 @@ class Prediction:
 
         self.fready = os.path.join( self.logdir, "tasks_prediction.ready")
         self.ready = os.path.exists( self.fready )
+        if(self.ready):
+            self.logger.info("----------- Prediction step skipped since it was already computed -----------")
+            self.logger.info("----------- Prediction step ended -----------")
 
     def _setup_gpu(self):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -49,12 +56,18 @@ class Prediction:
         if( not os.path.exists(self.logdir) ):
             os.makedirs( self.logdir )
         logf = os.path.join( self.logdir, "prediction.log" )
-        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a" )
+        logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S' )
+        self.logger = logging.getLogger('prediction')
 
         with open( args.parameter_file, 'r' ) as g:
             self.config = json.load(g)
 
         try:
+            self.config_path = None
+            self.flag_parallel = False
+            if( 'config_hpc' in self.config ):
+                self.config_path = self.config['config_hpc']
+                self.flag_parallel = True
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDir = self.config["outpath"]
             self.inpath = self.config["input_prediction"]
@@ -64,7 +77,7 @@ class Prediction:
                 self.infile = self.inpath
             elif( os.path.isdir(self.inpath) ):
                 self.indir = self.inpath
-            logging.info("----------- Prediction step started -----------")
+            self.logger.info("----------- Prediction step started -----------")
         except:
             raise Exception("Mandatory fields not found in config. file")
 
@@ -114,7 +127,7 @@ class Prediction:
             return None
 
     def _load_input_data(self):
-        logging.info("[Prediction step] Task (Loading input dataset) started -----------")
+        self.logger.info("[Prediction step] Task (Loading input dataset) started -----------")
         nlp = English()
         nlp.add_pipe('sentencizer')
 
@@ -146,7 +159,38 @@ class Prediction:
                 sid = str(uuid4())
                 indata[file_name][sid] = s
 
-        logging.info("[Prediction step] Task (Loading input dataset) ended -----------")
+        self.logger.info("[Prediction step] Task (Loading input dataset) ended -----------")
+
+        self.input = indata
+
+    def _load_input_data_parallel(self):
+        self.logger.info("[Prediction step] Task (Loading input dataset) started -----------")
+        nlp = English()
+        nlp.add_pipe('sentencizer')
+
+        indata = {}
+        if(self.indir is not None):
+            for f in os.listdir(self.indir):
+                if( f.endswith('.txt') ):
+                    path = os.path.join(self.indir, f)
+                    file_name = path.split("/")[-1].split(".")[0]
+                    
+                    sentences = [path]
+                    indata[file_name] = {}
+                    for s in sentences:
+                        sid = str(uuid4())
+                        indata[file_name][sid] = s
+        elif(self.infile is not None):
+            path = self.infile
+            file_name = path.split("/")[-1].split(".")[0]
+            
+            sentences = [path]
+            indata[file_name] = {}
+            for s in sentences:
+                sid = str(uuid4())
+                indata[file_name][sid] = s
+
+        self.logger.info("[Prediction step] Task (Loading input dataset) ended -----------")
 
         self.input = indata
 
@@ -161,12 +205,12 @@ class Prediction:
 
         self.models = model_files
 
-    def _get_predictions(self):
-        logging.info("[Prediction step] Task (Get predictions for new data) started -----------")
+    def _get_predictions_sequential(self):
+        self.logger.info("[Prediction step] Task (Get predictions for new data) started -----------")
 
         keys_order = ['score', 'start', 'end','entity_group', 'word']
         for i, model_file in enumerate( self.models ):
-            print(f"EVALUATING... model {i+1}")        
+            self.logger.info(f"\tPredicting using model {i+1}")        
             classifier = pipeline("ner", model=model_file, aggregation_strategy = 'average')
 
             path = os.path.join( self.out, f'results_model_{i}.txt' )
@@ -174,6 +218,8 @@ class Prediction:
             #f.write('\t'.join([key for key in ['input_file', 'sentence_id', 'sentence']+keys_order])+'\n')
             f.write('\t'.join([key for key in ['input_file']+keys_order])+'\n')
             f.close()
+
+            i = 0
             for inf in self.input:
                 sentences = self.input[inf]
                 for sid in sentences:
@@ -187,26 +233,65 @@ class Prediction:
                                 f.write('\t'.join( [inf]+[str(item.get(key, '')) for key in keys_order])+'\n')
                     except:
                         pass
+                i += 1
+                if( i%100 == 0 ):
+                    self.logger.info(f"\t\tEntry {i}/{len(self.input)}")
 
-        logging.info("[Prediction step] Task (Get predictions for new data) ended -----------")
+        self.logger.info("[Prediction step] Task (Get predictions for new data) ended -----------")
+
+    def _get_predictions_parallel(self):
+        self.logger.info("[Prediction step] Task (Get predictions for new data) started -----------")
+
+        keys_order = ['score', 'start', 'end','entity_group', 'word']
+        for i, model_file in enumerate( self.models ):
+            self.logger.info(f"\tPredicting using model {i+1}")        
+            classifier = pipeline("ner", model=model_file, aggregation_strategy = 'average')
+
+            path = os.path.join( self.out, f'results_model_{i}.tsv' )
+            if( not os.path.isfile(path) ):
+                f = open( path, 'w')
+                #f.write('\t'.join([key for key in ['input_file', 'sentence_id', 'sentence']+keys_order])+'\n')
+                f.write('\t'.join([key for key in ['input_file']+keys_order])+'\n')
+                f.close()
+
+                elements = []
+                for inf in self.input:
+                    text_files = self.input[inf]
+                    for sid in text_files:
+                        st = text_files[sid]
+                        elements.append( [path, inf, sid, st, model_file] )
+
+                self.logger.info("\t\tLaunching job to cluster")
+                job_name = f"predictions_parallel_model_{i}"
+                job_path = os.path.join( self.out, job_name )
+                chunk_size = 1000
+                script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
+                command = "python3 "+script_path
+                config = self.config_path
+                prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
+
+        self.logger.info("[Prediction step] Task (Get predictions for new data) ended -----------")
 
     def _mark_as_done(self):
         f = open( self.fready, 'w')
         f.close()
 
-        logging.info("----------- Prediction step ended -----------")
+        self.logger.info("----------- Prediction step ended -----------")
 
     def run(self):
         self._setup_seed()
-        self._load_input_data()
         self._load_models()
-        self._get_predictions()
+        
+        if( not self.flag_parallel ):
+            self._load_input_data()
+            self._get_predictions_sequential()
+        else:
+            self._load_input_data_parallel()
+            self._get_predictions_parallel()
+
         self._mark_as_done()
 
 if( __name__ == "__main__" ):
     i = Prediction( )
     if( not i.ready ):
         i.run()
-    else:
-        logging.info("----------- Prediction step skipped since it was already computed -----------")
-        logging.info("----------- Prediction step ended -----------")

@@ -3,15 +3,26 @@ model experiment elements:
 NLPExperiment owl:subclassof MLExperiment
 
 classes:
-	MLExperiment
-	NLPExperiment
-	NLPTask
+	computational workflow ( http://purl.obolibrary.org/obo/NCIT_C42753 )
+	Experiment ( http://ExplainableMachineLearningPipelineOntology#Experiment )
+	ExperimentCharacteristic
 	Dataset
 	TrainSplit
 	ValidationSplit
 	TestSplit
 	targetEntity
+	data preprocessing
+	model
+	evaluation measure
+	accuracy
+	precision
+	recall
+	f1
+	mcc (subtype micro, macro avg)
 
 relations:
 	owl:subClassOf - NLPExperiment => MLExperiment
-	
+	self:finetunedFrom - model => large language model (http://id.nlm.nih.gov/mesh/D000098342)
+	dc:subject - Computational workflow => Natural language processing (http://edamontology.org/topic_0218) , Workflows ( http://edamontology.org/topic_0769 )
+	self:hasTask - Computational workflow => Named entity recognition ( http://edamontology.org/operation_3280 )
+	dc:subject - Experiment

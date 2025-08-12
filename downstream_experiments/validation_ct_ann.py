@@ -26,7 +26,7 @@ class ExperimentValidationBySimilarity:
         self.ctDir = '/aloy/home/ymartins/match_clinical_trial/out/clinical_trials/'
         self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
         self.inPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
-        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
+        
         
         self.out = fout
         if( not os.path.isdir( self.out ) ) :
@@ -121,13 +121,13 @@ class ExperimentValidationBySimilarity:
                 mapp[k] = set(mapp[k])
         return mapp
 
-    def _map_nctid_pmid_general(self):
+    def _map_nctid_pmid_general(self, label_exp):
         mapp = self.__load_mapping_pmid_nctid()
 
         for f in os.listdir( self.outPredDir ):
-            if( f.startswith('general_mapping_') ):
+            if( f.startswith('results_') ):
                 fname = f.split('.')[0].replace('results_','')
-                omap = os.path.join( self.out, f'general_mapping_{fname}_nct_pubmed.tsv')
+                omap = os.path.join( self.out, f'general_mapping_{label_exp}_{fname}_nct_pubmed.tsv')
                 f = open( omap, 'w' )
                 f.write( 'pmid\tctid\ttext\tlabel\n' )
                 f.close()
@@ -491,19 +491,31 @@ class ExperimentValidationBySimilarity:
         self.embed_save_ncict(sourcect, 'ctdoc_')
         self._get_predictions(sourcect, 'gold')
     
-    def perform_validation_allct(self):
-        self._map_nctid_pmid_general()
+    def perform_validation_biobert_allct(self):
+        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
+        self._map_nctid_pmid_general('biobert')
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
-                fname = f.split('.')[0].replace('results_','')
+                fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
-                self.embed_save_ncict(sourcect, f'ctall_{fname}_')
-                self._get_predictions(sourcect, f'general_{fname}_' )
+                self.embed_save_ncict(sourcect, f'ctall_biobert_{fname}_')
+                self._get_predictions(sourcect, f'general_biobert_{fname}_' )
+    
+    def perform_validation_longformer_allct(self):
+        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/longformer_trial/longformer-base-4096-finetuned-ner/prediction/'
+        self._map_nctid_pmid_general('longformer')
+        for f in os.listdir(self.out):
+            if( f.startswith('general_mapping_') ):
+                fname = f.split('.')[0].replace('general_mapping_','')
+                sourcect = os.path.join( self.out, f)
+                self.embed_save_ncict(sourcect, f'ctall_longformer_{fname}_')
+                self._get_predictions(sourcect, f'general_longformer_{fname}_' )
     
     def run(self):
         #self.perform_validation_gold()
         self._extract_info_ct()
         #self.perform_validation_allct()
+        self.perform_validation_biobert_allct()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

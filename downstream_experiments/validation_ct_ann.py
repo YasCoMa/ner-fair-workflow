@@ -1,14 +1,23 @@
 import os
+import sys
 import re
 import json
 import faiss
 import pandas as pd
 from tqdm import tqdm
 from uuid import uuid4
-from langchain_ollama import OllamaEmbeddings
-from langchain_community.docstore.in_memory import InMemoryDocstore
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
+
+try:
+    from langchain_ollama import OllamaEmbeddings
+    from langchain_community.docstore.in_memory import InMemoryDocstore
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
+except:
+    pass
+
+root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
+sys.path.append( root_path )
+from utils.commons import *
 
 '''
 # https://python.langchain.com/docs/integrations/vectorstores/faiss/#saving-and-loading
@@ -23,9 +32,11 @@ Experiment on gold dataset of annotated PICO entities
 
 class ExperimentValidationBySimilarity:
     def __init__(self, fout):
+        self.config_path = '/aloy/home/ymartins/match_clinical_trial/config_hpc.json'
         self.ctDir = '/aloy/home/ymartins/match_clinical_trial/out/clinical_trials/'
         self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
         self.inPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
+        os.environ['OLLAMA_SERVER_URL']='http://murakami.irb.pcb.ub.es:11434'
         
         
         self.out = fout
@@ -35,13 +46,16 @@ class ExperimentValidationBySimilarity:
         self.out_ct_processed = os.path.join( self.out, "processed_cts" )
         if( not os.path.isdir( self.out_ct_processed ) ) :
             os.makedirs( self.out_ct_processed )
-            
-        self.embeddings = OllamaEmbeddings(model="mxbai-embed-large")
-        self.gold_ct_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
-        self.gct_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ct_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) # original CT info
-        self.gold_ann_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
-        self.gann_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ann_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) #  Snippets labeled
         
+        try:
+            self.embeddings = OllamaEmbeddings(model="mxbai-embed-large")
+            self.gold_ct_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
+            self.gct_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ct_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) # original CT info
+            self.gold_ann_index = index = faiss.IndexFlatL2( len( self.embeddings.embed_query("hello world") ) )
+            self.gann_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ann_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) #  Snippets labeled
+        except:
+            pass
+
     def _get_snippets_labels(self, pmid):
         anns = []
         f = f"{pmid}.ann"
@@ -85,8 +99,8 @@ class ExperimentValidationBySimilarity:
         f = self.predictions_df[ self.predictions_df['input_file'].str.startswith(pmid) ]
         anns = []
         for i in f.index:
-            label = self.predictions_df.loc[i, 'entity_group']
-            term = self.predictions_df.loc[i, 'word']
+            label = str(self.predictions_df.loc[i, 'entity_group'])
+            term = str(self.predictions_df.loc[i, 'word'])
             anns.append( [term, label] )
         
         return anns
@@ -123,7 +137,7 @@ class ExperimentValidationBySimilarity:
 
     def _map_nctid_pmid_general(self, label_exp):
         mapp = self.__load_mapping_pmid_nctid()
-
+        
         for f in os.listdir( self.outPredDir ):
             if( f.startswith('results_') ):
                 fname = f.split('.')[0].replace('results_','')
@@ -134,16 +148,81 @@ class ExperimentValidationBySimilarity:
                 
                 path = os.path.join( self.outPredDir, f)
                 print('---- in ', path)
-                self.predictions_df = pd.read_csv(path, sep='\t')
-                for pmid in mapp:
+
+                df = pd.read_csv(path, sep='\t')
+                self.predictions_df = df
+                del df
+                
+                lines = []
+                for pmid in tqdm(mapp):
+                    anns = self._get_snippets_pred_labels( pmid )
                     cts = mapp[pmid]
                     for ctid in cts:
-                        anns = self._get_snippets_pred_labels( pmid )
-                        for a in anns:
-                            line = '\t'.join( [pmid, ctid]+a )
-                            with open( omap, 'a' ) as g:
-                                g.write( line+'\n' )
+                        if( len(anns) > 0 ):
+                            for a in anns:
+                                items = [pmid, ctid]+a
+                                if( len(items) == 4 ):
+                                    line = '\t'.join( items )
+                                    lines.append(line)
+                                    if(  len(lines) %1000 == 0 ):
+                                        with open( path_partial, 'a' ) as g:
+                                            g.write( ('\n'.join(lines) )+'\n' )
+                                        lines = []
+
+                if(  len(lines) > 0 ):
+                    with open( omap, 'a' ) as g:
+                        g.write( ('\n'.join(lines) )+'\n' )
     
+    def __treat_predictions(self, path, fname):
+        npath = os.path.join( os.path.dirname( path ), 'treated_'+fname )
+        fn = open(npath, 'w')
+        g = open(path, 'r')
+        for line in g:
+            l = line.replace("'",'').replace('"','')
+            fn.write(l)
+        g.close()
+        fn.close()
+
+        return npath
+
+    def _map_nctid_pmid_general_parallel(self, label_exp):
+        mapp = self.__load_mapping_pmid_nctid()
+        for k in mapp:
+            mapp[k] = list(mapp[k])
+
+        for f in os.listdir( self.outPredDir ):
+            if( f.startswith('results_') ):
+                fname = f.split('.')[0].replace('results_','')
+                path = os.path.join( self.out, f'general_mapping_{label_exp}_{fname}_nct_pubmed.tsv')
+                if( not os.path.isfile(path) ):
+                    g = open( path, 'w' )
+                    g.write( 'pmid\tctid\ttext\tlabel\n' )
+                    g.close()
+
+                    inpath = os.path.join( self.outPredDir, f)
+                    treated = self.__treat_predictions(inpath, f)
+
+                    elements = []
+                    for pmid in tqdm(mapp):
+                        elements.append( [pmid, mapp, treated] )
+
+                    job_name = f"validation_parallel_{fname}"
+                    job_path = os.path.join( self.out, job_name )
+                    chunk_size = 1000
+                    script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_mapping.py')
+                    command = "python3 "+script_path
+                    config = self.config_path
+                    prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
+
+                    test_path_partial = os.path.join( job_path, f'part-task-1.tsv' )
+                    if( os.path.exists(test_path_partial) ):
+                        path_partial = os.path.join( job_path, f'part-task-*.tsv' )
+                        cmdStr = 'for i in '+path_partial+'; do cat $i; done | sort -u >> '+path
+                        execAndCheck(cmdStr)
+
+                        cmdStr = 'for i in '+path_partial+'; do rm $i; done '
+                        execAndCheck(cmdStr)
+
     def _retrieve_ct_studies(self, ids):
         studies = []
         for f in tqdm( os.listdir(self.ctDir) ):
@@ -427,6 +506,68 @@ class ExperimentValidationBySimilarity:
         for s in tqdm(cts): 
             _ = self._get_ct_info(s)
 
+    def __solve_retrieve_processed_cts(self, allids):
+        gone = set()
+        for _id in allids:
+            path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
+            if( os.path.isfile(path) ):
+                gone.add(_id)
+        todo = set(allids) - gone
+        print('todo', len(todo))
+        '''
+        cts = self._retrieve_ct_studies(todo)
+        for s in tqdm(cts):
+            _id = s["protocolSection"]["identificationModule"]["nctId"]
+            _ = self._get_ct_info(s)
+        '''
+        not_found = 0
+        dat = {}
+        for _id in allids:
+            path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
+            if( os.path.isfile(path) ):
+                dat[_id] = json.load( open(path, 'r') )
+            else:
+                not_found += 1
+        print( 'not found', not_found) # 1662
+
+        return dat
+
+    def __aggregate_nctids(self):
+        allids = set()
+        for f in os.listdir(self.out):
+            if( f.startswith('general_mapping_') ):
+                sourcect = os.path.join( self.out, f)
+                df = pd.read_csv( sourcect, sep='\t' )
+                ctids = set(df.ctid.unique())
+                allids = allids.union(ctids)
+        return allids
+    
+    def embed_save_ncict_general(self, label_ct_index='general'):
+        path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
+        if( os.path.exists(path) ):
+            self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
+        else:
+            docs = []
+            allids = self.__aggregate_nctids()
+            dat = self.__solve_retrieve_processed_cts(allids)
+            # Found 49371
+            for _id in tqdm(dat):
+                snippets = dat[_id]
+                for label in snippets:
+                    if( label not in ['inclusion', 'exclusion'] ):
+                        text = snippets[label]
+                        if( isinstance(text, set) ):
+                            for t in text:
+                                doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
+                                docs.append(doc)
+                        else:
+                            doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
+                            docs.append(doc)
+                
+            uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
+            self.gct_vs.add_documents(documents=docs, ids=uuids)
+            self.gct_vs.save_local(path)
+
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
         if( os.path.exists(path) ):
@@ -437,7 +578,7 @@ class ExperimentValidationBySimilarity:
             df = pd.read_csv( sourcect, sep='\t' )
             ctids = set(df.ctid.unique())
             cts = self._retrieve_ct_studies(ctids)
-            for s in cts:
+            for s in tqdm(cts):
                 _id = s["protocolSection"]["identificationModule"]["nctId"]
                 snippets = self._get_ct_info(s)
                 for label in snippets:
@@ -494,22 +635,29 @@ class ExperimentValidationBySimilarity:
     
     def perform_validation_biobert_allct(self):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
-        self._map_nctid_pmid_general('biobert')
+        #self._map_nctid_pmid_general('biobert')
+        #self._map_nctid_pmid_general_parallel('biobert')
+
+        self.embed_save_ncict_general('biobert')
+
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
-                self.embed_save_ncict(sourcect, f'ctall_biobert_{fname}_')
+                print('---- in ', sourcect)
                 self._get_predictions(sourcect, f'general_biobert_{fname}_' )
+        
     
     def perform_validation_longformer_allct(self):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/longformer_trial/longformer-base-4096-finetuned-ner/prediction/'
-        self._map_nctid_pmid_general('longformer')
+        self._map_nctid_pmid_general_parallel('longformer')
+        
+        self.embed_save_ncict_general('longformer')
+
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
-                self.embed_save_ncict(sourcect, f'ctall_longformer_{fname}_')
                 self._get_predictions(sourcect, f'general_longformer_{fname}_' )
     
     def run(self):

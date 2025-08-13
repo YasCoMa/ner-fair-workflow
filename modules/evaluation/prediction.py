@@ -229,6 +229,7 @@ class Prediction:
 
                         with open( path, 'a') as f:
                             for item in predictions:
+                                item['word'] = item['word'].replace('"','').replace("'",'')
                                 #f.write('\t'.join( [inf, sid, st]+[str(item.get(key, '')) for key in keys_order])+'\n')
                                 f.write('\t'.join( [inf]+[str(item.get(key, '')) for key in keys_order])+'\n')
                     except:

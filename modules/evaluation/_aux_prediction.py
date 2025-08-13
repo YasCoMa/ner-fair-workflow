@@ -25,6 +25,7 @@ def exec(subset):
             path_partial = os.path.join( os.getcwd(), f'part-task-{task_id}.tsv' )
             with open( path_partial, 'a') as f:
                 for item in predictions:
+                    item['word'] = item['word'].replace('"','').replace("'",'')
                     #f.write('\t'.join( [inf, sid, st]+[str(item.get(key, '')) for key in keys_order])+'\n')
                     f.write('\t'.join( [fname]+[str(item.get(key, '')) for key in keys_order])+'\n')
         except:

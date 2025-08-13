@@ -41,10 +41,6 @@ def ReadFiles(folder_path):
     
     return files
 
-
-
-
-
 def CountNumberFiles(files, B_label, ann_label, data_df, Freq, feedback=True):
     '''
     Function that analyzes the occurrence of the labels in the data and the frequency of the labels in the .ann files
@@ -229,9 +225,6 @@ def plotMismatchfiles(mismatch_dict, data_df, folder_path, control=False, feedba
         if control and input_ == 'y':
             break
 
-
-
-
 def GenerateInfoDF(df):
     '''
     Function that generates a DataFrame with different metrics to analyse the similarities between samples in the sets.
@@ -261,8 +254,6 @@ def GenerateInfoDF(df):
     df_info['ratio_entities_token'] = df_info['n_entities'] / df_info['n_tokens']
 
     return df_info
-
-
 
 def PreprocessingData(df, entry_param = 'complete'):
     '''

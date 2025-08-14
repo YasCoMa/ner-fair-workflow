@@ -513,8 +513,8 @@ class ExperimentValidationBySimilarity:
             if( os.path.isfile(path) ):
                 gone.add(_id)
         ctids = ctids - gone
-        print('new CTs:', len(ctids) )
-        cts = self._retrieve_ct_studies(ctids) # available 50068
+        print('new CTs:', len(ctids) ) # 1759
+        cts = self._retrieve_ct_studies(ctids) # available 50068, 56/1759
         for s in tqdm(cts): 
             _ = self._get_ct_info(s)
 

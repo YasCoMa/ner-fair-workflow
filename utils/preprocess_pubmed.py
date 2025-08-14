@@ -264,7 +264,7 @@ Combinations pmid+label_abstract_piece : 320285
             #    txts[fname] = []
             text = df.loc[i, 'text']
             #txts[fname].append(text)
-            txts[fname] = text
+            txts[fname] = text.replace('"','').replace("'",'')
         
         for fname in tqdm(txts):
             #text = ' '.join( txts[fname] )
@@ -288,10 +288,13 @@ Combinations pmid+label_abstract_piece : 320285
         df = pd.read_csv( inmap, sep='\t')
         callids = set( [ str(id) for id in df['ctid'].unique() ] )
         pallids = set( [ str(id) for id in df['pmid'].unique() ] )
+        f = df[ df['pmid'].isin( [ int(i) for i in pgone ] ) ]
+        ctf = set(f.ctid.unique())
         ids = pallids - pgone
         print( 'All mapped CTs', len(callids) )
         print( 'All mapped pubmeds', len(pallids) )
         print( 'Missing pubmeds', len(ids) )
+        print( 'All cts with abstract parsed', len(ctf), ' - ', ( len(ctf)/len(callids) ) )
         print( 'All pubmeds with abstract parsed', len(pgone), ' - ', ( len(pgone)/len(pallids) ) )
         '''
         All mapped CTs 116603
@@ -302,11 +305,12 @@ Combinations pmid+label_abstract_piece : 320285
     
     def run(self):
         #self.get_abstracts()
-        #self.get_grouped_abstracts()
         #self.complete_publication_type()
+        
+        self.get_grouped_abstracts()
         self.generate_prediction_inputs()
         
-        #elf.check_abstracts_mapped_coverage()
+        self.check_abstracts_mapped_coverage()
         
 if( __name__ == "__main__" ):
     odir = './out'

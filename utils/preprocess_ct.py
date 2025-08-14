@@ -204,18 +204,18 @@ class InformationExtractionCT:
             f.write( f"{it}\t{nin}\t{nex}\t{nall}\n" )
         f.close()
         
-    def get_missing_cts(self):
+    def get_raw_missing_cts(self):
         outp = os.path.join( self.out, 'clinical_trials')
         if( not os.path.isdir( outp ) ) :
             os.makedirs( outp )
 
         ids=set()
         for f in os.listdir('out/clinical_trials/'):
-            if( f.startswith('complete') ):
+            if( f.startswith('raw') ):
                 path = os.path.join( 'out/clinical_trials/', f )
                 dt = json.load( open( path, 'r' ) )
                 for s in dt:
-                    ids.add(s['id'])
+                    ids.add( s['protocolSection']['identificationModule']['nctId'] )
         ids = set()
         root = "https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=COMPLETED&countTotal=true&pageSize=1000"
         r = requests.get(root)
@@ -344,7 +344,7 @@ def find_study(id):
         gold = set( list( map( lambda x: x.split('.')[0], gold )) )
         print('Articles in PICO:', len(gold) )
         
-        inmap = os.path.join( self.out, 'mapping_pubmed.tsv' )
+        inmap = os.path.join( self.out, 'complete_mapping_pubmed.tsv' )
         df = pd.read_csv( inmap, sep='\t')
         ids = set( [ str(v) for v in df['pmid'].values ] )
         print('Articles in CTs:', len(ids) )
@@ -362,7 +362,7 @@ def find_study(id):
         #self.get_overall_metrics()
         #self.check_coverage_picos()
         
-        #self.get_missing_cts()
+        self.get_raw_missing_cts()
         self.make_mapping_ct_pubmed()
         
 if( __name__ == "__main__" ):

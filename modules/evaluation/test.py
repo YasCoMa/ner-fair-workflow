@@ -160,7 +160,7 @@ class Test:
             if criteria == 'first_label':
                 annotated_sentence_filtered = [annotated_sentence[i][0] for i in range(len(annotated_sentence)) if len(annotated_sentence[i])>0]
             elif criteria == 'majority':
-                annotated_sentence_filtered = [max(set(annotated_sentence[i]), key=annotated_sentence[i].count) for i in range(len(annotated_sentence)) if len(annotated_sentence[i])>0]
+                annotated_sentence_filtered = [ max(set(annotated_sentence[i]), key=annotated_sentence[i].count) for i in range(len(annotated_sentence)) if len(annotated_sentence[i])>0]
 
             annotated_sentences.append(annotated_sentence_filtered)
         self.logger.info("[Test step] Test (Sentence annotation) ended -----------")

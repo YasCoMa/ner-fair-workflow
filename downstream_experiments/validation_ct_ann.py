@@ -3,6 +3,8 @@ import sys
 import re
 import json
 import faiss
+import pickle
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from uuid import uuid4
@@ -36,8 +38,6 @@ class ExperimentValidationBySimilarity:
         self.ctDir = '/aloy/home/ymartins/match_clinical_trial/out/clinical_trials/'
         self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
         self.inPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
-        os.environ['OLLAMA_SERVER_URL']='http://murakami.irb.pcb.ub.es:11434'
-        
         
         self.out = fout
         if( not os.path.isdir( self.out ) ) :
@@ -547,26 +547,53 @@ class ExperimentValidationBySimilarity:
         if( os.path.exists(path) ):
             self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
         else:
-            docs = []
-            allids = self.__aggregate_nctids()
-            dat = self.__solve_retrieve_processed_cts(allids)
-            # Found 49371
-            for _id in tqdm(dat):
-                snippets = dat[_id]
-                for label in snippets:
-                    if( label not in ['inclusion', 'exclusion'] ):
-                        text = snippets[label]
-                        if( isinstance(text, set) ):
-                            for t in text:
-                                doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
+            k = 500
+            print('Retrieving mapping')
+            mapp = {}
+            omap = os.path.join(self.out, f'{label_ct_index}_map_docs_vs.pkl')
+            if( not os.path.isfile(omap)):
+                docs = []
+                allids = self.__aggregate_nctids()
+                dat = self.__solve_retrieve_processed_cts(allids)
+                # Found 49371
+                for _id in tqdm(dat):
+                    snippets = dat[_id]
+                    for label in snippets:
+                        if( label not in ['inclusion', 'exclusion'] ):
+                            text = snippets[label]
+                            if( isinstance(text, set) ):
+                                for t in text:
+                                    doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
+                                    docs.append(doc)
+                            else:
+                                doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
                                 docs.append(doc)
-                        else:
-                            doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
-                            docs.append(doc)
-                
-            uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
-            self.gct_vs.add_documents(documents=docs, ids=uuids)
-            self.gct_vs.save_local(path)
+                    
+                uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
+                print( len(docs))
+                mapp = {}
+                for i in range( len(docs) ):
+                    mapp[ uuids[i] ] = { 'doc': docs[i], 'status': False }
+                pickle.dump( mapp, open(omap, 'wb') )
+            else:
+                mapp = pickle.load( open(omap, 'rb') )
+
+            print('Saving in vector store')
+            ind = list( range( len(mapp) ) )
+            parts = np.array_split(ind, k)
+            for ids in tqdm(parts):
+                subdocs = []
+                subuuids = []
+                for i in ids:
+                    key = uuids[i]
+                    if(not mapp[ key ]['status']):
+                        subuuids.append( key )
+                        subdocs.append( mapp[ key ]['doc'] )
+                        mapp[ key ]['status'] = True
+
+                self.gct_vs.add_documents(documents=subdocs, ids=subuuids)
+                self.gct_vs.save_local(path)
+                pickle.dump( mapp, open(omap, 'wb') )
 
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
@@ -645,7 +672,7 @@ class ExperimentValidationBySimilarity:
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                self._get_predictions(sourcect, f'general_biobert_{fname}_' )
+                #self._get_predictions(sourcect, f'general_biobert_{fname}_' )
         
     
     def perform_validation_longformer_allct(self):

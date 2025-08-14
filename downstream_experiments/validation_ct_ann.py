@@ -131,8 +131,8 @@ class ExperimentValidationBySimilarity:
             for k in mapp:
                 mapp[k] = list(mapp[k])
             json.dump( mapp, open(opath, 'w') )
-            print('All ctids linked', len(ctids) )
-            print('All pubmeds linked', len(mapp) )
+            print('All ctids linked', len(ctids) ) # 51827
+            print('All pubmeds linked', len(mapp) ) # 68830
         else:
             mapp = json.load( open(opath, 'r') )
             for k in mapp:
@@ -501,14 +501,14 @@ class ExperimentValidationBySimilarity:
     
     def _extract_info_ct(self):
         mapp = self.__load_mapping_pmid_nctid()
-        print('Articles', len(mapp)) # 68744
+        print('Articles', len(mapp)) # 68744  ---> 68830
         ctids = set()
         for v in mapp.values():
             ctids = ctids.union(v)
-        print('CTs', len(ctids) ) # 51769
+        print('CTs', len(ctids) ) # 51769  ---> 51827
 
         gone = set()
-        for _id in allids:
+        for _id in ctids:
             path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
             if( os.path.isfile(path) ):
                 gone.add(_id)

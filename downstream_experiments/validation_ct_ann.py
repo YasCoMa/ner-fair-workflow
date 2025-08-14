@@ -109,6 +109,7 @@ class ExperimentValidationBySimilarity:
         mapp = {}
         opath = os.path.join( self.out, 'mapping_ct_pubmed.json' )
         if( not os.path.isfile(opath) ):
+            ctids = set()
             for f in tqdm( os.listdir( self.inPredDir ) ):
                 if( f.endswith('.txt') ):
                     pmid = f.split('_')[0]
@@ -126,9 +127,12 @@ class ExperimentValidationBySimilarity:
                                     if( t.startswith('NCT') ):
                                         ctid = t
                                         mapp[pmid].add(ctid)
+                                        ctids.add(ctid)
             for k in mapp:
                 mapp[k] = list(mapp[k])
             json.dump( mapp, open(opath, 'w') )
+            print('All ctids linked', len(ctids) )
+            print('All pubmeds linked', len(mapp) )
         else:
             mapp = json.load( open(opath, 'r') )
             for k in mapp:
@@ -502,6 +506,14 @@ class ExperimentValidationBySimilarity:
         for v in mapp.values():
             ctids = ctids.union(v)
         print('CTs', len(ctids) ) # 51769
+
+        gone = set()
+        for _id in allids:
+            path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
+            if( os.path.isfile(path) ):
+                gone.add(_id)
+        ctids = ctids - gone
+        print('new CTs:', len(ctids) )
         cts = self._retrieve_ct_studies(ctids) # available 50068
         for s in tqdm(cts): 
             _ = self._get_ct_info(s)
@@ -663,9 +675,9 @@ class ExperimentValidationBySimilarity:
     def perform_validation_biobert_allct(self):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
         #self._map_nctid_pmid_general('biobert')
-        #self._map_nctid_pmid_general_parallel('biobert')
+        self._map_nctid_pmid_general_parallel('biobert')
 
-        self.embed_save_ncict_general('biobert')
+        #self.embed_save_ncict_general('biobert')
 
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
@@ -689,9 +701,10 @@ class ExperimentValidationBySimilarity:
     
     def run(self):
         #self.perform_validation_gold()
-        #self._extract_info_ct()
+        self._extract_info_ct()
         #self.perform_validation_allct()
-        self.perform_validation_biobert_allct()
+
+        #self.perform_validation_biobert_allct()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

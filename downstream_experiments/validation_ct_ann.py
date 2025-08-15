@@ -713,9 +713,10 @@ class ExperimentValidationBySimilarity:
     def perform_validation_biobert_allct(self):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
         #self._map_nctid_pmid_general('biobert')
-        self._map_nctid_pmid_general_parallel('biobert')
+        
+        #self._map_nctid_pmid_general_parallel('biobert')
 
-        #self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
+        self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):

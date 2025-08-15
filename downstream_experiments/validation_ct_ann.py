@@ -584,7 +584,7 @@ class ExperimentValidationBySimilarity:
 
     def embed_save_ncict_general(self, mode='all', name_previous_file='', label_ct_index='general'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
-        if( os.path.exists(path) ):
+        if( os.path.exists(path) and mode=='all' ):
             self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
         else:
             k = 500
@@ -602,7 +602,7 @@ class ExperimentValidationBySimilarity:
                 if(mode=='all'):
                     allids = self.__aggregate_nctids()
                 elif(mode=='only_difference'):
-                    allids = self.__aggregate_nctids_diff()
+                    allids = self.__aggregate_nctids_diff(name_previous_file)
                 
                 dat = self.__solve_retrieve_processed_cts(allids)
                 # Found 49371
@@ -713,9 +713,9 @@ class ExperimentValidationBySimilarity:
     def perform_validation_biobert_allct(self):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
         #self._map_nctid_pmid_general('biobert')
-        self._map_nctid_pmid_general_parallel('biobert')
+        #self._map_nctid_pmid_general_parallel('biobert')
 
-        #self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
+        self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):

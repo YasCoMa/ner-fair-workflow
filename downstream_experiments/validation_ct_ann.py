@@ -584,7 +584,7 @@ class ExperimentValidationBySimilarity:
 
     def embed_save_ncict_general(self, mode='all', name_previous_file='', label_ct_index='general'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
-        if( os.path.exists(path) ):
+        if( os.path.exists(path) and mode=='all' ):
             self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
         else:
             k = 500
@@ -602,8 +602,8 @@ class ExperimentValidationBySimilarity:
                 if(mode=='all'):
                     allids = self.__aggregate_nctids()
                 elif(mode=='only_difference'):
-                    allids = self.__aggregate_nctids_diff()
-                
+                    allids = self.__aggregate_nctids_diff(name_previous_file)
+                print('new ids', len(allids))
                 dat = self.__solve_retrieve_processed_cts(allids)
                 # Found 49371
                 for _id in tqdm(dat):

@@ -544,6 +544,16 @@ class ExperimentValidationBySimilarity:
 
         return dat
 
+    def __aggregate_pmids(self):
+        allids = set()
+        for f in os.listdir(self.out):
+            if( f.startswith('general_mapping_') ):
+                sourcect = os.path.join( self.out, f)
+                df = pd.read_csv( sourcect, sep='\t' )
+                pmids = set(df.pmid.unique())
+                allids = allids.union(pmids)
+        return allids
+    
     def __aggregate_nctids(self):
         allids = set()
         for f in os.listdir(self.out):
@@ -554,7 +564,25 @@ class ExperimentValidationBySimilarity:
                 allids = allids.union(ctids)
         return allids
     
-    def embed_save_ncict_general(self, label_ct_index='general'):
+    def __aggregate_nctids_diff(self, fname):
+        allids = set()
+
+        v1 = json.load( open( os.path.join(self.out, fname) ) )
+        v2 = json.load( open( os.path.join(self.out, 'mapping_ct_pubmed.json') ) )
+
+        sv1 = set()
+        for v in v1.values():
+            sv1.update(v)
+
+        sv2 = set()
+        for v in v2.values():
+            sv2.update(v)
+
+        allids = sv2 - sv1
+
+        return allids
+
+    def embed_save_ncict_general(self, mode='all', name_previous_file='', label_ct_index='general'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
         if( os.path.exists(path) ):
             self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
@@ -563,9 +591,19 @@ class ExperimentValidationBySimilarity:
             print('Retrieving mapping')
             mapp = {}
             omap = os.path.join(self.out, f'{label_ct_index}_map_docs_vs.pkl')
-            if( not os.path.isfile(omap)):
+            if(mode=='only_difference'):
+                if(os.path.isfile(omap) ):
+                    mapp = pickle.load( open(omap, 'rb') )
+
+            if( not os.path.isfile(omap) or len(mapp) > 0):
                 docs = []
-                allids = self.__aggregate_nctids()
+
+                allids = set()
+                if(mode=='all'):
+                    allids = self.__aggregate_nctids()
+                elif(mode=='only_difference'):
+                    allids = self.__aggregate_nctids_diff()
+                
                 dat = self.__solve_retrieve_processed_cts(allids)
                 # Found 49371
                 for _id in tqdm(dat):
@@ -583,7 +621,6 @@ class ExperimentValidationBySimilarity:
                     
                 uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
                 print( len(docs))
-                mapp = {}
                 for i in range( len(docs) ):
                     mapp[ uuids[i] ] = { 'doc': docs[i], 'status': False }
                 pickle.dump( mapp, open(omap, 'wb') )
@@ -591,21 +628,22 @@ class ExperimentValidationBySimilarity:
                 mapp = pickle.load( open(omap, 'rb') )
 
             print('Saving in vector store')
-            ind = list( range( len(mapp) ) )
-            parts = np.array_split(ind, k)
-            for ids in tqdm(parts):
-                subdocs = []
-                subuuids = []
-                for i in ids:
-                    key = uuids[i]
-                    if(not mapp[ key ]['status']):
-                        subuuids.append( key )
-                        subdocs.append( mapp[ key ]['doc'] )
-                        mapp[ key ]['status'] = True
+            if( len(mapp) > 0 ):
+                ind = list( range( len(mapp) ) )
+                parts = np.array_split(ind, k)
+                for ids in tqdm(parts):
+                    subdocs = []
+                    subuuids = []
+                    for i in ids:
+                        key = uuids[i]
+                        if(not mapp[ key ]['status']):
+                            subuuids.append( key )
+                            subdocs.append( mapp[ key ]['doc'] )
+                            mapp[ key ]['status'] = True
 
-                self.gct_vs.add_documents(documents=subdocs, ids=subuuids)
-                self.gct_vs.save_local(path)
-                pickle.dump( mapp, open(omap, 'wb') )
+                    self.gct_vs.add_documents(documents=subdocs, ids=subuuids)
+                    self.gct_vs.save_local(path)
+                    pickle.dump( mapp, open(omap, 'wb') )
 
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
@@ -677,7 +715,7 @@ class ExperimentValidationBySimilarity:
         #self._map_nctid_pmid_general('biobert')
         self._map_nctid_pmid_general_parallel('biobert')
 
-        #self.embed_save_ncict_general('biobert')
+        #self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
@@ -691,7 +729,7 @@ class ExperimentValidationBySimilarity:
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/longformer_trial/longformer-base-4096-finetuned-ner/prediction/'
         self._map_nctid_pmid_general_parallel('longformer')
         
-        self.embed_save_ncict_general('longformer')
+        self.embed_save_ncict_general(mode = 'all', label_ct_index = 'longformer')
 
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
@@ -699,12 +737,31 @@ class ExperimentValidationBySimilarity:
                 sourcect = os.path.join( self.out, f)
                 self._get_predictions(sourcect, f'general_longformer_{fname}_' )
     
+    def get_diff_stats_gold_newds(self):
+        # gold ctids and pubmeds
+        sourcect = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
+        df = pd.read_csv(sourcect, sep='\t')
+        gctids = set(df.ctid.unique())
+        gpmids = set(df.pmid.unique())
+
+        # general ctids and pubmeds
+        widectids = self.__aggregate_nctids()
+        widepmids = self.__aggregate_pmids()
+
+        print('Gold - Number of CTs:', len(gctids))
+        print('Gold - Number of Articles:', len(gpmids))
+        print('All available CTs - Number of CTs:', len(widectids))
+        print('All available CTs  - Number of Articles:', len(widepmids))
+        print('Fraction gold/current for CTs', len(gctids)/len(widectids))
+        print('Fraction gold/current for Articles', len(gpmids)/len(widepmids))
+
     def run(self):
         #self.perform_validation_gold()
-        self._extract_info_ct()
+        #self._extract_info_ct()
         #self.perform_validation_allct()
+        #self.get_diff_stats_gold_newds()
 
-        #self.perform_validation_biobert_allct()
+        self.perform_validation_biobert_allct()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

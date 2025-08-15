@@ -12,17 +12,52 @@ classes:
 	TestSplit
 	targetEntity
 	data preprocessing
-	model
+	model ( name, version, parameters, date, format )
 	evaluation measure
-	accuracy
-	precision
-	recall
-	f1
-	mcc (subtype micro, macro avg)
+	accuracy http://purl.obolibrary.org/obo/STATO_0000415
+	precision http://purl.obolibrary.org/obo/STATO_0000416
+	recall http://purl.obolibrary.org/obo/STATO_0000233
+	auc roc http://purl.obolibrary.org/obo/STATO_0000608
+	f1 http://purl.obolibrary.org/obo/STATO_0000628
+	mcc (subtype micro, macro avg) http://purl.obolibrary.org/obo/STATO_0000524
 
 relations:
 	owl:subClassOf - NLPExperiment => MLExperiment
-	self:finetunedFrom - model => large language model (http://id.nlm.nih.gov/mesh/D000098342)
+	self:finetunedFrom - model => large language model (LLM) (http://id.nlm.nih.gov/mesh/D000098342)
 	dc:subject - Computational workflow => Natural language processing (http://edamontology.org/topic_0218) , Workflows ( http://edamontology.org/topic_0769 )
 	self:hasTask - Computational workflow => Named entity recognition ( http://edamontology.org/operation_3280 )
-	dc:subject - Experiment
+	dc:subject - Experiment 
+
+slso - http://www.w3.org/2006/vcard/ns#hasValue
+stato - http://purl.obolibrary.org/obo/
+
+Experiment -> self:hasDataset -> LabeledDataset
+self:NLPExperiment subclassof self:mlexperiment subclassof xmlpo:experiment
+Experiment rdf:type self:nlpExperiment
+experiment realizes goal
+experiment executedBy workflow
+workflow contains DataCleaning, DataSplit, train, test, mlModelEvaluation
+modelRoot rdf:type LLM
+model rdf:type LLM
+model self:finetunedFrom modelRoot
+model hasParameter parameterSettings
+model hasVersion literal
+model hasReplicateNumber literal
+parameterSettings hasParameterCharacteristic ParameterCharacteristic
+pc1 rdf:type ParameterCharacteristic
+pc1 rdfs:label learning rate
+pc1 slso:hasValue 0.001
+DataCleaning executes PreprocessImplementation
+DataSplit executes PreprocessImplementation
+Train executes SupervisedLearningApproachImplementation
+Train self:generatesModel model
+model self:describedBy ModelCharacteristic
+Test executes SupervisedLearningApproachImplementation
+MLModelEvaluation executes MLModelImplementation
+MLModelImplementation implements classificationAlgorithm (mlapproach)
+classificationAlgorithm describedBy MLApproachCharacteristic
+classificationAlgorithm hasOutput ClassPredictionEvaluationMeasure
+stato:accuracy subClassOf ClassPredictionEvaluationMeasure
+PreprocessImplementation generatesDataset LabeledDataset
+LabeledDataset datasetHasData TrainSet, TestSet, self:ValidationSet
+self:ValidationSet subClassOf xmlpo:PreprocessedData

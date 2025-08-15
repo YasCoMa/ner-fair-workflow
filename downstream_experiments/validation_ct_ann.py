@@ -629,6 +629,7 @@ class ExperimentValidationBySimilarity:
 
             print('Saving in vector store')
             if( len(mapp) > 0 ):
+                uuids = list(mapp.keys())
                 ind = list( range( len(mapp) ) )
                 parts = np.array_split(ind, k)
                 for ids in tqdm(parts):
@@ -641,9 +642,10 @@ class ExperimentValidationBySimilarity:
                             subdocs.append( mapp[ key ]['doc'] )
                             mapp[ key ]['status'] = True
 
-                    self.gct_vs.add_documents(documents=subdocs, ids=subuuids)
-                    self.gct_vs.save_local(path)
-                    pickle.dump( mapp, open(omap, 'wb') )
+                    if( len(subdocs) > 0 ):
+                        self.gct_vs.add_documents(documents=subdocs, ids=subuuids)
+                        self.gct_vs.save_local(path)
+                        pickle.dump( mapp, open(omap, 'wb') )
 
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')

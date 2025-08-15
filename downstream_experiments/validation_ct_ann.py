@@ -693,7 +693,7 @@ class ExperimentValidationBySimilarity:
         f.close()
 
         df = pd.read_csv( sourcect, sep='\t' )
-        for i in df.index:
+        for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
             pmid = df.loc[i, 'pmid']
             test_text = df.loc[i, 'text']
@@ -718,14 +718,14 @@ class ExperimentValidationBySimilarity:
         
         #self._map_nctid_pmid_general_parallel('biobert')
 
-        self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
+        #self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
         for f in os.listdir(self.out):
             if( f.startswith('general_mapping_') ):
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                #self._get_predictions(sourcect, f'general_biobert_{fname}_' )
+                self._get_predictions(sourcect, f'biobert_{fname}' )
         
     
     def perform_validation_longformer_allct(self):

@@ -698,7 +698,7 @@ class ExperimentValidationBySimilarity:
             pmid = df.loc[i, 'pmid']
             test_text = df.loc[i, 'text']
             test_label = df.loc[i, 'label']
-            results = self._send_query(human_text, ctid)
+            results = self._send_query(test_text, ctid)
             for r in results:
                 found_ct_text = r['hit']
                 found_ct_label = r['ct_label']

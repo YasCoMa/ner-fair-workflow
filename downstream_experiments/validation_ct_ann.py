@@ -867,7 +867,7 @@ class ExperimentValidationBySimilarity:
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
                 #self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
-                self._get_predictions_parallel( f'{label_aux}_biobert_{fname}' )
+                self._get_predictions_parallel( sourcect, f'{label_aux}_biobert_{fname}' )
         
     def launch_parallel_prediction(self):
         for i in range(5):

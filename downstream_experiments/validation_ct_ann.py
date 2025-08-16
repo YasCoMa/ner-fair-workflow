@@ -753,7 +753,10 @@ class ExperimentValidationBySimilarity:
                 print('---- in ', sourcect)
                 self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
         
-    
+    def launch_parallel_prediction(self):
+        for i in range(5):
+            os.system( f"nohup python3 ner_subproj/downstream_experiments/validation_ct_ann.py {i} > out_pred_{i}.log 2>&1 &" )
+
     def perform_validation_longformer_allct(self):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/longformer_trial/longformer-base-4096-finetuned-ner/prediction/'
         self._map_nctid_pmid_general_parallel('longformer')
@@ -790,7 +793,11 @@ class ExperimentValidationBySimilarity:
         #self.perform_validation_allct()
         #self.get_diff_stats_gold_newds()
 
-        self.perform_validation_biobert_allct()
+        if( len(sys.argv) > 1):
+            if( sys.argv[1] == 'launch' ):
+                self.launch_parallel_prediction()
+        else:
+            self.perform_validation_biobert_allct()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

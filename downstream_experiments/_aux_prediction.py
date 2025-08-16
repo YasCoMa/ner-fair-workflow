@@ -12,7 +12,7 @@ task_id = sys.argv[-2]
 task_file = sys.argv[-1]
 subset = pickle.load(open(task_file, 'rb'))[task_id]
 
-ctlib = json.load(pathlib)
+ctlib = json.load( open(pathlib, 'r') )
 
 def _send_query_fast( snippet, ctlib, ctid):
     cutoff = 0.9
@@ -30,13 +30,13 @@ def _send_query_fast( snippet, ctlib, ctid):
                         clss = '-m90'
                     results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
         else:
-            score = Levenshtein.ratio(snippet, ct[k])
+            score = Levenshtein.ratio(ct[k], ct[k])
             if(score > cutoff):
                 if(score>0.80 and score<0.90):
                     clss = '-m80'
                 if(score>.90):
                     clss = '-m90'
-                results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
+                results.append( { 'hit': text, 'ct_label': k, 'score': f'{score}-{clss}' } )
 
     return results
 

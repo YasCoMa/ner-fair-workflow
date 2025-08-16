@@ -540,7 +540,7 @@ class ExperimentValidationBySimilarity:
             if( os.path.isfile(path) ):
                 dat[_id] = json.load( open(path, 'r') )
             else:
-            x    not_found += 1
+                not_found += 1
         print( 'not found', not_found) # 1662
 
         return dat

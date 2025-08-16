@@ -707,7 +707,7 @@ class ExperimentValidationBySimilarity:
 
             json.dump( dat, open(pathout,'w') )
 
-        return dat, path
+        return dat, pathout
 
     def _send_query_fast(self, snippet, ctlib, ctid):
         cutoff = 0.9

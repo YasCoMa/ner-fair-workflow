@@ -592,6 +592,8 @@ class ExperimentValidationBySimilarity:
             mapp = {}
             omap = os.path.join(self.out, f'{label_ct_index}_map_docs_vs.pkl')
             if(mode=='only_difference'):
+                self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
+                
                 if(os.path.isfile(omap) ):
                     mapp = pickle.load( open(omap, 'rb') )
 
@@ -692,6 +694,9 @@ class ExperimentValidationBySimilarity:
         f.write("ctid\tpmid\ttest_label\tfound_ct_label\ttest_text\tfound_ct_text\tscore\n")
         f.close()
 
+        lines = []
+        idx = 0
+        k = 10000
         df = pd.read_csv( sourcect, sep='\t' )
         for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
@@ -703,8 +708,17 @@ class ExperimentValidationBySimilarity:
                 found_ct_text = r['hit']
                 found_ct_label = r['ct_label']
                 score = r['score']
-                with open(res, 'a') as g:
-                    g.write( f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}\n")
+                line = f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}"
+
+                lines.append(line)
+                if(idx%k==0 and len(lines)>0 ):
+                    with open(res, 'a') as g:
+                        g.write( ('\n'.join(lines))+'\n' )
+                    lines = []
+
+        if( len(lines)>0 ):
+            with open(res, 'a') as g:
+                g.write( ('\n'.join(lines))+'\n' )
                     
     def perform_validation_gold(self):
         self._map_nctid_pmid_gold()

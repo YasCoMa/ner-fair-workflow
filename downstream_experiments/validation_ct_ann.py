@@ -789,7 +789,7 @@ class ExperimentValidationBySimilarity:
             with open(res, 'a') as g:
                 g.write( ('\n'.join(lines))+'\n' )
 
-    def _get_predictions_parallel(self, label_exp):
+    def _get_predictions_parallel(self, sourcect, label_result=''):
         result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(result_path) ):

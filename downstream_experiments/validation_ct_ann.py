@@ -622,7 +622,7 @@ class ExperimentValidationBySimilarity:
                                 docs.append(doc)
                     
                 for k in mapp:
-                    if( mapp[k]['doc'].metadata.ctid in allids ):
+                    if( mapp[k]['doc'].metadata['ctid'] in allids ):
                         del mapp[k]
 
                 uuids = [ str(uuid4()) for _ in range( len(docs) ) ]

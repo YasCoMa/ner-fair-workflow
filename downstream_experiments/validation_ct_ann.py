@@ -735,7 +735,7 @@ class ExperimentValidationBySimilarity:
 
         return results
 
-    def _get_predictions(self, sourcect, label_result=''):
+    def _get_predictions(self, sourcect, ctlib, pathlib, label_result=''):
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(res) ):
@@ -757,8 +757,6 @@ class ExperimentValidationBySimilarity:
         idx = 0
         k = 10000
         df = pd.read_csv( sourcect, sep='\t' )
-        allids = set(df.ctid.values)
-        ctlib, pathlib = self.__load_cts_library(allids)
 
         for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
@@ -789,7 +787,7 @@ class ExperimentValidationBySimilarity:
             with open(res, 'a') as g:
                 g.write( ('\n'.join(lines))+'\n' )
 
-    def _get_predictions_parallel(self, sourcect, label_result=''):
+    def _get_predictions_parallel(self, sourcect, ctlib, pathlib, label_result=''):
         result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(result_path) ):
@@ -808,11 +806,9 @@ class ExperimentValidationBySimilarity:
             f.close()
 
         elements = []
-        df = pd.read_csv( sourcect, sep='\t' )
-        allids = set(df.ctid.values)
-        ctlib, pathlib = self.__load_cts_library(allids)
         model_index = re.findall( r'_model_[0-9]_', sourcect )[0][1:-1]
 
+        df = pd.read_csv( sourcect, sep='\t' )
         for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
             pmid = df.loc[i, 'pmid']
@@ -856,6 +852,9 @@ class ExperimentValidationBySimilarity:
 
         self.embed_save_ncict_general(mode = 'all', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
+        widectids = self.__aggregate_nctids()
+        ctlib, pathlib = self.__load_cts_library(widectids)
+        
         for f in os.listdir(self.out):
             flag = True
             label_aux = ''
@@ -866,8 +865,8 @@ class ExperimentValidationBySimilarity:
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                #self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
-                self._get_predictions_parallel( sourcect, f'{label_aux}_biobert_{fname}' )
+                #self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
+                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
         
     def launch_parallel_prediction(self):
         for i in range(5):
@@ -883,7 +882,7 @@ class ExperimentValidationBySimilarity:
             if( f.startswith('general_mapping_') ):
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
-                self._get_predictions(sourcect, f'general_longformer_{fname}_' )
+                self._get_predictions(sourcect, ctlib, pathlib, f'general_longformer_{fname}_' )
     
     def get_diff_stats_gold_newds(self):
         # gold ctids and pubmeds

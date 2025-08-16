@@ -15,7 +15,7 @@ subset = pickle.load(open(task_file, 'rb'))[task_id]
 ctlib = json.load( open(pathlib, 'r') )
 
 def _send_query_fast( snippet, ctlib, ctid):
-    cutoff = 0.9
+    cutoff = 0.8
     results = []
     ct = ctlib[ctid]
     for k in ct:
@@ -24,7 +24,7 @@ def _send_query_fast( snippet, ctlib, ctid):
             if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
                 for t in ct[k]:
                     score = Levenshtein.ratio(snippet, t)
-                    if(score > cutoff):
+                    if(score >= cutoff):
                         if(score>=0.80 and score<0.90):
                             clss = 'm80'
                         elif(score>=0.90 and score<1):
@@ -32,7 +32,7 @@ def _send_query_fast( snippet, ctlib, ctid):
                         results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
             else:
                 score = Levenshtein.ratio( snippet, str(ct[k]) )
-                if(score > cutoff):
+                if(score >= cutoff):
                     if(score>0.80 and score<0.90):
                         clss = 'm80'
                     elif(score>=0.90 and score<1):
@@ -64,13 +64,13 @@ def exec(subset, ctlib, model_index):
                 score = r['score']
                 line = f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}"
                 lines.append(line)
-                if(  len(lines) %10000 == 0 ):
+                if(  len(lines) % lap == 0 ):
                     with open( path_partial, 'a' ) as g:
                         g.write( ('\n'.join(lines) )+'\n' )
                     lines = []
             
         i += 1
-        if( i%10000 == 0 ):
+        if( i % lap == 0 ):
             logger.info(f"\t\tEntry {i}/{len(subset)}")
 
     if( len(lines) > 0 ):

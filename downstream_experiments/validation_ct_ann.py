@@ -693,11 +693,46 @@ class ExperimentValidationBySimilarity:
             #print(f"* [SIM={score:3f}] {res.page_content} [{res.metadata}]")
         return results
 
+    def __load_cts_library(self, allids):
+        dat = {}
+        for _id in allids:
+            path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
+            if( os.path.isfile(path) ):
+                dat[_id] = json.load( open(path, 'r') )
+        return dat
+
+    def _send_query_fast(self, snippet, ctlib, ctid):
+        cutoff = 0.9
+        results = []
+        ct = ctlib[ctid]
+        for k in ct:
+            clss = 'exact'
+            if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
+                for t in ct[k]:
+                    score = Levenshtein.ratio(snippet, t)
+                    if(score > cutoff):
+                        if(score>0.80 and score<0.90):
+                            clss = '-m80'
+                        if(score>0.90):
+                            clss = '-m90'
+                        results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
+            else:
+                score = Levenshtein.ratio(snippet, ct[k])
+                if(score > cutoff):
+                    if(score>0.80 and score<0.90):
+                        clss = '-m80'
+                    if(score>.90):
+                        clss = '-m90'
+                    results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
+
+        return results
+
     def _get_predictions(self, sourcect, label_result=''):
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(res) ):
             df = pd.read_csv( sourcect, sep='\t' )
+            gone = set(df.index.values)
             for i in tqdm(df.index):
                 ctid = df.loc[i, 'ctid']
                 pmid = df.loc[i, 'pmid']
@@ -715,15 +750,22 @@ class ExperimentValidationBySimilarity:
         idx = 0
         k = 10000
         df = pd.read_csv( sourcect, sep='\t' )
+        allids = set(df.ctid.values)
+        ctlib = self.__load_cts_library(allids)
+
         for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
             pmid = df.loc[i, 'pmid']
             test_text = df.loc[i, 'text']
             test_label = df.loc[i, 'label']
-            
+
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
             if( not aux in gone):
-                results = self._send_query(test_text, ctid)
+                gone.add(aux)
+                results = self._send_query_fast( test_text, ctlib, ctid)
+                if( len(results) == 0 ):
+                    results = self._send_query(test_text, ctid)
+
                 for r in results:
                     found_ct_text = r['hit']
                     found_ct_label = r['ct_label']

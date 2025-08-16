@@ -10,10 +10,10 @@ from tqdm import tqdm
 from uuid import uuid4
 
 try:
-from langchain_ollama import OllamaEmbeddings
-from langchain_community.docstore.in_memory import InMemoryDocstore
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
+    from langchain_ollama import OllamaEmbeddings
+    from langchain_community.docstore.in_memory import InMemoryDocstore
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
 except:
     pass
 

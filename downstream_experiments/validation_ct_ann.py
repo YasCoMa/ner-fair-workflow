@@ -793,8 +793,7 @@ class ExperimentValidationBySimilarity:
         #self.perform_validation_allct()
         #self.get_diff_stats_gold_newds()
 
-        if( len(sys.argv) > 1):
-            if( sys.argv[1] == 'launch' ):
+        if( len(sys.argv) > 1 and sys.argv[1] == 'launch' ):
                 self.launch_parallel_prediction()
         else:
             self.perform_validation_biobert_allct()

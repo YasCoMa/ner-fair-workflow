@@ -621,7 +621,8 @@ class ExperimentValidationBySimilarity:
                                 doc = Document( page_content = str(text), metadata = { "source": str(_id), "ctid": _id, "label": label } )
                                 docs.append(doc)
                     
-                for k in mapp:
+                keys = set(mapp)
+                for k in keys:
                     if( mapp[k]['doc'].metadata['ctid'] in allids ):
                         del mapp[k]
 

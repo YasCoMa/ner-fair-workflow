@@ -587,7 +587,7 @@ class ExperimentValidationBySimilarity:
         if( os.path.exists(path) and mode=='all' ):
             self.gct_vs = FAISS.load_local( path, self.embeddings, allow_dangerous_deserialization=True )
         else:
-            k = 500
+            nparts = 500
             print('Retrieving mapping')
             mapp = {}
             omap = os.path.join(self.out, f'{label_ct_index}_map_docs_vs.pkl')
@@ -627,7 +627,7 @@ class ExperimentValidationBySimilarity:
                         del mapp[k]
 
                 uuids = [ str(uuid4()) for _ in range( len(docs) ) ]
-                print( len(docs))
+                print('new docs to be added:', len(docs))
                 for i in range( len(docs) ):
                     mapp[ uuids[i] ] = { 'doc': docs[i], 'status': False }
                 pickle.dump( mapp, open(omap, 'wb') )
@@ -638,7 +638,7 @@ class ExperimentValidationBySimilarity:
             if( len(mapp) > 0 ):
                 uuids = list(mapp.keys())
                 ind = list( range( len(mapp) ) )
-                parts = np.array_split(ind, k)
+                parts = np.array_split(ind, nparts)
                 for ids in tqdm(parts):
                     subdocs = []
                     subuuids = []

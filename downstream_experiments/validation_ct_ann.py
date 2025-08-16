@@ -1,9 +1,10 @@
 import os
-import sys
 import re
+import sys
 import json
 import faiss
 import pickle
+import Levenshtein
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -210,7 +211,7 @@ class ExperimentValidationBySimilarity:
                     for pmid in tqdm(mapp):
                         elements.append( [pmid, mapp, treated] )
 
-                    job_name = f"validation_parallel_{fname}"
+                    job_name = f"mapping_parallel_{fname}"
                     job_path = os.path.join( self.out, job_name )
                     chunk_size = 1000
                     script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_mapping.py')
@@ -694,12 +695,19 @@ class ExperimentValidationBySimilarity:
         return results
 
     def __load_cts_library(self, allids):
+        path = os.path.join(slef.out, 'ctlib.json')
         dat = {}
-        for _id in allids:
-            path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
-            if( os.path.isfile(path) ):
-                dat[_id] = json.load( open(path, 'r') )
-        return dat
+        if( os.path.isfile(path) ):
+            dat = json.load( open(path,'r') )
+        else:
+            for _id in allids:
+                path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
+                if( os.path.isfile(path) ):
+                    dat[_id] = json.load( open(path, 'r') )
+
+            json.load( dat, open(path,'w') )
+
+        return dat, path
 
     def _send_query_fast(self, snippet, ctlib, ctid):
         cutoff = 0.9
@@ -731,13 +739,12 @@ class ExperimentValidationBySimilarity:
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(res) ):
-            df = pd.read_csv( sourcect, sep='\t' )
-            gone = set(df.index.values)
+            df = pd.read_csv( res, sep='\t' )
             for i in tqdm(df.index):
                 ctid = df.loc[i, 'ctid']
                 pmid = df.loc[i, 'pmid']
-                test_text = df.loc[i, 'text']
-                test_label = df.loc[i, 'label']
+                test_text = df.loc[i, 'test_text']
+                test_label = df.loc[i, 'test_label']
 
                 line = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
                 gone.add(line)
@@ -751,7 +758,7 @@ class ExperimentValidationBySimilarity:
         k = 10000
         df = pd.read_csv( sourcect, sep='\t' )
         allids = set(df.ctid.values)
-        ctlib = self.__load_cts_library(allids)
+        ctlib, pathlib = self.__load_cts_library(allids)
 
         for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
@@ -781,6 +788,57 @@ class ExperimentValidationBySimilarity:
         if( len(lines)>0 ):
             with open(res, 'a') as g:
                 g.write( ('\n'.join(lines))+'\n' )
+
+    def _get_predictions_parallel(self, label_exp):
+        result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
+        gone = set()
+        if( os.path.isfile(result_path) ):
+            df = pd.read_csv( res, sep='\t' )
+            for i in tqdm(df.index):
+                ctid = df.loc[i, 'ctid']
+                pmid = df.loc[i, 'pmid']
+                test_text = df.loc[i, 'test_text']
+                test_label = df.loc[i, 'test_label']
+
+                line = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
+                gone.add(line)
+        else:
+            f = open(result_path, 'w')
+            f.write("ctid\tpmid\ttest_label\tfound_ct_label\ttest_text\tfound_ct_text\tscore\n")
+            f.close()
+
+        elements = []
+        df = pd.read_csv( sourcect, sep='\t' )
+        allids = set(df.ctid.values)
+        ctlib, pathlib = self.__load_cts_library(allids)
+        model_index = re.findall( r'_model_[0-9]_', sourcect )[0][1:-1]
+
+        for i in tqdm(df.index):
+            ctid = df.loc[i, 'ctid']
+            pmid = df.loc[i, 'pmid']
+            test_text = df.loc[i, 'text']
+            test_label = df.loc[i, 'label']
+
+            aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
+            elements.append( [ctid, pmid, test_text, test_label] )
+
+        job_name = f"prediction_parallel_{fname}"
+        job_path = os.path.join( self.out, job_name )
+        chunk_size = 1000
+        script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
+        command = f"python3 {pathlib} {script_path} {model_index}"
+        config = self.config_path
+        prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
+
+        test_path_partial = os.path.join( job_path, f'part-task-1.tsv' )
+        if( os.path.exists(test_path_partial) ):
+            path_partial = os.path.join( job_path, f'part-task-*.tsv' )
+            cmdStr = 'for i in '+path_partial+'; do cat $i; done | sort -u >> '+result_path
+            execAndCheck(cmdStr)
+
+            cmdStr = 'for i in '+path_partial+'; do rm $i; done '
+            execAndCheck(cmdStr)
+
                     
     def perform_validation_gold(self):
         self._map_nctid_pmid_gold()
@@ -808,7 +866,8 @@ class ExperimentValidationBySimilarity:
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
+                #self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
+                self._get_predictions_parallel( f'{label_aux}_biobert_{fname}' )
         
     def launch_parallel_prediction(self):
         for i in range(5):

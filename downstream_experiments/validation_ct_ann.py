@@ -695,7 +695,7 @@ class ExperimentValidationBySimilarity:
         return results
 
     def __load_cts_library(self, allids):
-        path = os.path.join(slef.out, 'ctlib.json')
+        path = os.path.join(self.out, 'ctlib.json')
         dat = {}
         if( os.path.isfile(path) ):
             dat = json.load( open(path,'r') )
@@ -705,7 +705,7 @@ class ExperimentValidationBySimilarity:
                 if( os.path.isfile(path) ):
                     dat[_id] = json.load( open(path, 'r') )
 
-            json.load( dat, open(path,'w') )
+            json.dump( dat, open(path,'w') )
 
         return dat, path
 

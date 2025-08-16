@@ -720,17 +720,17 @@ class ExperimentValidationBySimilarity:
                     score = Levenshtein.ratio(snippet, t)
                     if(score > cutoff):
                         if(score>0.80 and score<0.90):
-                            clss = '-m80'
-                        if(score>0.90):
-                            clss = '-m90'
+                            clss = 'm80'
+                        elif(score>=0.90 and score<1):
+                            clss = 'm90'
                         results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
             else:
                 score = Levenshtein.ratio(snippet, ct[k])
                 if(score > cutoff):
                     if(score>0.80 and score<0.90):
-                        clss = '-m80'
-                    if(score>.90):
-                        clss = '-m90'
+                        clss = 'm80'
+                    elif(score>=0.90 and score<1):
+                        clss = 'm90'
                     results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
 
         return results

@@ -737,9 +737,9 @@ class ExperimentValidationBySimilarity:
         
         #self._map_nctid_pmid_general_parallel('biobert')
 
-        self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
+        #self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
-        #self.embed_save_ncict_general(mode = 'all', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
+        self.embed_save_ncict_general(mode = 'all', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
         for f in os.listdir(self.out):
             flag = True
@@ -751,7 +751,7 @@ class ExperimentValidationBySimilarity:
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                #self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
+                self._get_predictions(sourcect, f'{label_aux}_biobert_{fname}' )
         
     
     def perform_validation_longformer_allct(self):

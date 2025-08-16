@@ -824,7 +824,7 @@ class ExperimentValidationBySimilarity:
 
         job_name = f"prediction_parallel_{fname}"
         job_path = os.path.join( self.out, job_name )
-        chunk_size = 1000
+        chunk_size = 10000
         script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
         command = f"python3 {pathlib} {script_path} {model_index}"
         config = self.config_path

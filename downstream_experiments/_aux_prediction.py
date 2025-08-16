@@ -19,25 +19,27 @@ def _send_query_fast( snippet, ctlib, ctid):
     results = []
     ct = ctlib[ctid]
     for k in ct:
-        clss = 'exact'
-        if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
-            for t in ct[k]:
-                score = Levenshtein.ratio(snippet, t)
+        try:
+            clss = 'exact'
+            if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
+                for t in ct[k]:
+                    score = Levenshtein.ratio(snippet, t)
+                    if(score > cutoff):
+                        if(score>=0.80 and score<0.90):
+                            clss = 'm80'
+                        elif(score>=0.90 and score<1):
+                            clss = 'm90'
+                        results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
+            else:
+                score = Levenshtein.ratio( snippet, str(ct[k]) )
                 if(score > cutoff):
-                    if(score>=0.80 and score<0.90):
+                    if(score>0.80 and score<0.90):
                         clss = 'm80'
                     elif(score>=0.90 and score<1):
                         clss = 'm90'
-                    results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
-        else:
-            score = Levenshtein.ratio(ct[k], ct[k])
-            if(score > cutoff):
-                if(score>0.80 and score<0.90):
-                    clss = 'm80'
-                elif(score>=0.90 and score<1):
-                    clss = 'm90'
-                results.append( { 'hit': text, 'ct_label': k, 'score': f'{score}-{clss}' } )
-
+                    results.append( { 'hit': text, 'ct_label': k, 'score': f'{score}-{clss}' } )
+        except:
+            pass
     return results
 
 def exec(subset, ctlib, model_index):

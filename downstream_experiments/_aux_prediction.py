@@ -25,17 +25,17 @@ def _send_query_fast( snippet, ctlib, ctid):
                 score = Levenshtein.ratio(snippet, t)
                 if(score > cutoff):
                     if(score>0.80 and score<0.90):
-                        clss = '-m80'
+                        clss = 'm80'
                     if(score>0.90):
-                        clss = '-m90'
+                        clss = 'm90'
                     results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
         else:
             score = Levenshtein.ratio(ct[k], ct[k])
             if(score > cutoff):
                 if(score>0.80 and score<0.90):
-                    clss = '-m80'
+                    clss = 'm80'
                 if(score>.90):
-                    clss = '-m90'
+                    clss = 'm90'
                 results.append( { 'hit': text, 'ct_label': k, 'score': f'{score}-{clss}' } )
 
     return results

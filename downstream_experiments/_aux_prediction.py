@@ -51,7 +51,7 @@ def exec(subset, ctlib, model_index):
     lines = []
     for el in subset:
         ctid, pmid, test_text, test_label = el
-        results = self._send_query_fast( test_text, ctlib, ctid)
+        results = _send_query_fast( test_text, ctlib, ctid)
 
         for r in results:
             found_ct_text = r['hit']

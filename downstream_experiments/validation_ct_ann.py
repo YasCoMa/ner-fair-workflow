@@ -822,11 +822,11 @@ class ExperimentValidationBySimilarity:
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
             elements.append( [ctid, pmid, test_text, test_label] )
 
-        job_name = f"prediction_parallel_{fname}"
+        job_name = f"prediction_parallel_{model_index}"
         job_path = os.path.join( self.out, job_name )
         chunk_size = 10000
         script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
-        command = f"python3 {pathlib} {script_path} {model_index}"
+        command = f"python3 {script_path} {pathlib} {model_index}"
         config = self.config_path
         prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
 

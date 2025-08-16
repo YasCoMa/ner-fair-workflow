@@ -695,17 +695,17 @@ class ExperimentValidationBySimilarity:
         return results
 
     def __load_cts_library(self, allids):
-        path = os.path.join(self.out, 'ctlib.json')
+        pathout = os.path.join(self.out, 'ctlib.json')
         dat = {}
-        if( os.path.isfile(path) ):
-            dat = json.load( open(path,'r') )
+        if( os.path.isfile(pathout) ):
+            dat = json.load( open(pathout,'r') )
         else:
             for _id in allids:
                 path = os.path.join( self.out_ct_processed, f"proc_ct_{_id}.json" )
                 if( os.path.isfile(path) ):
                     dat[_id] = json.load( open(path, 'r') )
 
-            json.dump( dat, open(path,'w') )
+            json.dump( dat, open(pathout,'w') )
 
         return dat, path
 

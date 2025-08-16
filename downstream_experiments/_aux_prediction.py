@@ -41,6 +41,8 @@ def _send_query_fast( snippet, ctlib, ctid):
     return results
 
 def exec(subset, ctlib, model_index):
+    cts_available = set(ctlib)
+
     path_partial = os.path.join( os.getcwd(), f'part-task-{task_id}.tsv' )
     
     logging.basicConfig( format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO )
@@ -51,18 +53,19 @@ def exec(subset, ctlib, model_index):
     lines = []
     for el in subset:
         ctid, pmid, test_text, test_label = el
-        results = _send_query_fast( test_text, ctlib, ctid)
+        if( ctid in cts_available ):
+            results = _send_query_fast( test_text, ctlib, ctid)
 
-        for r in results:
-            found_ct_text = r['hit']
-            found_ct_label = r['ct_label']
-            score = r['score']
-            line = f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}"
-            lines.append(line)
-            if(  len(lines) %10000 == 0 ):
-                with open( path_partial, 'a' ) as g:
-                    g.write( ('\n'.join(lines) )+'\n' )
-                lines = []
+            for r in results:
+                found_ct_text = r['hit']
+                found_ct_label = r['ct_label']
+                score = r['score']
+                line = f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}"
+                lines.append(line)
+                if(  len(lines) %10000 == 0 ):
+                    with open( path_partial, 'a' ) as g:
+                        g.write( ('\n'.join(lines) )+'\n' )
+                    lines = []
             
         i += 1
         if( i%10000 == 0 ):

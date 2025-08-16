@@ -10,10 +10,10 @@ from tqdm import tqdm
 from uuid import uuid4
 
 try:
-    from langchain_ollama import OllamaEmbeddings
-    from langchain_community.docstore.in_memory import InMemoryDocstore
-    from langchain_community.vectorstores import FAISS
-    from langchain_core.documents import Document
+from langchain_ollama import OllamaEmbeddings
+from langchain_community.docstore.in_memory import InMemoryDocstore
+from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
 except:
     pass
 
@@ -539,7 +539,7 @@ class ExperimentValidationBySimilarity:
             if( os.path.isfile(path) ):
                 dat[_id] = json.load( open(path, 'r') )
             else:
-                not_found += 1
+            x    not_found += 1
         print( 'not found', not_found) # 1662
 
         return dat
@@ -613,7 +613,7 @@ class ExperimentValidationBySimilarity:
                     for label in snippets:
                         if( label not in ['inclusion', 'exclusion'] ):
                             text = snippets[label]
-                            if( isinstance(text, set) ):
+                            if( isinstance(text, set) or isinstance(text, list) ):
                                 for t in text:
                                     doc = Document( page_content = t, metadata = { "source": str(_id), "ctid": _id, "label": label } )
                                     docs.append(doc)
@@ -695,9 +695,21 @@ class ExperimentValidationBySimilarity:
 
     def _get_predictions(self, sourcect, label_result=''):
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
-        f = open(res, 'w')
-        f.write("ctid\tpmid\ttest_label\tfound_ct_label\ttest_text\tfound_ct_text\tscore\n")
-        f.close()
+        gone = set()
+        if( os.path.isfile(res) ):
+            df = pd.read_csv( sourcect, sep='\t' )
+            for i in tqdm(df.index):
+                ctid = df.loc[i, 'ctid']
+                pmid = df.loc[i, 'pmid']
+                test_text = df.loc[i, 'text']
+                test_label = df.loc[i, 'label']
+
+                line = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
+                gone.add(line)
+        else:
+            f = open(res, 'w')
+            f.write("ctid\tpmid\ttest_label\tfound_ct_label\ttest_text\tfound_ct_text\tscore\n")
+            f.close()
 
         lines = []
         idx = 0
@@ -708,18 +720,21 @@ class ExperimentValidationBySimilarity:
             pmid = df.loc[i, 'pmid']
             test_text = df.loc[i, 'text']
             test_label = df.loc[i, 'label']
-            results = self._send_query(test_text, ctid)
-            for r in results:
-                found_ct_text = r['hit']
-                found_ct_label = r['ct_label']
-                score = r['score']
-                line = f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}"
+            
+            aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
+            if( not aux in gone):
+                results = self._send_query(test_text, ctid)
+                for r in results:
+                    found_ct_text = r['hit']
+                    found_ct_label = r['ct_label']
+                    score = r['score']
+                    line = f"{ctid}\t{pmid}\t{test_label}\t{found_ct_label}\t{test_text}\t{found_ct_text}\t{score}"
 
-                lines.append(line)
-                if(idx%k==0 and len(lines)>0 ):
-                    with open(res, 'a') as g:
-                        g.write( ('\n'.join(lines))+'\n' )
-                    lines = []
+                    lines.append(line)
+                    if(idx%k==0 and len(lines)>0 ):
+                        with open(res, 'a') as g:
+                            g.write( ('\n'.join(lines))+'\n' )
+                        lines = []
 
         if( len(lines)>0 ):
             with open(res, 'a') as g:

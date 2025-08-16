@@ -793,7 +793,7 @@ class ExperimentValidationBySimilarity:
         result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(result_path) ):
-            df = pd.read_csv( res, sep='\t' )
+            df = pd.read_csv( result_path, sep='\t' )
             for i in tqdm(df.index):
                 ctid = df.loc[i, 'ctid']
                 pmid = df.loc[i, 'pmid']

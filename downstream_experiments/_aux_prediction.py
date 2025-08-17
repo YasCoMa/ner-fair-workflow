@@ -15,29 +15,23 @@ subset = pickle.load(open(task_file, 'rb'))[task_id]
 ctlib = json.load( open(pathlib, 'r') )
 
 def _send_query_fast( snippet, ctlib, ctid):
-    cutoff = 0.8
+    cutoff = 0.3
     results = []
     ct = ctlib[ctid]
     for k in ct:
         try:
-            clss = 'exact'
+            elements = [ ct[k] ]
             if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
-                for t in ct[k]:
-                    score = Levenshtein.ratio(snippet, t)
-                    if(score >= cutoff):
-                        if(score>=0.80 and score<0.90):
-                            clss = 'm80'
-                        elif(score>=0.90 and score<1):
-                            clss = 'm90'
-                        results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
-            else:
-                score = Levenshtein.ratio( snippet, str(ct[k]) )
+                elements = ct[k]
+                
+            for el in elements:
+                el = str(el)
+                clss = 'exact'
+                score = Levenshtein.ratio( snippet, el )
                 if(score >= cutoff):
-                    if(score>0.80 and score<0.90):
-                        clss = 'm80'
-                    elif(score>=0.90 and score<1):
-                        clss = 'm90'
-                    results.append( { 'hit': text, 'ct_label': k, 'score': f'{score}-{clss}' } )
+                    if( score < 1):
+                        clss = 'm'+str(score).split('.')[1][0]+'0'
+                    results.append( { 'hit': el, 'ct_label': k, 'score': f'{score}-{clss}' } )
         except:
             pass
     return results

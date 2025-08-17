@@ -866,8 +866,10 @@ class ExperimentValidationBySimilarity:
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
-                #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
+                #self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
+                
+                label_aux = 'predlev'
+                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
         
     def launch_parallel_prediction(self):
         for i in range(5):

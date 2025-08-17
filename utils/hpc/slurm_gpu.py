@@ -1,5 +1,5 @@
 
-t jobs to an HPC cluster through SLURM queueing system."""
+"""Submit jobs to an HPC cluster through SLURM queueing system."""
 import os
 import sys
 import re

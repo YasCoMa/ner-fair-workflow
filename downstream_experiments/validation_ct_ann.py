@@ -753,6 +753,7 @@ class ExperimentValidationBySimilarity:
             f.write("ctid\tpmid\ttest_label\tfound_ct_label\ttest_text\tfound_ct_text\tscore\n")
             f.close()
 
+        print('Skipped', len(gone))
         lines = []
         idx = 0
         k = 10000
@@ -767,9 +768,9 @@ class ExperimentValidationBySimilarity:
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
             if( not aux in gone):
                 gone.add(aux)
-                results = self._send_query_fast( test_text, ctlib, ctid)
-                if( len(results) == 0 ):
-                    results = self._send_query(test_text, ctid)
+                #results = self._send_query_fast( test_text, ctlib, ctid)
+                #if( len(results) == 0 ):
+                results = self._send_query(test_text, ctid)
 
                 for r in results:
                     found_ct_text = r['hit']
@@ -865,8 +866,8 @@ class ExperimentValidationBySimilarity:
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                #self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
-                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
+                self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
+                #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
         
     def launch_parallel_prediction(self):
         for i in range(5):

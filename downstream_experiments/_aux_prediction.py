@@ -8,11 +8,37 @@ import pandas as pd
 
 pathlib = sys.argv[1]
 model_index = sys.argv[2]
+path_faiss = sys.argv[3]
+
 task_id = sys.argv[-2] 
 task_file = sys.argv[-1]
 subset = pickle.load(open(task_file, 'rb'))[task_id]
 
 ctlib = json.load( open(pathlib, 'r') )
+
+
+from langchain_ollama import OllamaEmbeddings
+from langchain_community.vectorstores import FAISS
+
+gct_vs = None
+if(path_faiss!='none' and os.path.exists(path_faiss)):
+    embeddings = OllamaEmbeddings(model="mxbai-embed-large")
+    gct_vs = FAISS.load_local( path_faiss, embeddings, allow_dangerous_deserialization=True )
+
+def _send_query( snippet, ctid, gct_vs):
+    results = []
+    rs = gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
+    for res, score in rs:
+        score = float(1 - score) # score is actually distance, the higher it is, less it is the match
+        hit = res.page_content
+        label = res.metadata['label']
+
+        clss = 'exact'
+        if( score < 1):
+            clss = 'm'+str(score).split('.')[1][0]+'0'
+        results.append( { 'hit': hit, 'ct_label': label, 'score': f'{score}-{clss}' } )
+
+    return results
 
 def _send_query_fast( snippet, ctlib, ctid):
     cutoff = 0.3
@@ -36,7 +62,7 @@ def _send_query_fast( snippet, ctlib, ctid):
             pass
     return results
 
-def exec(subset, ctlib, model_index):
+def exec(subset, ctlib, model_index, gct_vs):
     cts_available = set(ctlib)
 
     path_partial = os.path.join( os.getcwd(), f'part-task-{task_id}.tsv' )
@@ -45,13 +71,16 @@ def exec(subset, ctlib, model_index):
     logger = logging.getLogger( f'Prediction with model {model_index}')
     
     i=0
-    lap = 10000
+    lap = 1000
     lines = []
     for el in subset:
-        ctid, pmid, test_text, test_label = el
+        ctid, pmid, test_text, test_label, mode = el
         if( ctid in cts_available ):
-            results = _send_query_fast( test_text, ctlib, ctid)
-
+            if(mode=='fast' or gct_vs==None):
+                results = _send_query_fast( test_text, ctlib, ctid)
+            elif(mode=='ollama'):
+                results = _send_query( test_text, ctid, gct_vs)
+            
             for r in results:
                 found_ct_text = r['hit']
                 found_ct_label = r['ct_label']
@@ -71,4 +100,4 @@ def exec(subset, ctlib, model_index):
         with open( path_partial, 'a' ) as g:
             g.write( ('\n'.join(lines) )+'\n' )
 
-exec(subset, ctlib, model_index)
+exec(subset, ctlib, model_index, gct_vs)

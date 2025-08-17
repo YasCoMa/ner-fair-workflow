@@ -144,7 +144,7 @@ def prepare_job_single( job_name, job_path, command, ignore_check = False, wait 
         cluster = HPC.from_config( config )
         cluster.create_submit_job( job_name, n_jobs, job_path=job_path, elements = elements, template_script = template_script, command = command, config=config, wait=wait, ncpus=ncpus, nmem=nmem, execpy=execpy)
 
-def prepare_job_array( job_name, job_path, command, filetasksFolder="", taskList=[], chunk_size=10, ignore_check = False, hpc_env='slurm', wait=True, destroy=True, ncpus=1, nmem=10, execpy='python', config_path=None ):
+def prepare_job_array( job_name, job_path, command, filetasksFolder="", taskList=[], chunk_size=10, ignore_check = False, hpc_env='slurm', wait=True, destroy=True, ncpus=1, nmem=10, execpy='python', config_path=None, flag_ollama=False ):
     flag = True
     if(not ignore_check):
         flag = check_previous_job( job_path, job_name)
@@ -216,7 +216,7 @@ def prepare_job_array( job_name, job_path, command, filetasksFolder="", taskList
                 n_jobs = total_tasks // chunk_size
 
         cluster = HPC.from_config( config )
-        cluster.create_submit_job( job_name, n_jobs, force_array = True, job_path=job_path, elements = elements, template_script = template_script, command = command, config = config, add_cnf=add_cnf, wait=wait, ncpus=ncpus, nmem=nmem, execpy=execpy )
+        cluster.create_submit_job( job_name, n_jobs, force_array = True, job_path=job_path, elements = elements, template_script = template_script, command = command, config = config, add_cnf=add_cnf, wait=wait, ncpus=ncpus, nmem=nmem, execpy=execpy, flag_ollama=flag_ollama )
         if(wait == False):
             prepare_launch_monitor_job( job_path, job_name)
         

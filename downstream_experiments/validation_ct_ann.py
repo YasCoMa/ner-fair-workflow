@@ -654,6 +654,7 @@ class ExperimentValidationBySimilarity:
                         self.gct_vs.add_documents(documents=subdocs, ids=subuuids)
                         self.gct_vs.save_local(path)
                         pickle.dump( mapp, open(omap, 'wb') )
+        return path
 
     def embed_save_ncict(self, sourcect, label_ct_index='ctdoc_'):
         path = os.path.join(self.out, f'{label_ct_index}_faiss.index')
@@ -788,7 +789,7 @@ class ExperimentValidationBySimilarity:
             with open(res, 'a') as g:
                 g.write( ('\n'.join(lines))+'\n' )
 
-    def _get_predictions_parallel(self, sourcect, ctlib, pathlib, label_result=''):
+    def _get_predictions_parallel(self, sourcect, ctlib, pathlib, label_result='', mode='fast', path_faiss = 'none'):
         result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(result_path) ):
@@ -819,13 +820,17 @@ class ExperimentValidationBySimilarity:
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
             elements.append( [ctid, pmid, test_text, test_label] )
 
-        job_name = f"prediction_parallel_{model_index}"
+        flag_ollama = False
+        if(mode == 'ollama'):
+            flag_ollama = True
+
+        job_name = f"{mode}_prediction_parallel_{model_index}"
         job_path = os.path.join( self.out, job_name )
         chunk_size = 10000
         script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
-        command = f"python3 {script_path} {pathlib} {model_index}"
+        command = f"python3 {script_path} {pathlib} {model_index} {mode} {path_faiss}"
         config = self.config_path
-        prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
+        prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config, flag_ollama = flag_ollama )
 
         test_path_partial = os.path.join( job_path, f'part-task-1.tsv' )
         if( os.path.exists(test_path_partial) ):
@@ -851,7 +856,7 @@ class ExperimentValidationBySimilarity:
 
         #self.embed_save_ncict_general(mode = 'only_difference', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
-        self.embed_save_ncict_general(mode = 'all', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
+        path_faiss = self.embed_save_ncict_general(mode = 'all', name_previous_file = 'bkp_mapping_ct_pubmed.json', label_ct_index = 'biobert')
 
         widectids = self.__aggregate_nctids()
         ctlib, pathlib = self.__load_cts_library(widectids)
@@ -867,9 +872,12 @@ class ExperimentValidationBySimilarity:
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
                 #self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
-                
-                label_aux = 'predlev'
-                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
+
+                #label_aux = 'predlev'
+                #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'fast', 'none' )
+
+                label_aux = 'ollama'
+                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'ollama', path_faiss )
         
     def launch_parallel_prediction(self):
         for i in range(5):

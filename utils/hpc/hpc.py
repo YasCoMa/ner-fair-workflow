@@ -130,7 +130,7 @@ class HPC():
         """
         return self.hpc.status()
 
-    def create_submit_job(self, job_name, n_jobs, force_array = False, job_path = None, elements=[], custom_elements=[], template_script=None, command=None, config=None, add_cnf='', wait=True, ncpus = 1, nmem=15, execpy='python'):
+    def create_submit_job(self, job_name, n_jobs, force_array = False, job_path = None, elements=[], custom_elements=[], template_script=None, command=None, config=None, add_cnf='', wait=True, ncpus = 1, nmem=15, execpy='python', flag_ollama=False):
         # command = script.py param1 param2
         if(config is None):
             config = Config()
@@ -170,6 +170,15 @@ class HPC():
         params["mem_by_core"] = memv
         params["cpu"] = ncpus
         params["time"] = '30-00:00:00' 
+        
+        if(flag_ollama):
+            params["pre_exports"] = '''
+export SINGULARITYENV_OLLAMA_MODELS=/aloy/scratch/$USER/ollama/ollama_models_scratch
+export SINGULARITY_BIND="/home/sbnb:/aloy/home,/data/sbnb/data:/aloy/data,/data/sbnb/scratch:/aloy/scratch,/data/sbnb/chemicalchecker:/aloy/web_checker,/data/sbnb/web_updates:/aloy/web_repository"
+export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/web_repository,/aloy/scratch"
+
+nohup singularity run --nv  /aloy/scratch/ymartins/ollama/ollama.sif &
+            '''
         # job command
        
         perl5 = os.environ['PERL5LIB']

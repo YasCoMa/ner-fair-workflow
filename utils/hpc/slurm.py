@@ -141,6 +141,7 @@ export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/web_repository,/aloy/sc
         email_receiver = kwargs.get("receiver", "yasmmin.martins@irbbarcelona.org")
         output_log = kwargs.get("output_file", None)
         error_log = kwargs.get("error_file", None)
+        pre_exports = kwargs.get("pre_exports", self.pre_exports )
         
         submit_string = 'sbatch --parsable '
             
@@ -201,8 +202,8 @@ export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/web_repository,/aloy/sc
             jobParams.append(
                 "#SBATCH --time=" + str(maxtime))
 
-        if( self.pre_exports != None ):
-            jobParams.append( str(self.pre_exports) )
+        if( pre_exports != None ):
+            jobParams.append( str(pre_exports) )
         
         input_dict = dict()
         if len(elements) > 0:

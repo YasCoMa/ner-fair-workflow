@@ -1,4 +1,5 @@
-"""Submit jobs to an HPC cluster through SLURM queueing system."""
+
+t jobs to an HPC cluster through SLURM queueing system."""
 import os
 import sys
 import re
@@ -136,6 +137,7 @@ export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/scratch,/aloy/web_check
         compress_out = kwargs.get("compress", True)
         check_error = kwargs.get("check_error", True)
         maxtime = kwargs.get("time", None)
+        pre_exports = kwargs.get("pre_exports", self.pre_exports )
 
         submit_string = 'sbatch --parsable '
 
@@ -183,8 +185,8 @@ export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/scratch,/aloy/web_check
             jobParams.append(
                 "#SBATCH --time=" + str(maxtime))
 
-        if( self.pre_exports != None ):
-            jobParams.append( str(self.pre_exports) )
+        if( pre_exports != None ):
+            jobParams.append( str(pre_exports) )
 
         if len(elements) > 0:
             self.__log.debug("Num elements submitted " + str(len(elements)))

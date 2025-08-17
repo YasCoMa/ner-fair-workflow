@@ -150,6 +150,7 @@ export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/web_repository,/aloy/sc
         # when the job exceeds membycore*cpu il get killed, to start it
         # we ask to have a node with at least 80% of the maximum we can reach
         max_jobs = kwargs.get("max_jobs", None)
+        pre_exports = kwargs.get("pre_exports", self.pre_exports )
 
         submit_string = 'qsub -terse '
 
@@ -205,8 +206,8 @@ export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/web_repository,/aloy/sc
         if max_jobs is not None:
             jobParams.append("#$ -tc " + str(max_jobs))
 
-        if( self.pre_exports != None ):
-            jobParams.append( str(self.pre_exports) )
+        if( pre_exports != None ):
+            jobParams.append( str(pre_exports) )
             
         # NS, where elements turns into <FILE>
         if ( (len(elements) > 0) or (len(custom_elements) > 0) ):

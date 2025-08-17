@@ -8,7 +8,8 @@ import pandas as pd
 
 pathlib = sys.argv[1]
 model_index = sys.argv[2]
-path_faiss = sys.argv[3]
+mode = sys.argv[3]
+path_faiss = sys.argv[4]
 
 task_id = sys.argv[-2] 
 task_file = sys.argv[-1]
@@ -16,12 +17,11 @@ subset = pickle.load(open(task_file, 'rb'))[task_id]
 
 ctlib = json.load( open(pathlib, 'r') )
 
-
-from langchain_ollama import OllamaEmbeddings
-from langchain_community.vectorstores import FAISS
-
 gct_vs = None
-if(path_faiss!='none' and os.path.exists(path_faiss)):
+if( mode=='ollama' and path_faiss!='none' and os.path.exists(path_faiss)):
+    from langchain_ollama import OllamaEmbeddings
+    from langchain_community.vectorstores import FAISS
+    
     embeddings = OllamaEmbeddings(model="mxbai-embed-large")
     gct_vs = FAISS.load_local( path_faiss, embeddings, allow_dangerous_deserialization=True )
 
@@ -62,7 +62,7 @@ def _send_query_fast( snippet, ctlib, ctid):
             pass
     return results
 
-def exec(subset, ctlib, model_index, gct_vs):
+def exec(subset, ctlib, model_index, mode, gct_vs):
     cts_available = set(ctlib)
 
     path_partial = os.path.join( os.getcwd(), f'part-task-{task_id}.tsv' )
@@ -74,7 +74,7 @@ def exec(subset, ctlib, model_index, gct_vs):
     lap = 1000
     lines = []
     for el in subset:
-        ctid, pmid, test_text, test_label, mode = el
+        ctid, pmid, test_text, test_label = el
         if( ctid in cts_available ):
             if(mode=='fast' or gct_vs==None):
                 results = _send_query_fast( test_text, ctlib, ctid)
@@ -100,4 +100,4 @@ def exec(subset, ctlib, model_index, gct_vs):
         with open( path_partial, 'a' ) as g:
             g.write( ('\n'.join(lines) )+'\n' )
 
-exec(subset, ctlib, model_index, gct_vs)
+exec(subset, ctlib, model_index, mode, gct_vs)

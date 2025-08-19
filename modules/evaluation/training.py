@@ -72,6 +72,11 @@ class Training:
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
+            self.optimization_metric = 'f1'
+            if( 'optimization_metric' in self.config ):
+                if( self.config['optimization_metric'] in ['f1', 'precision', 'recall', 'accuracy'] ):
+                    self.optimization_metric = self.config['optimization_metric']
+
             self.do_optimization = True
             self.optimization_file = None
             if( 'do_hyperparameter_search' in self.config ):
@@ -212,9 +217,9 @@ class Training:
                 #We want to maximize the f1-score in validation set
                 predictions, labels, metrics = trainer.predict(tokenized_datasets['valid'])  
                 print(f"Validation set metrics: \n {metrics}")
-                f1_value = compute_objective(predictions, labels, self.label_list)
-                print(f"F1-Score: {f1_value}")
-                return f1_value
+                metric_value = __compute_objective(predictions, labels, self.label_list, self.optimization_metric)
+                print(f"{self.optimization_metric}: {metric_value}")
+                return metric_value
 
             # We want to maximize the f1-score in validation set
             study = optuna.create_study(study_name="hyper-parameter-search", direction="maximize")
@@ -404,9 +409,9 @@ class Training:
 
             #Evaluate the model
             self.logger.info("\t\tEVALUATING... round{i}")
-            predictions, labels, _ = trainer.predict(tokenized_datasets["test"])
+            outputs, labels, _ = trainer.predict(tokenized_datasets["test"])
 
-            predictions = np.argmax(predictions, axis=2)
+            predictions = np.argmax(outputs, axis=2)
             generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
         
         generate_csv_comparison( self.out_report, type_level=['token_level'])

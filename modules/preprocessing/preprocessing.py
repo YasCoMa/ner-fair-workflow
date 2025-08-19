@@ -182,7 +182,7 @@ class Preprocessing:
 
         return data_df, train_df, test_df, valid_df, not_in_train_df
 
-    def _gen_freq_stats(self, data_df, train_df, test_df, valid_df, not_in_train_df):
+    def _generate_freq_stats(self, data_df, train_df, test_df, valid_df, not_in_train_df):
         self.logger.info("[Preprocessing step] Task (Get entity frequency) started -----------")
 
         #Create a copy of the dataframe
@@ -259,7 +259,7 @@ class Preprocessing:
 
         self.logger.info("[Preprocessing step] Task (Generate statistics and group sentences for the final datasets) ended -----------")
 
-    def _gen_final_dataset(self):
+    def _generate_final_dataset(self):
         self.logger.info("[Preprocessing step] Task (Generate final dataset compatible with transformers models) started -----------")
         tag_values = self.target_tags
 
@@ -326,9 +326,9 @@ class Preprocessing:
         self._transform_format()
         self._add_sentence_id_save()
         data_df, train_df, test_df, valid_df, not_in_train_df = self._split()
-        self._gen_freq_stats(data_df, train_df, test_df, valid_df, not_in_train_df)
+        self._generate_freq_stats(data_df, train_df, test_df, valid_df, not_in_train_df)
         self._process_group_sentences(data_df, train_df, test_df, valid_df, not_in_train_df)
-        self._gen_final_dataset()
+        self._generate_final_dataset()
         self._mark_as_done()
 
 if( __name__ == "__main__" ):

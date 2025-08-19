@@ -31,33 +31,58 @@ relations:
 slso - http://www.w3.org/2006/vcard/ns#hasValue
 stato - http://purl.obolibrary.org/obo/
 
+
 Experiment -> self:hasDataset -> LabeledDataset
 self:NLPExperiment subclassof self:mlexperiment subclassof xmlpo:experiment
 Experiment rdf:type self:nlpExperiment
 experiment realizes goal
-experiment executedBy workflow
+experiment (exp1) executedBy workflow
+exp1 self:describedBy ExperimentCharacteristics (expd1)
+expd1 ExperimentType "Named entity recognition"
+expd1 ExperimentDomain "NER for PICO entities in texts concerning clinical trials"
+expd1 ExperimentDescription "Finetuning of the biobert LLM model for NER task applied to identification of entities on pubmed abstracts regarding clinical trials. These entities are related to participants characterization, interventions, control vectors and outcomes."
+
 workflow contains DataCleaning, DataSplit, train, test, mlModelEvaluation
 modelRoot rdf:type LLM
 model rdf:type LLM
 model self:finetunedFrom modelRoot
-model hasParameter parameterSettings
-model hasVersion literal
-model hasReplicateNumber literal
+model self:hasParameter parameterSettings
+model self:hasVersion literal
+model self:hasReplicateNumber literal
+
 parameterSettings hasParameterCharacteristic ParameterCharacteristic
 pc1 rdf:type ParameterCharacteristic
 pc1 rdfs:label learning rate
 pc1 slso:hasValue 0.001
+pc1 xmlpo:ParameterName learning rate
+pc1 xmlpo:ParameterValue 0.001
+
 DataCleaning executes PreprocessImplementation
 DataSplit executes PreprocessImplementation
 Train executes SupervisedLearningApproachImplementation
 Train self:generatesModel model
+
 model self:describedBy ModelCharacteristic
 Test executes SupervisedLearningApproachImplementation
 MLModelEvaluation executes MLModelImplementation
 MLModelImplementation implements classificationAlgorithm (mlapproach)
-classificationAlgorithm describedBy MLApproachCharacteristic
+classificationAlgorithm self:describedBy MLApproachCharacteristic
 classificationAlgorithm hasOutput ClassPredictionEvaluationMeasure
-stato:accuracy subClassOf ClassPredictionEvaluationMeasure
+stato:accuracy (acc1) subClassOf ClassPredictionEvaluationMeasure
+acc1 slso:hasValue 0.8
+https://www.ebi.ac.uk/ols4/ontologies/ncit/classes/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FNCIT_C53313?lang=en
+acc1 self:hasAggregatedValue ncit:C53322 sd1 (standard deviation)
+sd1 slso:hasValue 0.02
+acc1 self:belongsTo model1
+acc1 self:
+
+describe all results of the tables 4*5*2 (test) 4(eval types default, strict, skwith, skwithout)*5(model replicates) (train)
+
 PreprocessImplementation generatesDataset LabeledDataset
+
 LabeledDataset datasetHasData TrainSet, TestSet, self:ValidationSet
 self:ValidationSet subClassOf xmlpo:PreprocessedData
+TrainSet hasDatasetCharacteristics DatasetCharacteristics (tds1)
+tds1 NumberOfFeatures 512
+tds1 NumberOfInstances 808
+

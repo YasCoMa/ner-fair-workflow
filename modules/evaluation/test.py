@@ -196,9 +196,11 @@ class Test:
 
             predictions = torch.argmax(outputs.logits, dim=2).to("cpu").numpy()
             torch.cuda.empty_cache()
-            
+
+            # Per token
             generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
 
+            # Per word
             annotated_samples_first = self.__annotate_samples(tokenized_datasets["test"], predictions)
             generate_reports(annotated_samples_first, datasets['test']['ner_tags'] , self.label_list, self.out_report, f"{i}_word_level", self.target_tags)
             models_predictions.append(annotated_samples_first)
@@ -240,6 +242,7 @@ class Test:
                     token, or_label, *pred_values = token_data
                     csv_dict['token'].append(token)
                     csv_dict['True label'].append( self.label_list[or_label])
+
                     for i, pred_value in enumerate(pred_values):
                         csv_dict[f'Pred model {i+1}'].append( self.label_list[pred_value])
                     occurence_counter = Counter([csv_dict[f'Pred model {i+1}'][-1] for i in range(len(model_files))])

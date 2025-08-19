@@ -73,7 +73,10 @@ acc1 slso:hasValue 0.8
 https://www.ebi.ac.uk/ols4/ontologies/ncit/classes/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FNCIT_C53313?lang=en
 acc1 self:hasAggregatedValue ncit:C53322 sd1 (standard deviation)
 sd1 slso:hasValue 0.02
-acc1 self:belongsTo model1
+modelEvaluation1 rdf_type ModelEvaluationCharacteristic
+modelEvaluation1 MLEvaluationTechniqueName sklearn_without-prefix
+modelEvaluation1 MLEvaluationTechniqueDescription sk learn without the prefixes
+acc1 self:belongsTo modelEvaluation1
 acc1 self:
 
 describe all results of the tables 4*5*2 (test) 4(eval types default, strict, skwith, skwithout)*5(model replicates) (train)

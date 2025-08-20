@@ -250,13 +250,16 @@ def __flatten_array(predictions, labels, remove_prefix=False):
     return arr1dpred, arr1dy
 
 def _rename_label_predictions(predictions, labels, target_tags, labels_to_ignore=[-100, 0]):
+    
     y = []
     preds = []
     for idx, sentence_labels in enumerate(labels):
         auxy = []
         auxp = []
+        mlen = len(predictions[idx])
+        
         for lidx, l in enumerate(sentence_labels):
-            if(l not in labels_to_ignore):
+            if( (lidx < mlen) and (l not in labels_to_ignore) ):
                 auxy.append( target_tags[l] )
                 auxp.append( target_tags[ predictions[idx][lidx] ] )
         y.append( auxy )

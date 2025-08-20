@@ -830,7 +830,7 @@ class ExperimentValidationBySimilarity:
         script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
         command = f"python3 {script_path} {pathlib} {model_index} {mode} {path_faiss}"
         config = self.config_path
-        prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config, flag_ollama = flag_ollama )
+        prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config, flag_ollama = flag_ollama, ncpus=8 )
 
         test_path_partial = os.path.join( job_path, f'part-task-1.tsv' )
         if( os.path.exists(test_path_partial) ):

@@ -368,7 +368,7 @@ def _generate_summary_plot(inpath, out_path, fname, agg_stats_metric = 'median')
 
     df = pd.read_csv( inpath, sep='\t', index_col=0)
     f = df[ (df['evaluation_metric'] != 'support') & (df['stats_agg_name'] == 'median') ].reset_index()
-    f = f[ ['Entity', 'evaluation_metric' 'stats_agg_value'] ]
+    f = f[ ['Entity', 'evaluation_metric', 'stats_agg_value'] ]
     f.columns = ['Entity', 'Evaluation Metric', stats_metric ]
     fig = px.bar(f, x="Entity", y=stats_metric, color="Evaluation Metric", barmode="group")
     path = os.path.join(out_path, fname)

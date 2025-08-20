@@ -11,6 +11,7 @@ class SemanticDescription:
 		config = json.load( open('/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert.json','r') )
 		exp_metadata = config['experiment_metadata']
 
+
 	def _setup_namespaces(self):
 		g = self.graph
 		self.nerwf = Namespace("http://example.org/")
@@ -27,8 +28,18 @@ class SemanticDescription:
 		self.graph = g
 		
 	def _define_new_onto_elements(self):
+		g = self.graph
+		print()
+		self.graph = g
 
+	def _describe_experiment(self):
+		g = self.graph
+
+		self.graph = g
 
 	def _describe_items(self):
+		g = self.graph
 		expid = str(uuid4())
 		g.add( ( self.nerwf[f"experiment/{expid}"], RDF.type, self.xmlpo.Experiment) )
+		
+		self.graph = g

@@ -72,6 +72,11 @@ class Training:
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
+            self.report_summary_stats_metric = 'median'
+            if( 'report_summary_stats_metric' in self.config ):
+                if( self.config['report_summary_stats_metric'] in ['max', 'min', 'mean', 'median', 'std'] ):
+                    self.report_summary_stats_metric = self.config['report_summary_stats_metric']
+
             self.optimization_metric = 'f1'
             if( 'optimization_metric' in self.config ):
                 if( self.config['optimization_metric'] in ['f1', 'precision', 'recall', 'accuracy'] ):
@@ -105,6 +110,10 @@ class Training:
         self.out_report = os.path.join( self.out, "reports" )
         if( not os.path.exists(self.out_report) ):
             os.makedirs( self.out_report )
+
+        self.out_agg_report = os.path.join( self.out, "summary_reports" )
+        if( not os.path.exists(self.out_agg_report) ):
+            os.makedirs( self.out_agg_report )
 
     def _setup_seed(self):
         seed = self.seed
@@ -360,6 +369,7 @@ class Training:
         
         self.logger.info(f"\tTraining with hyperparameters: \n {hyperparameters_loaded}")
         #TRAINING
+        report_identifier = 'training-model'
 
         for i in range(5):
             self.logger.info("\t\tTRAINING... round {i}")
@@ -410,11 +420,16 @@ class Training:
             #Evaluate the model
             self.logger.info("\t\tEVALUATING... round{i}")
             outputs, labels, _ = trainer.predict(tokenized_datasets["test"])
-
             predictions = np.argmax(outputs, axis=2)
-            generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
+
+            generate_reports_table( outputs, predictions, labels, label_list, self.out_report, report_identifier, index=f'{i}', level='token' )
+            #generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
         
-        generate_csv_comparison( self.out_report, type_level=['token_level'])
+        #generate_csv_comparison( self.out_report, type_level=['token_level'])
+        entry_point = self.out_report
+        out_path = self.out_agg_report
+        aggregate_reports(entry_point, report_identifier, out_path, agg_stats_metric = self.report_summary_stats_metric, levels = ['word', 'token'])
+
         self.logger.info("[Training step] Task (Training model) ended -----------")
 
         self.__generate_learning_curves(save_path)

@@ -63,6 +63,11 @@ class Test:
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
+            self.report_summary_stats_metric = 'median'
+            if( 'report_summary_stats_metric' in self.config ):
+                if( self.config['report_summary_stats_metric'] in ['max', 'min', 'mean', 'median', 'std'] ):
+                    self.report_summary_stats_metric = self.config['report_summary_stats_metric']
+
             self.logger.info("----------- Test step started -----------")
         except:
             raise Exception("Mandatory fields not found in config. file")
@@ -83,9 +88,9 @@ class Test:
         if( not os.path.exists(self.out_report) ):
             os.makedirs( self.out_report )
 
-        self.out_eval = os.path.join( self.out, "evaluations" )
-        if( not os.path.exists(self.out_eval) ):
-            os.makedirs( self.out_eval )
+        self.out_agg_report = os.path.join( self.out, "summary_reports" )
+        if( not os.path.exists(self.out_agg_report) ):
+            os.makedirs( self.out_agg_report )
 
     def _setup_seed(self):
         seed = self.seed
@@ -184,6 +189,8 @@ class Test:
 
         labels = tokenized_datasets['test']['labels']
 
+        report_identifier = 'test-model'
+
         models_predictions = []
         for i, model_file in enumerate(model_files):
             #print(i, model_file)
@@ -198,25 +205,32 @@ class Test:
             torch.cuda.empty_cache()
 
             # Per token
-            generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
+            #generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
+            generate_reports_table( outputs.logits, predictions, labels, self.label_list, self.out_report, report_identifier, index=f'{i}', level='token' )
 
             # Per word
             annotated_samples_first = self.__annotate_samples(tokenized_datasets["test"], predictions)
-            generate_reports(annotated_samples_first, datasets['test']['ner_tags'] , self.label_list, self.out_report, f"{i}_word_level", self.target_tags)
+            #generate_reports(annotated_samples_first, datasets['test']['ner_tags'], self.label_list, self.out_report, f"{i}_word_level", self.target_tags)
+            generate_reports_table( None, annotated_samples_first, datasets['test']['ner_tags'], self.label_list, self.out_report, report_identifier, index=f'{i}', level='word' )
+
             models_predictions.append(annotated_samples_first)
 
-        generate_csv_comparison(self.out_report, target_tags = self.target_tags)
-        
-        #Save predictions for the models in csv files
+        #generate_csv_comparison(self.out_report, target_tags = self.target_tags)
+        entry_point = self.out_report
+        out_path = self.out_agg_report
+        aggregate_reports(entry_point, report_identifier, out_path, agg_stats_metric = self.report_summary_stats_metric, levels = ['word', 'token'])
 
+        '''
+        # Save predictions for the models in csv files
         # Create a dictionary for the dataset
         dataset_dict = {'tokens': tokenized_datasets["test"]['tokens'], 'file': tokenized_datasets["test"]['id'], 'true_labels': datasets['test']['ner_tags']}
         for i in range(len(model_files)):
             dataset_dict[f'Predicted_label_{i}'] = models_predictions[i]
+        '''
 
         self.logger.info("[Test step] Task (Get predictions for test set) ended -----------")
 
-        return dataset_dict
+        #return dataset_dict
 
     def _save_most_common_predictions(self, dataset_dict):
         save_path = self.outDir
@@ -254,7 +268,8 @@ class Test:
 
         # Compute the classification reports with most common predictions
         most_common_predictions = [[ self.labelxids[id] for id in lab] for lab in most_common_predictions]
-        generate_reports(most_common_predictions,  dataset_annotated['true_labels'], self.label_list, self.out_report, 'most_common', self.target_tags)
+        generate_reports_table(None, most_common_predictions,  dataset_annotated['true_labels'], self.label_list, self.out_report, 'most_common', index='unique', level='word')
+        
         self.logger.info("[Test step] Task (Save most common predicted labels for a token across the models) ended -----------")
 
     def _mark_as_done(self):
@@ -268,7 +283,7 @@ class Test:
         self._setup_model()
         self._load_input_data()
         dataset_dict = self._get_predictions()
-        self._save_most_common_predictions(dataset_dict)
+        #self._save_most_common_predictions(dataset_dict)
         self._mark_as_done()
 
 if( __name__ == "__main__" ):

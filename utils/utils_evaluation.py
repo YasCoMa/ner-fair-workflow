@@ -1,9 +1,12 @@
 import os
 import re
+import glob
+import torch
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import confusion_matrix, cohen_kappa_score, matthews_corrcoef, roc_auc_score
@@ -182,13 +185,25 @@ def tokenize_and_align_labels(examples, tokenizer=None, flag_tokenizer=None, lab
     tokenized_inputs["labels"] = labels
     return tokenized_inputs
 
-def __get_probabilities( labels, outputs_logits, labels_to_ignore=[-100, 0], remove_prefix=False):
+def __get_probabilities( labels, target_tags, outputs_logits, labels_to_ignore=[-100, 0], remove_prefix=False):
+    auxc = __remove_prefix_tags(target_tags)
+
     arr = torch.softmax( outputs_logits, dim=2).to('cpu').numpy()
     probs = []
     for idx, sentence_labels in enumerate(labels):
         for lidx, l in enumerate(sentence_labels):
             if(l not in labels_to_ignore):
-                probs.append( arr[idx][lidx] )
+                px = arr[idx][lidx]
+
+                if(remove_prefix):
+                    rep = {}
+                    for c, p in zip( auxc, px ):
+                        if(not c in rep):
+                            rep[c] = []
+                        rep[c].append(p)
+                    
+                    px = [ max(rep[c]) for c in rep ]
+                probs.append( px )
     return probs
 
 def __get_binary_truey(labels, target_tags, labels_to_ignore=[-100, 0], remove_prefix=False):
@@ -199,11 +214,11 @@ def __get_binary_truey(labels, target_tags, labels_to_ignore=[-100, 0], remove_p
                 v = [ target_tags[l] ]
                 if(remove_prefix):
                     v = __remove_prefix_tags(v)
-                y.append( [ target_tags[l] ] )
+                y.append( v )
 
     categories = target_tags
     if(remove_prefix):
-        categories = __remove_prefix_tags(target_tags)
+        categories = __remove_prefix_tags(target_tags, remove_duplicates=True)
     yaux = [ [l] for l in categories ]
     enc = OneHotEncoder()
     enc.fit(yaux)
@@ -211,14 +226,15 @@ def __get_binary_truey(labels, target_tags, labels_to_ignore=[-100, 0], remove_p
 
     return ency, categories
 
-def __remove_prefix_tags(target_tags):
+def __remove_prefix_tags(target_tags, remove_duplicates=False):
     categories = list( map( lambda x: x[2:] if( x[:2].lower() in ['o-', 'b-', 'i-', 'e-', 's-', 'u-', 'l-']) else x, target_tags ) )
-    aux = []
-    for c in categories:
-        if( c not in aux ):
-            aux.append(c)
-    categories = aux
-
+    
+    if( remove_duplicates ):
+        aux = []
+        for j, c in enumerate(categories):
+            if( c not in aux ):
+                aux.append(c)
+        categories = aux
     return categories
 
 def __flatten_array(predictions, labels, remove_prefix=False):
@@ -242,23 +258,25 @@ def _rename_label_predictions(predictions, labels, target_tags, labels_to_ignore
         for lidx, l in enumerate(sentence_labels):
             if(l not in labels_to_ignore):
                 auxy.append( target_tags[l] )
-                auxp.append( predictions[idx][lidx] )
+                auxp.append( target_tags[ predictions[idx][lidx] ] )
         y.append( auxy )
         preds.append( auxp )
         
     return preds, y
 
-def _generate_metric_plots(dat, target_tags, model_identifier, out_path):
+def _generate_metric_plots(dat, target_tags, report_identifier, out_path):
     for k in dat:
         categories = target_tags
         if( k == 'without-prefix' ):
-            categories = __remove_prefix_tags(target_tags)
+            categories = __remove_prefix_tags(target_tags, remove_duplicates=True)
+
         cm = np.array( confusion_matrix( dat[k][1], dat[k][0], labels=categories, normalize='true')).reshape(len(categories), len(categories) )
-        make_confusion_matrix(cm, f"{out_path}/cm_{k}_{model_identifier}.png", categories=categories, cmap='viridis', figsize=(30,20), title='Confusion matrix', cbar = True, count = False, percent = False)
+        make_confusion_matrix(cm, f"{out_path}/cm_{k}_{report_identifier}.png", categories=categories, cmap='viridis', figsize=(30,20), title='Confusion matrix', cbar = True, count = False, percent = False)
 
 def __compute_aucroc(labels, outputs_logits, target_tags, remove_prefix):
-    probs = __get_probabilities( labels, outputs_logits, labels_to_ignore=[-100, 0], remove_prefix=remove_prefix)
+    probs = __get_probabilities( labels, target_tags, outputs_logits, labels_to_ignore=[-100, 0], remove_prefix=remove_prefix)
     onehot_y, categories = __get_binary_truey(labels, target_tags, labels_to_ignore=[-100, 0], remove_prefix=remove_prefix)
+    
     auc_roc = roc_auc_score(onehot_y, probs, average=None)
     per_class = {}
     for i, c in enumerate(categories):
@@ -267,15 +285,18 @@ def __compute_aucroc(labels, outputs_logits, target_tags, remove_prefix):
             per_class[c] = 0
     return per_class
 
-def _generate_summary_metrics_bysklearn(dat, labels, outputs_logits, target_tags, model_identifier, level, out_path):
-    index = model_identifier.split('@')[-1]
+def _generate_summary_metrics_bysklearn(dat, labels, outputs_logits, target_tags, report_identifier, level, out_path):
+    index = report_identifier.split('@')[-1]
 
     categories = target_tags
     for k in dat:
         remove_prefix = False
         if( k == 'without-prefix' ):
             remove_prefix = True
-        auc_roc = __compute_aucroc(labels, outputs_logits, target_tags, remove_prefix)
+
+        auc_roc = 0
+        if(outputs_logits != None):
+            auc_roc = __compute_aucroc(labels, outputs_logits, target_tags, remove_prefix)
         mcc = matthews_corrcoef( dat[k][1], dat[k][0] )
         kappa = cohen_kappa_score( dat[k][1], dat[k][0] )
         acc = accuracy_score_sk( dat[k][1], dat[k][0] )
@@ -283,39 +304,36 @@ def _generate_summary_metrics_bysklearn(dat, labels, outputs_logits, target_tags
         
         df = pd.DataFrame(class_report_sk).transpose()
         
-        ordered_auc = []
-        for i in df.index:
-            v = 0
-            if( i in auc_roc ):
-                v = auc_roc[i]
-            ordered_auc.append( v )
+        ordered_auc = 0
+        if(outputs_logits != None):
+            ordered_auc = []
+            for i in df.index:
+                v = 0
+                if( i in auc_roc ):
+                    v = auc_roc[i]
+                ordered_auc.append( v )
         df['aucroc'] = ordered_auc
 
         df['mcc'] = mcc
         df['kappa'] = kappa
         df['accuracy'] = acc
-        df['index'] = f'm{index}'
-        df['level'] = level
 
-        df.to_csv(f"{out_path}/sk-{k}_report_{model_identifier}-l{level}.csv")
+        df.to_csv(f"{out_path}/sk-{k}_report_{report_identifier}-l{level}.tsv", sep='\t')
 
-def _generate_summary_metrics_byseqeval(dat, model_identifier, level, out_path):
-    index = model_identifier.split('@')[-1]
+def _generate_summary_metrics_byseqeval(slabels, spredictions, report_identifier, level, out_path):
+    index = report_identifier.split('@')[-1]
 
-    k = 'with-prefix'
-    acc = accuracy_score( dat[k][1], dat[k][0] )
+    acc = accuracy_score( slabels, spredictions )
     modes = { 'default': None, 'strict': 'strict' }
     for m in modes:
-        class_report = classification_report( dat[k][1], dat[k][0], mode = modes[m], scheme=IOB2, output_dict=True, zero_division=0)
+        class_report = classification_report( slabels, spredictions, mode = modes[m], scheme=IOB2, output_dict=True, zero_division=0)
         
         df = pd.DataFrame(class_report).transpose()
         df['accuracy'] = acc
-        df['index'] = f'm{index}'
-        df['level'] = level
 
-        df.to_csv(f"{out_path}/seqeval-{m}_report_{model_identifier}-l{level}.csv")
+        df.to_csv(f"{out_path}/seqeval-{m}_report_{report_identifier}-l{level}.tsv", sep='\t')
 
-def generate_reports_table( outputs_logits, predictions, labels, target_tags, out_path, model_identifier, index='unique', level='token' ):
+def generate_reports_table( outputs_logits, predictions, labels, target_tags, out_path, report_identifier, index='unique', level='token' ):
     '''
     Generate reports considering the modes available in seqeval (IO (default) or IOB (strict) formats) and sklearn (with or without prefixes).
 
@@ -325,22 +343,110 @@ def generate_reports_table( outputs_logits, predictions, labels, target_tags, ou
         labels (A list of lists): contains the list of real labels for each token
         target_tags (list): the list of possible tags that belong to the NER experiment
         out_path (string): path to the directory where the reports and plots will be saved
-        model_identifier (string): an identifier for the report
+        report_identifier (string): an identifier for the report
         index (string): In case it is a report of model replicates (training_0, training_1...) this index is the number itself, if it is not a sequence, the default is 'unique'
         level (string): Two levels are accepted (token or word)
     '''
 
-    predictions, labels = _rename_label_predictions(predictions, labels, target_tags, labels_to_ignore=[-100, 0])
+    spredictions, slabels = _rename_label_predictions(predictions, labels, target_tags, labels_to_ignore=[-100, 0])
     
     dat = { 'with-prefix': '', 'without-prefix': '' }
-    dat['with-prefix'] = __flatten_array(predictions, labels, remove_prefix=False)
-    dat['without-prefix'] = __flatten_array(predictions, labels, remove_prefix=True)
+    dat['with-prefix'] = __flatten_array(spredictions, slabels, remove_prefix=False)
+    dat['without-prefix'] = __flatten_array(spredictions, slabels, remove_prefix=True)
     
-    model_identifier = f"{model_identifier}@{index}"
-    _generate_summary_metrics_bysklearn(dat, labels, outputs, target_tags, model_identifier, level, out_path)
-    _generate_summary_metrics_byseqeval(dat, model_identifier, level, out_path)
+    report_identifier = f"{report_identifier}@{index}"
+    _generate_summary_metrics_bysklearn(dat, labels, outputs_logits, target_tags, report_identifier, level, out_path)
+    _generate_summary_metrics_byseqeval(slabels, spredictions, report_identifier, level, out_path)
 
-    _generate_metric_plots(dat, target_tags, model_identifier, out_path)
+    _generate_metric_plots(dat, target_tags, report_identifier, out_path)
+
+def _generate_summary_plot(inpath, out_path, fname, agg_stats_metric = 'median'):
+    stats_metric = agg_stats_metric.capitalize().replace('_', ' ').replace('Std', 'Standard Deviation')
+
+    df = pd.read_csv( inpath, sep='\t', index_col=0)
+    f = df[ (df['evaluation_metric'] != 'support') & (df['stats_agg_name'] == 'median') ].reset_index()
+    f = f[ ['Entity', 'evaluation_metric' 'stats_agg_value'] ]
+    f.columns = ['Entity', 'Evaluation Metric', stats_metric ]
+    fig = px.bar(f, x="Entity", y=stats_metric, color="Evaluation Metric", barmode="group")
+    path = os.path.join(out_path, fname)
+    fig.write_image(path)
+
+def aggregate_reports(entry_point, report_identifier, out_path, agg_stats_metric = 'median', levels = ['word', 'token']):
+    evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
+    
+    for mode in evaluation_modes:
+        for level in levels:
+            inpath = os.path.join(entry_point, f"{mode}_report_{report_identifier}@*-l{level}.tsv")
+            files = glob.glob( inpath )
+            if( len( files ) > 0 ):
+                file_names = []
+                dat = {}
+                for f in files:
+                    fname = f.split('/')[-1].split('.')[0]
+                    file_names.append(fname)
+                    df = pd.read_csv( f, sep='\t', index_col=0 )
+                    for m in df.columns:
+                        for idx in df.index:
+                            if( (idx.find(' avg') == -1) and (idx!='accuracy') and (idx!='O') ):
+                                if( not idx in dat ):
+                                    dat[idx] = {}
+                                if( not m in dat[idx] ):
+                                    dat[idx][m] = { 'values': [] }
+                                dat[idx][m]['values'].append(df.loc[idx, m])
+
+                dtst = {}
+                for tag in dat:
+                    for m in dat[tag]:
+                        vs = dat[tag][m]['values']
+                        dat[tag][m]['mean'] = np.average(vs)
+                        dat[tag][m]['std'] = np.std(vs)
+                        dat[tag][m]['median'] = np.median(vs)
+                        dat[tag][m]['max'] = np.max(vs)
+                        dat[tag][m]['min'] = np.min(vs)
+
+                header_values = '\t'.join( [ f"metric_value-{fname}" for fname in file_names ] )
+                fname = f"{mode}_summary-report_{report_identifier}-l{level}.tsv"
+                opath = os.path.join(out_path, fname)
+                f = open( opath, 'w')
+                f.write( f"Entity\tevaluation_metric\tstats_agg_name\tstats_agg_value\t{header_values}\n")
+                for tag in dat:
+                    for m in dat[tag]:
+                        values = '\t'.join([ str(x) for x in dat[tag][m]['values'] ])
+                        for stm in dat[tag][m]:
+                            if(stm != 'values'):
+                                v = dat[tag][m][stm]
+                                f.write( f"{tag}\t{m}\t{stm}\t{v}\t{values}\n" )
+                f.close()
+
+                fname = f"plot_{mode}_summary-report_{report_identifier}-l{level}.png"
+                _generate_summary_plot(opath, out_path, fname, agg_stats_metric = 'median')
+
+def __compute_objective(predictions, labels, label_list, metric='f1'):
+    '''
+    Compute the chosen metric score between the true labels and the predicted labels.
+
+    This function first converts the predictions to the labels using the argmax function.
+    It then removes any special tokens that are represented by -100 in the labels.
+    Finally, it computes and returns the F1 score between the true labels and the predicted labels.
+
+    Args:
+    predictions (np.array): The predicted probabilities for each label. 
+                            This is a 2D array where the first dimension is the number of examples and the second dimension is the number of possible labels.
+    labels (list of list of int): The true labels for each example. 
+                                  This is a list of lists where each inner list contains the labels for one example.
+    label_list (list): A list of labels corresponding to the indices in the predictions.
+
+    metric (string): The metric chosen for optimization (f1, accuracy, precision or recall)
+
+    Returns:
+    float: The metric score between the true labels and the predicted labels.
+    '''
+
+    predictions = np.argmax(predictions, axis=2)
+    # Remove ignored index (special tokens)
+    true_predictions, true_labels = _rename_label_predictions(predictions, labels, label_list)
+    
+    return eval(f'{metric}_score')(true_labels, true_predictions, zero_division=0)
 
 def generate_true_predictions_and_labels(predictions, labels, label_list, mode = None):
     '''
@@ -389,33 +495,6 @@ def generate_true_predictions_and_labels(predictions, labels, label_list, mode =
         ]
 
     return true_predictions, true_labels
-
-def __compute_objective(predictions, labels, label_list, metric='f1'):
-    '''
-    Compute the chosen metric score between the true labels and the predicted labels.
-
-    This function first converts the predictions to the labels using the argmax function.
-    It then removes any special tokens that are represented by -100 in the labels.
-    Finally, it computes and returns the F1 score between the true labels and the predicted labels.
-
-    Args:
-    predictions (np.array): The predicted probabilities for each label. 
-                            This is a 2D array where the first dimension is the number of examples and the second dimension is the number of possible labels.
-    labels (list of list of int): The true labels for each example. 
-                                  This is a list of lists where each inner list contains the labels for one example.
-    label_list (list): A list of labels corresponding to the indices in the predictions.
-
-    metric (list): The metric chosen for optimization (f1, accuracy, precision or recall)
-
-    Returns:
-    float: The metric score between the true labels and the predicted labels.
-    '''
-
-    predictions = np.argmax(predictions, axis=2)
-    # Remove ignored index (special tokens)
-    true_predictions, true_labels = _rename_label_predictions(predictions, labels, label_list)
-    
-    return eval(f'{metric}_score')(true_labels, true_predictions, zero_division=0)
 
 def generate_csv_comparison(path_data, type_metrics = ['sk', 'strict', 'default'], type_level = ['token_level', 'word_level'], target_tags=[]):
     '''
@@ -511,7 +590,7 @@ def generate_reports(predictions, labels, label_list, save_path, i, target_tags)
     aux_true_predictions = [label.split('-',1)[1] if len(label.split('-')) > 1 else label for full_pred in true_predictions for label in full_pred]
     
     #categories = ['O', 'total-participants', 'intervention-participants', 'control-participants', 'age', 'eligibility', 'ethinicity', 'condition', 'location', 'intervention', 'control', 'outcome', 'outcome-Measure', 'iv-bin-abs', 'cv-bin-abs', 'iv-bin-percent', 'cv-bin-percent', 'iv-cont-mean', 'cv-cont-mean', 'iv-cont-median', 'cv-cont-median', 'iv-cont-sd', 'cv-cont-sd', 'iv-cont-q1', 'cv-cont-q1', 'iv-cont-q3', 'cv-cont-q3']
-    categories = __remove_prefix_tags(target_tags)
+    categories = __remove_prefix_tags(target_tags, remove_duplicates=True)
     cm = np.array(confusion_matrix(aux_true_labels, aux_true_predictions, labels=categories, normalize='true')).reshape(len(categories), len(categories))
     make_confusion_matrix(cm, f"{save_path}/cm_{i}.png", categories=categories, cmap='viridis', figsize=(20,20), title='Confusion matrix', cbar = False, percent = False)
 

@@ -19,6 +19,8 @@ class SemanticDescription:
 		g.bind("stato", self.stato)
 		self.ncit = Namespace("http://purl.obolibrary.org/obo/NCIT_")
 		g.bind("ncit", self.ncit)
+		self.mesh = Namespace("http://id.nlm.nih.gov/mesh/")
+		g.bind("mesh", self.mesh)
 		
 	def _define_new_onto_elements(self):
 

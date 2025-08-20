@@ -342,13 +342,13 @@ def generate_reports_table( outputs_logits, predictions, labels, target_tags, ou
 
     Args:
         outputs (tensor): A torch tensor containing the instances, the labels predicted for each token of the instance and the probabilities of each label for a single token
-        predictions (A list of lists): contains the list of labels predicted for each token for the instances
-        labels (A list of lists): contains the list of real labels for each token
-        target_tags (list): the list of possible tags that belong to the NER experiment
-        out_path (string): path to the directory where the reports and plots will be saved
-        report_identifier (string): an identifier for the report
+        predictions (A list of lists): Contains the list of labels predicted for each token for the instances
+        labels (A list of lists): Contains the list of real labels for each token
+        target_tags (list): The list of possible tags that belong to the NER experiment
+        out_path (string): Path to the directory where the reports and plots will be saved
+        report_identifier (string): An identifier for the report
         index (string): In case it is a report of model replicates (training_0, training_1...) this index is the number itself, if it is not a sequence, the default is 'unique'
-        level (string): Two levels are accepted (token or word)
+        level (string): Two values are accepted (token or word)
     '''
 
     spredictions, slabels = _rename_label_predictions(predictions, labels, target_tags, labels_to_ignore=[-100, 0])
@@ -375,6 +375,17 @@ def _generate_summary_plot(inpath, out_path, fname, agg_stats_metric = 'median')
     fig.write_image(path)
 
 def aggregate_reports(entry_point, report_identifier, out_path, agg_stats_metric = 'median', levels = ['word', 'token']):
+    '''
+    Generate reports aggregating the model evaluation metrics of the training model rounds, according to the statistical measures min, max, mean, median and standard deviation.
+
+    Args:
+        entry_point (string): Path to the individual reports of each model round
+        report_identifier (string): The identifier that was used before for the individual reports
+        out_path (string): Path to the directory where the reports and plots will be saved
+        agg_stats_metric (string): The statistical measure that will be used for the summary plot of the evaluation metrics for the each of the entities. Possible values are: min, max, mean, median or std
+        levels (list of string): Two levels are accepted (token or word). It may be a list with both or a list of one of them
+    '''
+
     evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
     
     for mode in evaluation_modes:

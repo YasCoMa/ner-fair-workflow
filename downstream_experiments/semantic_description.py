@@ -9,8 +9,10 @@ class SemanticDescription:
 	
 	def __init__(self, fout):
 		config = json.load( open('/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert.json','r') )
+		exp_metadata = config['experiment_metadata']
 
 	def _setup_namespaces(self):
+		g = self.graph
 		self.nerwf = Namespace("http://example.org/")
 		g.bind("nerwf", self.nerwf)
 		self.xmlpo = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/") # https://github.com/OntoUML/ontouml-models/raw/refs/heads/master/models/xhani2023xmlpo/ontology.ttl
@@ -21,6 +23,8 @@ class SemanticDescription:
 		g.bind("ncit", self.ncit)
 		self.mesh = Namespace("http://id.nlm.nih.gov/mesh/")
 		g.bind("mesh", self.mesh)
+
+		self.graph = g
 		
 	def _define_new_onto_elements(self):
 

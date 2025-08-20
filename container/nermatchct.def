@@ -2,12 +2,6 @@ Bootstrap: docker
 From: ubuntu:20.04
 
 %environment
-	export PROGRAMSPATH="/aloy/data/programs/"
-	export MOE_PATH="$PROGRAMSPATH/moe/"
-    export PATH=/opt/bin:$PATH
-	export PATH="$PROGRAMSPATH/moe/moe2020/bin:/opt/fpocket/bin:/opt/p2rank_2.4.2:/opt/structureChecking/bin:$PATH"
-    export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
-	export RBT_ROOT=/opt/rDock
     # PATHS
     export PATH=/opt/miniconda3/bin:$PATH
     . /opt/miniconda3/etc/profile.d/conda.sh
@@ -47,15 +41,9 @@ From: ubuntu:20.04
                    libnetcdf-dev
 
     apt install -y make git libpopt0 libpopt-dev g++
+    apt install -y libnss3 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libpango-1.0-0 libcairo2 libasound2
     
     DEBIAN_FRONTEND=noninteractive apt install -y ttf-mscorefonts-installer
-	
-	cd opt/
-	git clone https://github.com/CBDD/rDock.git
-	cd rDock
-	make
-	PREFIX=/opt make install
-	cd ../..
 	
     # conda
     mkdir -p /opt/miniconda3
@@ -80,3 +68,5 @@ From: ubuntu:20.04
     mamba update -q -n base mamba
     
     conda env create --name matchct_env --file=/opt/environment.yml
+    conda activate matchct_env
+    kaleido_get_chrome

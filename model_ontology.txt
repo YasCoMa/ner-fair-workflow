@@ -31,12 +31,24 @@ relations:
 slso - http://www.w3.org/2006/vcard/ns#hasValue
 stato - http://purl.obolibrary.org/obo/
 
+---------
+Declaring union rdflib
+domain_union = BNode()                         # _:b0
+g.add((domain_union, RDF.type, OWL.Class))
+g.add((domain_union, OWL.unionOf,
+       RDF.collection([EX.Person, EX.Organization])))   # ( Person Organization )
+
+# Now attach the union node as the *single* domain
+g.add((works_for, RDFS.domain, domain_union))
+
+---------
+
 
 Experiment -> self:hasDataset -> LabeledDataset
 self:NLPExperiment subclassof self:mlexperiment subclassof xmlpo:experiment
 Experiment rdf:type self:nlpExperiment
 experiment realizes goal
-experiment (exp1) executedBy workflow
+experiment (exp1) self:executedBy workflow
 exp1 self:describedBy ExperimentCharacteristics (expd1)
 expd1 ExperimentType "Named entity recognition"
 expd1 ExperimentDomain "NER for PICO entities in texts concerning clinical trials"
@@ -45,15 +57,16 @@ expd1 ExperimentDescription "Finetuning of the biobert LLM model for NER task ap
 workflow contains DataCleaning, DataSplit, train, test, mlModelEvaluation
 modelRoot rdf:type LLM
 model rdf:type LLM
+model rdfs:label biobert based model for NER task in PICO entities
 model self:finetunedFrom modelRoot
 model self:hasParameter parameterSettings
-model self:hasVersion literal
+model slso:hasVersion (id 0001174) literal
 model self:hasReplicateNumber literal
 
 parameterSettings hasParameterCharacteristic ParameterCharacteristic
 pc1 rdf:type ParameterCharacteristic
 pc1 rdfs:label learning rate
-pc1 slso:hasValue 0.001
+pc1 vcard:hasValue 0.001
 pc1 xmlpo:ParameterName learning rate
 pc1 xmlpo:ParameterValue 0.001
 
@@ -63,19 +76,23 @@ Train executes SupervisedLearningApproachImplementation
 Train self:generatesModel model
 
 model self:describedBy ModelCharacteristic
-Test executes SupervisedLearningApproachImplementation
+Test executes SupervisedLearningApproachImplementation (trainSlaImpl1)
 MLModelEvaluation executes MLModelImplementation
 MLModelImplementation implements classificationAlgorithm (mlapproach)
+
 classificationAlgorithm self:describedBy MLApproachCharacteristic
 classificationAlgorithm hasOutput ClassPredictionEvaluationMeasure
 stato:accuracy (acc1) subClassOf ClassPredictionEvaluationMeasure
 acc1 slso:hasValue 0.8
+acc1 self:relatedTo ageEntity
+
 https://www.ebi.ac.uk/ols4/ontologies/ncit/classes/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FNCIT_C53313?lang=en
 acc1 self:hasAggregatedValue ncit:C53322 sd1 (standard deviation)
 sd1 slso:hasValue 0.02
 modelEvaluation1 rdf_type ModelEvaluationCharacteristic
 modelEvaluation1 MLEvaluationTechniqueName sklearn_without-prefix
 modelEvaluation1 MLEvaluationTechniqueDescription sk learn without the prefixes
+
 acc1 self:belongsTo modelEvaluation1
 acc1 self:
 

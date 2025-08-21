@@ -9,9 +9,16 @@ class SemanticDescription:
 	
 	def __init__(self, fout):
 		config = json.load( open('/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert.json','r') )
+		self.exp_metadata = {  }
 		if( 'experiment_metadata' in config ):
-		self.exp_metadata = config['experiment_metadata']
-
+			self.exp_metadata = config['experiment_metadata']
+		
+		_id = self.gen_id()
+		self.exp_metadata['id'] = f'exp_{_id}'
+		if( 'name' not in self.exp_metadata):
+			self.exp_metadata['name'] = f'NLP Experiment for namd entity recognition - identifier {_id}'
+		if( 'description' not in self.exp_metadata):
+			self.exp_metadata['description'] = ''
 	
 	def gen_id(self):
 		_id = uuid4().hex
@@ -88,7 +95,10 @@ class SemanticDescription:
 
 	def _describe_experiment(self):
 		g = self.graph
-		g.add( ( self.nerwf['exp_'+uuid4().hex], RDF.type, self.nerwf.NLPExperiment ) )
+		_id = self.exp_metadata['id']
+		g.add( ( self.nerwf[_id], RDF.type, self.nerwf.NLPExperiment ) )
+		g.add( ( self.nerwf[_id], RDFS.label, Literal( self.exp_metadata['name']) ) )
+		g.add( ( self.nerwf[_id], DCTERMS.description, Literal( self.exp_metadata['description']) ) )
 
 		self.graph = g
 

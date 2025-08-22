@@ -22,7 +22,8 @@ from utils.utils_evaluation import *
 
 class Training:
     def __init__(self):
-        self.batch_size = 16
+        self.batch_size_train = 16
+        self.batch_size_eval = 16
         self.learning_rate = 2e-5
         self.weight_decay = 0.01
         self.seed = 42
@@ -82,7 +83,7 @@ class Training:
                 if( self.config['optimization_metric'] in ['f1', 'precision', 'recall', 'accuracy'] ):
                     self.optimization_metric = self.config['optimization_metric']
 
-            self.do_optimization = True
+            self.do_optimization = False
             self.optimization_file = None
             if( 'do_hyperparameter_search' in self.config ):
                 self.do_optimization = self.config["do_hyperparameter_search"]
@@ -158,7 +159,8 @@ class Training:
     def _manage_optimization(self):
         self.logger.info("[Training step] Task (Manage hyperparameter optimization) started -----------")
         device = self.device
-        BATCH_SIZE = self.batch_size
+        BATCH_SIZE_train = self.batch_size_train
+        BATCH_SIZE_eval = self.batch_size_eval
         LEARNING_RATE = self.learning_rate
         WEIGHT_DECAY = self.weight_decay
         save_path = self.out
@@ -246,8 +248,8 @@ class Training:
             #Case when hyperparameter optimization is not wanted and has been defined manually or in Experiment 1
             self.hyperparameters_loaded = {'learning_rate': LEARNING_RATE,
                                     'weight_decay': WEIGHT_DECAY,
-                                    'per_device_train_batch_size': BATCH_SIZE,
-                                    'per_device_eval_batch_size': BATCH_SIZE
+                                    'per_device_train_batch_size': BATCH_SIZE_train,
+                                    'per_device_eval_batch_size': BATCH_SIZE_eval
                                     }
         self.logger.info("[Training step] Task (Manage hyperparameter optimization) ended -----------")
 
@@ -309,7 +311,8 @@ class Training:
     def _train(self):
         self.logger.info("[Training step] Task (Training model) started -----------")
         device = self.device
-        BATCH_SIZE = self.batch_size
+        BATCH_SIZE_train = self.batch_size_train
+        BATCH_SIZE_eval = self.batch_size_eval
         LEARNING_RATE = self.learning_rate
         WEIGHT_DECAY = self.weight_decay
         save_path = self.outDir
@@ -359,9 +362,9 @@ class Training:
 
         #In case of providing a .pkl file without any of the four hyperparameters considered we set them to the ones of Experiment 1
         if 'per_device_train_batch_size' not in list(hyperparameters_loaded.keys()):
-            hyperparameters_loaded['per_device_train_batch_size'] = BATCH_SIZE
+            hyperparameters_loaded['per_device_train_batch_size'] = BATCH_SIZE_train
         if 'per_device_eval_batch_size' not in list(hyperparameters_loaded.keys()):
-            hyperparameters_loaded['per_device_eval_batch_size']  = BATCH_SIZE
+            hyperparameters_loaded['per_device_eval_batch_size']  = BATCH_SIZE_eval
         if 'learning_rate' not in list(hyperparameters_loaded.keys()):
             hyperparameters_loaded['learning_rate'] = LEARNING_RATE
         if 'weight_decay' not in list(hyperparameters_loaded.keys()):

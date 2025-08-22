@@ -70,7 +70,7 @@ pc1 vcard:hasValue 0.001
 pc1 xmlpo:ParameterName learning rate
 pc1 xmlpo:ParameterValue 0.001
 
-DataCleaning executes PreprocessImplementation
+DataCleaning executes ( stato:0000102) PreprocessImplementation
 DataSplit executes PreprocessImplementation
 Train executes SupervisedLearningApproachImplementation
 Train self:generatesModel model
@@ -102,7 +102,7 @@ PreprocessImplementation generatesDataset LabeledDataset
 
 LabeledDataset datasetHasData TrainSet, TestSet, self:ValidationSet
 self:ValidationSet subClassOf xmlpo:PreprocessedData
-TrainSet hasDatasetCharacteristics DatasetCharacteristics (tds1)
+TrainSet describedBy DatasetCharacteristics (tds1)
 tds1 NumberOfFeatures 512
 tds1 NumberOfInstances 808
 

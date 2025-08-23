@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import json
+import glob
 import faiss
 import pickle
 import Levenshtein
@@ -40,6 +41,10 @@ class ExperimentValidationBySimilarity:
         self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
         self.inPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
         
+        self.augdsDir = '/aloy/home/ymartins/match_clinical_trial/experiments/augmented_data/'
+        if( not os.path.isdir( self.augdsDir ) ) :
+            os.makedirs( self.augdsDir )
+
         self.out = fout
         if( not os.path.isdir( self.out ) ) :
             os.makedirs( self.out )
@@ -873,28 +878,16 @@ class ExperimentValidationBySimilarity:
                 print('---- in ', sourcect)
                 #self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
 
-                #label_aux = 'predlev'
-                #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'fast', 'none' )
+                label_aux = 'predlev'
+                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'fast', 'none' )
 
-                label_aux = 'ollama'
-                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'ollama', path_faiss )
+                #label_aux = 'ollama'
+                #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'ollama', path_faiss )
         
     def launch_parallel_prediction(self):
         for i in range(5):
             os.system( f"nohup python3 ner_subproj/downstream_experiments/validation_ct_ann.py {i} > out_pred_{i}.log 2>&1 &" )
 
-    def perform_validation_longformer_allct(self):
-        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/longformer_trial/longformer-base-4096-finetuned-ner/prediction/'
-        self._map_nctid_pmid_general_parallel('longformer')
-        
-        self.embed_save_ncict_general(mode = 'all', label_ct_index = 'longformer')
-
-        for f in os.listdir(self.out):
-            if( f.startswith('general_mapping_') ):
-                fname = f.split('.')[0].replace('general_mapping_','')
-                sourcect = os.path.join( self.out, f)
-                self._get_predictions(sourcect, ctlib, pathlib, f'general_longformer_{fname}_' )
-    
     def get_diff_stats_gold_newds(self):
         # gold ctids and pubmeds
         sourcect = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
@@ -913,16 +906,143 @@ class ExperimentValidationBySimilarity:
         print('Fraction gold/current for CTs', len(gctids)/len(widectids))
         print('Fraction gold/current for Articles', len(gpmids)/len(widepmids))
 
+    
+    def _concatenate_per_pmid_augmented_txt(self, per_model_path, pmids):
+        save_aug = self.augdsDir
+        predDir='/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
+        for _id in pmids:
+            path = os.path.join( per_model_path, f'{_id}.txt')
+            if( not os.path.isfile(path) ):
+                files = glob.glob( os.path.join( predDir, f"{_id}_*" ) )
+                texts = list( map( lambda f: open(f, 'r').read(), files ))
+
+                f = open(path, 'w')
+                f.write( ('\n'.join(texts)).replace("\n\n", "\n") )
+                f.close()
+
+    def _build_annotations_augmented_ann(self, per_model_path, model_name, mapped_positions, agg_validated_df, historic):
+        cnt = {}
+        for i in agg_validated_df:
+            pmid = df.loc[i, 'pmid']
+            entity = df.loc[i, 'test_label']
+            word = df.loc[i, 'test_text']
+            score = df.loc[i, 'val']
+
+             key = f'{pmid}#$@{entity}#$@{word}'
+            for pos in mapped_positions[key]:
+                start = mapped_positions[key]['start']
+                end = mapped_positions[key]['end']
+
+            if( not key in historic ):
+                historic[key] = {}
+            historic[key][model_name] = score
+
+            if(not pmid in cnt):
+                cnt[pmid] = 1
+            path = os.path.join( per_model_path, f'{pmid}.ann')
+            if( not os.path.isfile(path) ):
+                with open(path, 'a') as g:
+                    g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
+                cnt[pmid] += 1
+    
+    def __load_mapped_positions(self, pred_coords_df):
+        mapped_positions = {}
+        for i in pred_coords_df:
+            pmid = df.loc[i, 'input_file']
+            entity = df.loc[i, 'entity_group']
+            word = df.loc[i, 'word']
+            start = df.loc[i, 'start']
+            end = df.loc[i, 'end']
+
+            key = f'{pmid}#$@{entity}#$@{word}'
+            if( not key in mapped_positions ):
+                mapped_positions[key] = []
+            mapped_positions[key].append( { 'start': start, 'end': end } )
+
+        return mapped_positions
+
+    def _build_historic_predictions_across_models(self, historic, models):
+        oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
+        f = open(oconsensus, 'w')
+        header = '\t'.join( ['pmid', 'entity', 'word', 'mean', 'min', 'max'] + models )
+        f.write( f"{header}\n")
+        for info in historic:
+            pmid, entity, word = info.split('#$@')
+            aux = {}
+            for m in models:
+                aux[m] = 0
+                if( m in historic[key] ):
+                    aux[m] = historic[key]
+
+            vals = [ float(v) for v in aux.values() ]
+            _min = min(vals)
+            _max = max(vals)
+            _mean = sum(vals)/len(vals)
+            values = [pmid, entity, word, _mean, _min, _max] + [ str(v) for v in vals ]
+            f.write( f"{values}\n")
+        f.close()
+
+    def integrate_high_scored_to_augment(self):
+        label_result = 'predlev'
+        
+        all_pmids = set()
+        historic = {}
+        coverage = {}
+        models = []
+        for i, f in enumerate( os.listdir( self.outPredDir ) ):
+            if( f.startswith('results_') ):
+                fname = f.split('.')[0].replace('results_','')
+                model_name = fname.split('.')[0]
+                models.append(model_name)
+                print('---- in ', model_name)
+                per_model_path = os.path.join(self.augdsDir, model_name)
+                if( not os.path.isdir( per_model_path ) ) :
+                    os.makedirs( per_model_path)
+                
+                path = os.path.join( self.outPredDir, f)
+                df = pd.read_csv(path, sep='\t')
+                pred_cov_pmids = set([ s.split('_')[0] for s in df['input_file'] ])
+
+                result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
+                rdf = pd.read_csv( result_path, sep='\t')
+                rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
+                rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
+                stat_class = [ s.split('-')[1] for s in rdf['score'] ]
+                rdf = rdf.drop('score', axis=1)
+                rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
+
+                rdf['stat_class'] = stat_class
+                result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
+                rdf.to_csv( result_path, sep='\t', index=None )
+                
+                rdf = rdf[ rdf['val'] >= 0.8 ]
+                sim_cov_pmids = set( rdf.pmid.unique() )
+                mapped_positions = self.__load_mapped_positions( df )
+                self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf)
+                historic = self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids, historic)
+                
+                all_pmids.update( list(sim_cov_pmids) )
+
+                coverage[fname] = { 'number_pmids_prediction': len(pred_cov_pmids), 'number_pmids_validation': len(sim_cov_pmids), 'ratio': ( len(sim_cov_pmids)/len(pred_cov_pmids) ) }
+
+        opath = os.path.join( self.out, 'validation_coverage_predlev.json')
+        json.dump(coverage, open(opath,'w') )
+
+        self._build_historic_predictions_across_models(historic, models)
+
     def run(self):
         #self.perform_validation_gold()
         #self._extract_info_ct()
         #self.perform_validation_allct()
         #self.get_diff_stats_gold_newds()
 
+        '''
         if( len(sys.argv) > 1 and sys.argv[1] == 'launch' ):
                 self.launch_parallel_prediction()
         else:
             self.perform_validation_biobert_allct()
+        '''
+        self.integrate_high_scored_to_augment()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

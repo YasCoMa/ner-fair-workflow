@@ -966,11 +966,10 @@ class ExperimentValidationBySimilarity:
         rdf = pd.read_csv( result_path, sep='\t')
         rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
         rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
-        stat_class = [ s.split('-')[1] for s in rdf['score'] ]
+        rdf['stat_class'] = [ s.split('-')[1] for s in rdf['score'] ]
         rdf = rdf.drop('score', axis=1)
         rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
 
-        rdf['stat_class'] = stat_class
         result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
         rdf.to_csv( result_path, sep='\t', index=None )
         

@@ -928,7 +928,7 @@ class ExperimentValidationBySimilarity:
             word = df.loc[i, 'test_text']
             score = df.loc[i, 'val']
 
-             key = f'{pmid}#$@{entity}#$@{word}'
+            key = f'{pmid}#$@{entity}#$@{word}'
             for pos in mapped_positions[key]:
                 start = mapped_positions[key]['start']
                 end = mapped_positions[key]['end']
@@ -1011,7 +1011,7 @@ class ExperimentValidationBySimilarity:
             model_name = fname.split('.')[0]
             models.append(model_name)
             print('---- in ', model_name)
-            
+
             per_model_path = os.path.join(self.augdsDir, model_name)
             if( not os.path.isdir( per_model_path ) ) :
                 os.makedirs( per_model_path)

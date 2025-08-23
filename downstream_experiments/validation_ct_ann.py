@@ -944,6 +944,8 @@ class ExperimentValidationBySimilarity:
                 with open(path, 'a') as g:
                     g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
                 cnt[pmid] += 1
+                
+        return historic
     
     def __load_mapped_positions(self, df):
         mapped_positions = {}
@@ -1024,8 +1026,8 @@ class ExperimentValidationBySimilarity:
             sim_cov_pmids = set( rdf.pmid.unique() )
             
             mapped_positions = self.__load_mapped_positions( df )
-            self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf)
-            historic = self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids, historic)
+            historic = self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf, historic)
+            self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids)
             
             all_pmids.update( list(sim_cov_pmids) )
 

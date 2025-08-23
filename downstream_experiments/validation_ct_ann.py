@@ -930,8 +930,8 @@ class ExperimentValidationBySimilarity:
 
             key = f'{pmid}#$@{entity}#$@{word}'
             for pos in mapped_positions[key]:
-                start = mapped_positions[key]['start']
-                end = mapped_positions[key]['end']
+                start = pos['start']
+                end = pos['end']
 
             if( not key in historic ):
                 historic[key] = {}

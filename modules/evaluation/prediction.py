@@ -28,7 +28,7 @@ class Prediction:
         self._get_arguments()
         self._setup_out_folders()
 
-        self.fready = os.path.join( self.logdir, "tasks_prediction.ready")
+        self.fready = os.path.join( self.logdir, f"{self.expid}-tasks_prediction.ready")
         self.ready = os.path.exists( self.fready )
         if(self.ready):
             self.logger.info("----------- Prediction step skipped since it was already computed -----------")
@@ -55,7 +55,9 @@ class Prediction:
         self.logdir = os.path.join( execdir, "logs" )
         if( not os.path.exists(self.logdir) ):
             os.makedirs( self.logdir )
-        logf = os.path.join( self.logdir, "prediction.log" )
+
+        self.expid = self.config["identifier"]
+        logf = os.path.join( self.logdir, f"{self.expid}-prediction.log" )
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('prediction')
 
@@ -63,6 +65,7 @@ class Prediction:
             self.config = json.load(g)
 
         try:
+            self.expid = self.config["identifier"]
             self.config_path = None
             self.flag_parallel = False
             if( 'config_hpc' in self.config ):
@@ -87,7 +90,7 @@ class Prediction:
         fout = '.'
         if self.outDir is not None:
             fout = self.outDir
-        self.outDir = f"{fout}/{model_name}-finetuned-{task}"
+        self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
         self.out = os.path.join( self.outDir, "prediction" )
         if( not os.path.exists(self.out) ):

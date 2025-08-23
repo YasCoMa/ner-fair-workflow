@@ -22,7 +22,7 @@ class Test:
         self._get_arguments()
         self._setup_out_folders()
 
-        self.fready = os.path.join( self.logdir, "tasks_test.ready")
+        self.fready = os.path.join( self.logdir, f"{self.expid}-tasks_test.ready")
         self.ready = os.path.exists( self.fready )
         if(self.ready):
             self.logger.info("----------- Test step skipped since it was already computed -----------")
@@ -49,7 +49,9 @@ class Test:
         self.logdir = os.path.join( execdir, "logs" )
         if( not os.path.exists(self.logdir) ):
             os.makedirs( self.logdir )
-        logf = os.path.join( self.logdir, "test.log" )
+
+        self.expid = self.config["identifier"]
+        logf = os.path.join( self.logdir, f"{self.expid}-test.log" )
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('test')
@@ -78,7 +80,7 @@ class Test:
         fout = '.'
         if self.outDir is not None:
             fout = self.outDir
-        self.outDir = f"{fout}/{model_name}-finetuned-{task}"
+        self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
         self.out = os.path.join( self.outDir, "test" )
         if( not os.path.exists(self.out) ):

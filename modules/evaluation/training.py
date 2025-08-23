@@ -32,7 +32,7 @@ class Training:
         self._get_arguments()
         self._setup_out_folders()
 
-        self.fready = os.path.join( self.logdir, "tasks_training.ready")
+        self.fready = os.path.join( self.logdir, f"{self.expid}-tasks_training.ready")
         self.ready = os.path.exists( self.fready )
         if(self.ready):
             self.logger.info("----------- Training step skipped since it was already computed -----------")
@@ -59,7 +59,9 @@ class Training:
         self.logdir = os.path.join( execdir, "logs" )
         if( not os.path.exists(self.logdir) ):
             os.makedirs( self.logdir )
-        logf = os.path.join( self.logdir, "training.log" )
+
+        self.expid = self.config["identifier"]
+        logf = os.path.join( self.logdir, f"{self.expid}-training.log" )
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('training')
@@ -68,6 +70,7 @@ class Training:
             self.config = json.load(g)
 
         try:
+            self.expid = self.config["identifier"]
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDir = self.config["outpath"]
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
@@ -102,7 +105,7 @@ class Training:
         fout = '.'
         if self.outDir is not None:
             fout = self.outDir
-        self.outDir = f"{fout}/{model_name}-finetuned-{task}"
+        self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
         self.out = os.path.join( self.outDir, "training" )
         if( not os.path.exists(self.out) ):

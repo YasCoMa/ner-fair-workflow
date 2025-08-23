@@ -944,13 +944,13 @@ class ExperimentValidationBySimilarity:
                 with open(path, 'a') as g:
                     g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
                 cnt[pmid] += 1
-                
+
         return historic
     
     def __load_mapped_positions(self, df):
         mapped_positions = {}
         for i in df.index:
-            pmid = df.loc[i, 'input_file']
+            pmid = df.loc[i, 'input_file'].split('_')[0]
             entity = df.loc[i, 'entity_group']
             word = df.loc[i, 'word']
             start = df.loc[i, 'start']

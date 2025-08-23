@@ -920,9 +920,9 @@ class ExperimentValidationBySimilarity:
                 f.write( ('\n'.join(texts)).replace("\n\n", "\n") )
                 f.close()
 
-    def _build_annotations_augmented_ann(self, per_model_path, model_name, mapped_positions, agg_validated_df, historic):
+    def _build_annotations_augmented_ann(self, per_model_path, model_name, mapped_positions, df, historic):
         cnt = {}
-        for i in agg_validated_df:
+        for i in df.index:
             pmid = df.loc[i, 'pmid']
             entity = df.loc[i, 'test_label']
             word = df.loc[i, 'test_text']
@@ -945,9 +945,9 @@ class ExperimentValidationBySimilarity:
                     g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
                 cnt[pmid] += 1
     
-    def __load_mapped_positions(self, pred_coords_df):
+    def __load_mapped_positions(self, df):
         mapped_positions = {}
-        for i in pred_coords_df:
+        for i in df.index:
             pmid = df.loc[i, 'input_file']
             entity = df.loc[i, 'entity_group']
             word = df.loc[i, 'word']

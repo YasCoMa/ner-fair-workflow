@@ -999,7 +999,7 @@ class ExperimentValidationBySimilarity:
         f.close()
 
     def integrate_high_scored_to_augment(self):
-        label_result = 'predlev'
+        label_aux = 'predlev'
 
         all_pmids = set()
         historic = {}
@@ -1020,6 +1020,7 @@ class ExperimentValidationBySimilarity:
             df = pd.read_csv(path, sep='\t')
             pred_cov_pmids = set([ s.split('_')[0] for s in df['input_file'] ])
 
+            label_result = f'{label_aux}_biobert_biobert_{model_name}_nct_pubmed'
             rdf = self._aggregate_group_predictions( label_result)
             sim_cov_pmids = set( rdf.pmid.unique() )
             

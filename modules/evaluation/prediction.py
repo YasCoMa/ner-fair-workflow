@@ -51,6 +51,10 @@ class Prediction:
         parser.add_argument('-paramFile','--parameter_file', help='Running configuration file', required=False)
         
         args = parser.parse_args()
+        
+        with open( args.parameter_file, 'r' ) as g:
+            self.config = json.load(g)
+
         execdir = args.execution_path
         self.logdir = os.path.join( execdir, "logs" )
         if( not os.path.exists(self.logdir) ):
@@ -60,9 +64,6 @@ class Prediction:
         logf = os.path.join( self.logdir, f"{self.expid}-prediction.log" )
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('prediction')
-
-        with open( args.parameter_file, 'r' ) as g:
-            self.config = json.load(g)
 
         try:
             self.expid = self.config["identifier"]

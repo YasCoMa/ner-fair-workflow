@@ -45,6 +45,10 @@ class Test:
         parser.add_argument('-paramFile','--parameter_file', help='Running configuration file', required=False)
         
         args = parser.parse_args()
+        
+        with open( args.parameter_file, 'r' ) as g:
+            self.config = json.load(g)
+
         execdir = args.execution_path
         self.logdir = os.path.join( execdir, "logs" )
         if( not os.path.exists(self.logdir) ):
@@ -55,9 +59,6 @@ class Test:
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('test')
-
-        with open( args.parameter_file, 'r' ) as g:
-            self.config = json.load(g)
 
         try:
             self.model_checkpoint = self.config["pretrained_model"]

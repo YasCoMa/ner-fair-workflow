@@ -961,6 +961,22 @@ class ExperimentValidationBySimilarity:
 
         return mapped_positions
 
+    def _aggregate_group_predictions(self, label_result):
+        result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
+        rdf = pd.read_csv( result_path, sep='\t')
+        rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
+        rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
+        stat_class = [ s.split('-')[1] for s in rdf['score'] ]
+        rdf = rdf.drop('score', axis=1)
+        rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
+
+        rdf['stat_class'] = stat_class
+        result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
+        rdf.to_csv( result_path, sep='\t', index=None )
+        
+        rdf = rdf[ rdf['val'] >= 0.8 ]
+        return rdf
+
     def _build_historic_predictions_across_models(self, historic, models):
         oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
         f = open(oconsensus, 'w')
@@ -984,46 +1000,36 @@ class ExperimentValidationBySimilarity:
 
     def integrate_high_scored_to_augment(self):
         label_result = 'predlev'
-        
+
         all_pmids = set()
         historic = {}
         coverage = {}
         models = []
-        for i, f in enumerate( os.listdir( self.outPredDir ) ):
-            if( f.startswith('results_') ):
-                fname = f.split('.')[0].replace('results_','')
-                model_name = fname.split('.')[0]
-                models.append(model_name)
-                print('---- in ', model_name)
-                per_model_path = os.path.join(self.augdsDir, model_name)
-                if( not os.path.isdir( per_model_path ) ) :
-                    os.makedirs( per_model_path)
-                
-                path = os.path.join( self.outPredDir, f)
-                df = pd.read_csv(path, sep='\t')
-                pred_cov_pmids = set([ s.split('_')[0] for s in df['input_file'] ])
+        files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
+        for i, f in tqdm( enumerate( files ) ):
+            fname = f.split('.')[0].replace('results_','')
+            model_name = fname.split('.')[0]
+            models.append(model_name)
+            print('---- in ', model_name)
+            
+            per_model_path = os.path.join(self.augdsDir, model_name)
+            if( not os.path.isdir( per_model_path ) ) :
+                os.makedirs( per_model_path)
+            
+            path = os.path.join( self.outPredDir, f)
+            df = pd.read_csv(path, sep='\t')
+            pred_cov_pmids = set([ s.split('_')[0] for s in df['input_file'] ])
 
-                result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
-                rdf = pd.read_csv( result_path, sep='\t')
-                rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
-                rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
-                stat_class = [ s.split('-')[1] for s in rdf['score'] ]
-                rdf = rdf.drop('score', axis=1)
-                rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
+            rdf = self._aggregate_group_predictions( label_result)
+            sim_cov_pmids = set( rdf.pmid.unique() )
+            
+            mapped_positions = self.__load_mapped_positions( df )
+            self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf)
+            historic = self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids, historic)
+            
+            all_pmids.update( list(sim_cov_pmids) )
 
-                rdf['stat_class'] = stat_class
-                result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
-                rdf.to_csv( result_path, sep='\t', index=None )
-                
-                rdf = rdf[ rdf['val'] >= 0.8 ]
-                sim_cov_pmids = set( rdf.pmid.unique() )
-                mapped_positions = self.__load_mapped_positions( df )
-                self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf)
-                historic = self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids, historic)
-                
-                all_pmids.update( list(sim_cov_pmids) )
-
-                coverage[fname] = { 'number_pmids_prediction': len(pred_cov_pmids), 'number_pmids_validation': len(sim_cov_pmids), 'ratio': ( len(sim_cov_pmids)/len(pred_cov_pmids) ) }
+            coverage[fname] = { 'number_pmids_prediction': len(pred_cov_pmids), 'number_pmids_validation': len(sim_cov_pmids), 'ratio': ( len(sim_cov_pmids)/len(pred_cov_pmids) ) }
 
         opath = os.path.join( self.out, 'validation_coverage_predlev.json')
         json.dump(coverage, open(opath,'w') )

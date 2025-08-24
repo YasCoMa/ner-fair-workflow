@@ -417,13 +417,14 @@ class SemanticDescription:
 
 		return flag, models	
 
-    def _integrate_model_evaluation_agg_results(self, eval_op_id):
+    def _integrate_model_evaluation_agg_results(self, eval_op_id, stage):
+        stage = 'test' # change to train later
+        
         task = 'ner'
         model_name = self.config['model_checkpoint'].split("/")[-1]
         fout = self.config['outpath']
         outDir = os.path.join(fout, f"{self.config['identifier']}-{model_name}-finetuned-{task}" )
 
-        stage = 'test' # change to train later
         folder = os.path.join( outDir, stage, 'summary_reports' )
         
         g = self.graph
@@ -485,7 +486,7 @@ class SemanticDescription:
             g.add( ( self.nerwf[proc1], self.RDF.type, self.xmlpo.MLModelEvaluation ) )
             g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Training evaluation", lang="en") ) )
             g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
-            self._integrate_model_evaluation_agg_results(proc1)
+            self._integrate_model_evaluation_agg_results(proc1, 'train')
 
         self.graph = g
 

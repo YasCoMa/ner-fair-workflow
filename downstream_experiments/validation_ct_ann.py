@@ -929,13 +929,14 @@ class ExperimentValidationBySimilarity:
             score = df.loc[i, 'val']
 
             key = f'{pmid}#$@{entity}#$@{word}'
-            for pos in mapped_positions[key]:
-                start = pos['start']
-                end = pos['end']
 
             if( not key in historic ):
                 historic[key] = {}
             historic[key][model_name] = score
+
+            for pos in mapped_positions[key]:
+                start = pos['start']
+                end = pos['end']
 
             if(not pmid in cnt):
                 cnt[pmid] = 1
@@ -988,8 +989,8 @@ class ExperimentValidationBySimilarity:
             aux = {}
             for m in models:
                 aux[m] = 0
-                if( m in historic[key] ):
-                    aux[m] = historic[key]
+                if( m in historic[info] ):
+                    aux[m] = historic[info]
 
             vals = [ float(v) for v in aux.values() ]
             _min = min(vals)
@@ -1003,8 +1004,8 @@ class ExperimentValidationBySimilarity:
         label_aux = 'predlev'
 
         all_pmids = set()
-        historic = {}
         coverage = {}
+        historic = {}
         models = []
         files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
         for i, f in tqdm( enumerate( files ) ):
@@ -1036,6 +1037,33 @@ class ExperimentValidationBySimilarity:
         opath = os.path.join( self.out, 'validation_coverage_predlev.json')
         json.dump(coverage, open(opath,'w') )
 
+        
+    def get_report_consensus(self):
+        label_aux = 'predlev'
+        historic = {}
+        models = []
+        files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
+        for i, f in tqdm( enumerate( files ) ):
+            model_name = fname.split('.')[0]
+            models.append(model_name)
+
+            label_result = f'{label_aux}_biobert_biobert_{model_name}_nct_pubmed'
+            result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
+            rdf = pd.read_csv( result_path, sep='\t')
+            rdf = rdf[ rdf['val'] >= 0.8 ]
+
+            for i in df.index:
+                pmid = df.loc[i, 'pmid']
+                entity = df.loc[i, 'test_label']
+                word = df.loc[i, 'test_text']
+                score = df.loc[i, 'val']
+
+                key = f'{pmid}#$@{entity}#$@{word}'
+
+                if( not key in historic ):
+                    historic[key] = {}
+                historic[key][model_name] = score
+
         self._build_historic_predictions_across_models(historic, models)
 
     def run(self):
@@ -1050,7 +1078,8 @@ class ExperimentValidationBySimilarity:
         else:
             self.perform_validation_biobert_allct()
         '''
-        self.integrate_high_scored_to_augment()
+        #self.integrate_high_scored_to_augment()
+        self.get_report_consensus()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

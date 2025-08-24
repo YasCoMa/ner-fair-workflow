@@ -14,6 +14,7 @@ classes:
 	data preprocessing
 	model ( name, version, parameters, date, format )
 	evaluation measure
+	
 	accuracy http://purl.obolibrary.org/obo/STATO_0000415
 	precision http://purl.obolibrary.org/obo/STATO_0000416
 	recall http://purl.obolibrary.org/obo/STATO_0000233

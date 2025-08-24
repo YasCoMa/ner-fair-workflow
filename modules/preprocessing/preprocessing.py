@@ -44,7 +44,10 @@ class Preprocessing:
         try:
             self.dataDir = self.config["data_text_path"]
             self.outDir = self.config["outpath"]
-            self.treat_overlap = self.config["eliminate_overlappings"]
+            self.treat_overlap = True
+            if('eliminate_overlappings' in self.config):
+                if( self.config["eliminate_overlappings"] in [True, False] ):
+                    self.treat_overlap = self.config["eliminate_overlappings"]
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
 
             self.logger.info("----------- Preprocessing step started -----------")

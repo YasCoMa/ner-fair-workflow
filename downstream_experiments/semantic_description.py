@@ -156,6 +156,12 @@ class SemanticDescription:
         g.add(( self.nerwf.useInputData, RDFS.label,   Literal("useInputData", lang="en")))
         g.add(( self.nerwf.useInputData, RDFS.comment,   Literal("Correlates operation with some declared input data", lang="en")))
         
+        g.add(( self.nerwf.hasScore, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.hasScore, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
+        g.add(( self.nerwf.hasScore, RDFS.range,  self.nerwf.NEREvaluationMeasure ))
+        g.add(( self.nerwf.hasScore, RDFS.label,   Literal("hasScore", lang="en")))
+        g.add(( self.nerwf.hasScore, RDFS.comment,   Literal("Correlates the model evaluation settings with the scores", lang="en")))
+        
         # --------- Datatype Properties
         g.add(( self.nerwf.hasReplicateNumber, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.hasReplicateNumber, RDFS.domain, self.OWL.Class )) 
@@ -174,6 +180,24 @@ class SemanticDescription:
         g.add(( self.nerwf.isAggregatedValue, RDFS.range,  XSD.boolean))
         g.add(( self.nerwf.isAggregatedValue, RDFS.label,   Literal("isAggregatedValue", lang="en")))
         g.add(( self.nerwf.isAggregatedValue, RDFS.comment,   Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
+        
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDF.type, OWL.DatatypeProperty) )
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.xmlpo.NEREvaluationMeasure )) 
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.label,   Literal("aggregatedByStatsFunction", lang="en")))
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.comment,   Literal("Describes statistical function used to aggregate the model replicate values of evaluation metrics", lang="en")))
+        
+        g.add(( self.nerwf.reportLevel, RDF.type, OWL.DatatypeProperty) )
+        g.add(( self.nerwf.reportLevel, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
+        g.add(( self.nerwf.reportLevel, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.reportLevel, RDFS.label,   Literal("reportLevel", lang="en")))
+        g.add(( self.nerwf.reportLevel, RDFS.comment,   Literal("Describes the level that the score was computed (word or token)", lang="en")))
+        
+        g.add(( self.nerwf.underContext, RDF.type, OWL.DatatypeProperty) )
+        g.add(( self.nerwf.underContext, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
+        g.add(( self.nerwf.underContext, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.underContext, RDFS.label,   Literal("underContext", lang="en")))
+        g.add(( self.nerwf.underContext, RDFS.comment,   Literal("Describes stage of the workflow in which the scores were computed", lang="en")))
         
         
         self.graph = g
@@ -314,6 +338,21 @@ class SemanticDescription:
 	        g.add( ( self.nerwf[proc2], self.nerwf.applyTaggingFormat, self.nerwf.nlpformat_iob ) )
 	        g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc2] ) )
 			
+            preprocParamConfig = self.gen_id('paramSetting') 
+            g.add( ( self.nerwf[preprocParamConfig], self.RDF.type, self.xmlpo.ParameterSettings ) )
+            g.add( ( self.nerwf[preprocParamConfig], self.RDFS.label, Literal("Proprocessing parameter configuration", lang="en") ) )
+            g.add( ( self.nerwf[proc2], self.xmlpo.HasParameter, self.nerwf[preprocParamConfig] ) )
+            
+            value = True
+            if('eliminate_overlappings' in self.config):
+                if( self.config["eliminate_overlappings"] in [True, False] ):
+                    value = self.config["eliminate_overlappings"]
+            param = self.gen_id('preprocparam') 
+            g.add( ( self.nerwf[param], self.RDF.type, self.xmlpo.ParameterCharacteristic ) )
+            g.add( ( self.nerwf[param], self.xmlpo.ParameterName, Literal( "eliminate entity annotation overlapping", lang="en") ) )
+            g.add( ( self.nerwf[param], self.xmlpo.ParameterValue, Literal(value) ) )
+            g.add( ( self.nerwf[preprocParamConfig], self.xmlpo.hasParameterCharacteristic, self.nerwf[param] ) )
+
 			proc3 = self.gen_id('wfoperation') # DatasetSplit
 	        g.add( ( self.nerwf[proc3], self.RDF.type, self.xmlpo.DatasetSplit ) )
 	        g.add( ( self.nerwf[proc3], self.RDFS.label, Literal("Reorganize the data according to the train, test and validation sets", lang="en") ) )
@@ -378,7 +417,50 @@ class SemanticDescription:
 
 		return flag, models	
 
+    def _integrate_model_evaluation_agg_results(self, eval_op_id):
+        task = 'ner'
+        model_name = self.config['model_checkpoint'].split("/")[-1]
+        fout = self.config['outpath']
+        outDir = os.path.join(fout, f"{self.config['identifier']}-{model_name}-finetuned-{task}" )
 
+        stage = 'test' # change to train later
+        folder = os.path.join( outDir, stage, 'summary_reports' )
+        
+        g = self.graph
+
+        eval_links = { 'accuracy': self.stato.0000415, 'precision': self.stato.0000416, 'recall': self.stato.0000233, 'aucroc': self.stato.0000608, 'f1-score': self.stato.0000628, 'mcc': self.stato.0000524, 'kappa': self.stato.0000630 }
+        evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
+        levels = ['token', 'word']
+        for mode in evaluation_modes:
+            for level in levels:
+                files = glob.glob( os.path.join(folder, f"{mode}_summary-report_*-l{level}.tsv") )
+                if( len(files) > 0 ):
+                    datc = self.gen_id('evalCharacteristics') 
+                    g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.ModelEvaluationCharacteristic ) )
+                    g.add( ( self.nerwf[datc], self.xmlpo.MLEvaluationTechniqueName, Literal( mode, lang="en" ) ) )
+                    g.add( ( self.nerwf[datc], self.nerwf.reportLevel, Literal( level, lang="en" ) ) )
+                    g.add( ( self.nerwf[datc], self.nerwf.underContext, Literal( stage, lang="en" ) ) )
+                    g.add( ( self.nerwf[eval_op_id], self.nerwf.describedBy, self.nerwf[datc] ) )
+                    for f in files:
+                        df = pd.read_csv(f, sep='\t')
+                        for i in df.index:
+                            entity = df.loc[i, 'Entity']
+                            evalMetric = df.loc[i, 'evaluation_metric']
+                            statsMetric = df.loc[i, 'stats_agg_name']
+                            value = df.loc[i, 'stats_agg_value']
+
+                            score = self.gen_id('evalScore') 
+                            g.add( ( self.nerwf[score], self.RDF.type, self.nerwf.NEREvaluationMeasure ) )
+                            g.add( ( self.nerwf[score], self.nerwf.belongsToEntity, Literal(entity) ) )
+                            g.add( ( self.nerwf[score], self.nerwf.isAggregatedValue, Literal(True) ) )
+                            g.add( ( self.nerwf[score], self.vcard.hasValue, Literal( value ) ) )
+                            g.add( ( self.nerwf[score], self.nerwf.aggregatedByStatsFunction, Literal( statsMetric, lang="en" ) ) )
+                            if( evalMetric in eval_links ):
+                                g.add( ( self.nerwf[score], self.nerwf.fromEvaluationMetric, eval_links[evalMetric] ) )
+                            g.add( ( self.nerwf[datc], self.nerwf.hasScore, self.nerwf[score] ) )
+
+        self.graph = g
+    
     def _describe_training(self):
         g = self.graph
 
@@ -398,6 +480,12 @@ class SemanticDescription:
                 g.add( ( self.nerwf[approach], self.xmlpo.hasOutput, self.nerwf[model_id] ) )
                 g.add( ( self.nerwf[proc1], self.nerwf.generatesModel, self.nerwf[model_id] ) )
 	        g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
+
+            proc1 = self.gen_id('wfoperation')
+            g.add( ( self.nerwf[proc1], self.RDF.type, self.xmlpo.MLModelEvaluation ) )
+            g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Training evaluation", lang="en") ) )
+            g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
+            self._integrate_model_evaluation_agg_results(proc1)
 
         self.graph = g
 

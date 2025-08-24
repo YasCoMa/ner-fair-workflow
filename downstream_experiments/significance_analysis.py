@@ -15,7 +15,7 @@ class AnalysisStatisticalSignificance:
 	def _acquire_data(self):
 		data = {}
 
-		folders = glob.glob( os.path.join(self.root_path, f"*-finetuned-*") )
+		folders = glob.glob( os.path.join(self.root_path, f"*-finetuned-*", self.stage, 'summary_reports') )
 
 		evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
         levels = ['token', 'word']

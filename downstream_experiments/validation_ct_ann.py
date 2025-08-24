@@ -990,7 +990,7 @@ class ExperimentValidationBySimilarity:
             for m in models:
                 aux[m] = 0
                 if( m in historic[info] ):
-                    aux[m] = historic[info]
+                    aux[m] = historic[info][m]
 
             vals = [ float(v) for v in aux.values() ]
             _min = min(vals)

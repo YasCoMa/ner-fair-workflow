@@ -299,7 +299,10 @@ def _generate_summary_metrics_bysklearn(dat, labels, outputs_logits, target_tags
 
         auc_roc = 0
         if(outputs_logits is not None):
-            auc_roc = __compute_aucroc(labels, outputs_logits, target_tags, remove_prefix)
+            try:
+                auc_roc = __compute_aucroc(labels, outputs_logits, target_tags, remove_prefix)
+            except:
+                pass
         mcc = matthews_corrcoef( dat[k][1], dat[k][0] )
         kappa = cohen_kappa_score( dat[k][1], dat[k][0] )
         acc = accuracy_score_sk( dat[k][1], dat[k][0] )
@@ -308,7 +311,7 @@ def _generate_summary_metrics_bysklearn(dat, labels, outputs_logits, target_tags
         df = pd.DataFrame(class_report_sk).transpose()
         
         ordered_auc = 0
-        if(outputs_logits is not None):
+        if( auc_roc != 0 ):
             ordered_auc = []
             for i in df.index:
                 v = 0

@@ -1050,8 +1050,8 @@ class ExperimentValidationBySimilarity:
 
             label_result = f'{label_aux}_biobert_biobert_{model_name}_nct_pubmed'
             result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
-            rdf = pd.read_csv( result_path, sep='\t')
-            rdf = rdf[ rdf['val'] >= 0.8 ]
+            df = pd.read_csv( result_path, sep='\t')
+            df = df[ df['val'] >= 0.8 ]
 
             for i in df.index:
                 pmid = df.loc[i, 'pmid']

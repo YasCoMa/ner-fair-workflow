@@ -7,6 +7,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
+from scipy.special import softmax
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import confusion_matrix, cohen_kappa_score, matthews_corrcoef, roc_auc_score
@@ -188,7 +189,12 @@ def tokenize_and_align_labels(examples, tokenizer=None, flag_tokenizer=None, lab
 def __get_probabilities( labels, target_tags, outputs_logits, labels_to_ignore=[-100, 0], remove_prefix=False):
     auxc = __remove_prefix_tags(target_tags)
 
-    arr = torch.softmax( outputs_logits, dim=2).to('cpu').numpy()
+    arr = np.array([])
+    try:
+        arr = torch.softmax( outputs_logits, dim=2).to('cpu').numpy()
+    except:
+        arr = softmax( outputs_logits, axis=2)
+        
     probs = []
     for idx, sentence_labels in enumerate(labels):
         for lidx, l in enumerate(sentence_labels):

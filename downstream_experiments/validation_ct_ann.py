@@ -997,7 +997,7 @@ class ExperimentValidationBySimilarity:
             _max = max(vals)
             _mean = sum(vals)/len(vals)
             values = [pmid, entity, word, _mean, _min, _max] + vals
-            value = '\t'.join( [ str(v) for v in values ] )
+            values = '\t'.join( [ str(v) for v in values ] )
             f.write( f"{values}\n")
         f.close()
 

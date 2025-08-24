@@ -1044,6 +1044,7 @@ class ExperimentValidationBySimilarity:
         models = []
         files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
         for i, f in tqdm( enumerate( files ) ):
+            fname = f.split('.')[0].replace('results_','')
             model_name = fname.split('.')[0]
             models.append(model_name)
 

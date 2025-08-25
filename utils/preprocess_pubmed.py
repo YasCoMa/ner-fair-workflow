@@ -297,10 +297,11 @@ Combinations pmid+label_abstract_piece : 320285
         print( 'All cts with abstract parsed', len(ctf), ' - ', ( len(ctf)/len(callids) ) )
         print( 'All pubmeds with abstract parsed', len(pgone), ' - ', ( len(pgone)/len(pallids) ) )
         '''
-        All mapped CTs 116603
-        All mapped pubmeds 401674
-        Missing pubmeds 21104
-        All pubmeds with abstract parsed 380570  -  0.947
+All mapped CTs 116755
+All mapped pubmeds 402373
+Missing pubmeds 20685
+All cts with abstract parsed 115886  -  0.9925570639373046
+All pubmeds with abstract parsed 381688  -  0.9485924751412247
         '''
     
     def run(self):

@@ -107,3 +107,7 @@ TrainSet describedBy DatasetCharacteristics (tds1)
 tds1 NumberOfFeatures 512
 tds1 NumberOfInstances 808
 
+predictionProcedure hasSummaryPrediction SummaryPrediction (sp1)
+sp1 belongsToEntity ent
+sp1 biolink:has_count 200
+sp1

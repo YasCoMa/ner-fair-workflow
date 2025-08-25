@@ -2,15 +2,18 @@ import os
 import sys
 import json
 from uuid import uuid4
-from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD
+from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
 
 class SemanticDescription:
     
     def __init__(self, fout):
         self.config = json.load( open('/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert.json','r') )
-        self.outDir = self.config["outpath"]
-        
+        self.outDirRoot = self.config["outpath"]
+        task = 'ner'
+        model_name = self.config['model_checkpoint'].split("/")[-1]
+        self.outDir = os.path.join(self.outDirRoot, f"{self.config['identifier']}-{model_name}-finetuned-{task}" )
+
         self.exp_metadata = {  }
         if( 'experiment_metadata' in config ):
             self.exp_metadata = config['experiment_metadata']
@@ -26,7 +29,9 @@ class SemanticDescription:
         if( 'source' not in self.exp_metadata):
             self.exp_metadata['source'] = ''
         
-    
+    	
+        self.approach = None
+
     def gen_id(self, prefix):
         _id = uuid4().hex
         return f'{prefix}_{_id}'
@@ -66,22 +71,31 @@ class SemanticDescription:
         g = self.graph
         
         # Defining specific types of Experiment
+        g.add(( self.nerwf.MLExperiment, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.MLExperiment, RDFS.subClassOf, self.xmlpo.Experiment ) )
         g.add(( self.nerwf.MLExperiment, RDFS.label,   Literal("MLExperiment", lang="en")))
         
+        g.add(( self.nerwf.NLPExperiment, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.NLPExperiment, RDFS.subClassOf, self.nerwf.MLExperiment ) )
         g.add(( self.nerwf.NLPExperiment, RDFS.label,   Literal("NLPExperiment", lang="en")))
         
+        g.add(( self.nerwf.NEREvaluationMeasure, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.NEREvaluationMeasure, RDFS.subClassOf, self.xmlpo.ClassPredictionEvaluationMeasure ) )
         g.add(( self.nerwf.NEREvaluationMeasure, RDFS.label,   Literal("NEREvaluationMeasure", lang="en")))
         
+        g.add(( self.nerwf.ValidationSet, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.ValidationSet, RDFS.subClassOf, self.xmlpo.PreprocessedData ) )
         g.add(( self.nerwf.ValidationSet, RDFS.label,   Literal("ValidationSet", lang="en")))
         
+        g.add(( self.nerwf.TaggingFormat, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.TaggingFormat, RDFS.subClassOf, self.edam.format_3862 ) ) # NLP annotation format class from edam (format branch)
         g.add(( self.nerwf.TaggingFormat, RDFS.label,   Literal("TaggingFormat", lang="en")))
         self.__define_tagging_format_instances()
 
+        g.add(( self.nerwf.SummaryPrediction, RDF.type, OWL.Class) )
+        g.add( ( self.nerwf.SummaryPrediction, RDFS.subClassOf, self.xmlpo.Result ) )
+        g.add(( self.nerwf.SummaryPrediction, RDFS.label,   Literal("SummaryPrediction", lang="en")))
+        
         # Defining MLModel as a sub class of the general Model class
         g.add( ( self.xmlpo.MLModel, RDFS.subClassOf, self.ncit.C43383 ) ) 
         # Defining Predictive Learning Models model as a sub class of the MLModel class
@@ -152,7 +166,10 @@ class SemanticDescription:
         
         g.add(( self.nerwf.useInputData, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.useInputData, RDFS.domain, self.xmlpo.Operation )) 
-        g.add(( self.nerwf.useInputData, RDFS.range,  self.xmlpo.Data ))
+        range_union = BNode()
+		g.add((range_union, RDF.type, OWL.Class))
+		g.add((range_union, OWL.unionOf, RDF.collection([ self.xmlpo.Dataset, self.xmlpo.Data ]) ) )
+        g.add(( self.nerwf.useInputData, RDFS.range,  range_union ))
         g.add(( self.nerwf.useInputData, RDFS.label,   Literal("useInputData", lang="en")))
         g.add(( self.nerwf.useInputData, RDFS.comment,   Literal("Correlates operation with some declared input data", lang="en")))
         
@@ -161,6 +178,18 @@ class SemanticDescription:
         g.add(( self.nerwf.hasScore, RDFS.range,  self.nerwf.NEREvaluationMeasure ))
         g.add(( self.nerwf.hasScore, RDFS.label,   Literal("hasScore", lang="en")))
         g.add(( self.nerwf.hasScore, RDFS.comment,   Literal("Correlates the model evaluation settings with the scores", lang="en")))
+        
+        g.add(( self.nerwf.predictedByModel, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.predictedByModel, RDFS.domain, self.nerwf.SummaryPrediction )) 
+        g.add(( self.nerwf.predictedByModel, RDFS.range, self.mesh.D000098412 ))
+        g.add(( self.nerwf.predictedByModel, RDFS.label,   Literal("predictedByModel", lang="en")))
+        g.add(( self.nerwf.predictedByModel, RDFS.comment,   Literal("Generation of a predictive model as a product of an operation execution", lang="en")))
+        
+        g.add(( self.nerwf.hasSummaryPrediction, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.hasSummaryPrediction, RDFS.domain, self.edam.operation_0335 )) 
+        g.add(( self.nerwf.hasSummaryPrediction, RDFS.range, self.nerwf.SummaryPrediction ))
+        g.add(( self.nerwf.hasSummaryPrediction, RDFS.label,   Literal("hasSummaryPrediction", lang="en")))
+        g.add(( self.nerwf.hasSummaryPrediction, RDFS.comment,   Literal("Generation of a predictive model as a product of an operation execution", lang="en")))
         
         # --------- Datatype Properties
         g.add(( self.nerwf.hasReplicateNumber, RDF.type, OWL.DatatypeProperty) )
@@ -176,7 +205,10 @@ class SemanticDescription:
         g.add(( self.nerwf.belongsToEntity, RDFS.comment,   Literal("Specify the name of the entity related to the score instance", lang="en")))
         
         g.add(( self.nerwf.isAggregatedValue, RDF.type, OWL.DatatypeProperty) )
-        g.add(( self.nerwf.isAggregatedValue, RDFS.domain, self.nerwf.NEREvaluationMeasure )) 
+        domain_union = BNode()
+		g.add((domain_union, RDF.type, OWL.Class))
+		g.add((domain_union, OWL.unionOf, RDF.collection([ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ]) ) )
+        g.add(( self.nerwf.isAggregatedValue, RDFS.domain, domain_union )) 
         g.add(( self.nerwf.isAggregatedValue, RDFS.range,  XSD.boolean))
         g.add(( self.nerwf.isAggregatedValue, RDFS.label,   Literal("isAggregatedValue", lang="en")))
         g.add(( self.nerwf.isAggregatedValue, RDFS.comment,   Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
@@ -198,6 +230,12 @@ class SemanticDescription:
         g.add(( self.nerwf.underContext, RDFS.range,  XSD.string))
         g.add(( self.nerwf.underContext, RDFS.label,   Literal("underContext", lang="en")))
         g.add(( self.nerwf.underContext, RDFS.comment,   Literal("Describes stage of the workflow in which the scores were computed", lang="en")))
+        
+        g.add(( self.nerwf.hasPredictedItemsCount, RDF.type, OWL.DatatypeProperty) )
+        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.domain, self.nerwf.SummaryPrediction )) 
+        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.range,  XSD.integer))
+        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.label,   Literal("hasPredictedItemsCount", lang="en")))
+        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.comment,   Literal("Number of words predicted to belong to certain entity", lang="en")))
         
         
         self.graph = g
@@ -249,7 +287,7 @@ class SemanticDescription:
 
     def __describe_preproc_dataset(self):
         g = self.graph
-        dataPreprocDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
+        dataPreprocDir = os.path.join(self.outDirRoot, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
         flag = os.path.isdir(dataPreprocDir)
         if( flag ):
         	ds = load_from_disk(dataPreprocDir)
@@ -262,6 +300,7 @@ class SemanticDescription:
 	        fe = self.gen_id('feature') 
 	        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
 	        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature ID", lang="en") ) )
+	        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
 	        datc = self.gen_id('featureCharacteristics') 
 	        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
 	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("id", lang="en") ) )
@@ -271,18 +310,20 @@ class SemanticDescription:
 	        fe = self.gen_id('feature') 
 	        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
 	        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature TOKENS", lang="en") ) )
+	        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
 	        datc = self.gen_id('featureCharacteristics') 
 	        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
-	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("id", lang="en") ) )
+	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("tokens", lang="en") ) )
 	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "Original sentence tokens", lang="en" ) ) )
 	        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
 	        
 	        fe = self.gen_id('feature') 
 	        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
 	        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature NER_TAGS", lang="en") ) )
+	        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
 	        datc = self.gen_id('featureCharacteristics') 
 	        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
-	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("id", lang="en") ) )
+	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("ner_tags", lang="en") ) )
 	        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "Correct entity labels for each token in the sentences", lang="en" ) ) )
 	        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
 
@@ -291,6 +332,7 @@ class SemanticDescription:
             self.dtrain = dtrain
 	        g.add( ( self.nerwf[dtrain], self.RDF.type, self.xmlpo.TrainSet ) )
 	        g.add( ( self.nerwf[dtrain], self.RDFS.label, Literal( "Train data", lang="en") ) )
+	        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasData, self.nerwf[dtrain] ) )
 	        datc = self.gen_id('dataCharacteristics') 
 	        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.DatasetCharacteristic ) )
 	        g.add( ( self.nerwf[datc], self.xmlpo.NumberOfFeatures, Literal(3) ) )
@@ -364,15 +406,13 @@ class SemanticDescription:
     def __check_model_details(self, train_id):
         g = self.graph
 
-        models = []
-    	model_checkpoint = self.config["pretrained_model"]
-    	hyperparams = {'per_device_train_batch_size': 8, 'per_device_eval_batch_size': 16, 'learning_rate': 2e-5, 'weight_decay': 0.01 }
-		model_name = model_checkpoint.split("/")[-1]
-		outDir = f"{outDir}/{model_name}-finetuned-ner"
-		trout = os.path.join( outDir, "training" )
+        self.models = {}
+        
+        hyperparams = {'per_device_train_batch_size': 8, 'per_device_eval_batch_size': 16, 'learning_rate': 2e-5, 'weight_decay': 0.01 }
+		trout = os.path.join( self.outDir, "training" )
 		flag = os.path.exists(trout)
 		if(flag):
-			model_files = [file for file in os.listdir(outDir) if file.startswith("model_")]
+			model_files = [file for file in os.listdir(self.outDir) if file.startswith("model_")]
 			if( len(model_files) > 0 ):
 				do_optimization = False
 				optimization_file = None
@@ -433,7 +473,7 @@ class SemanticDescription:
                 g.add( ( self.nerwf[rootmodel], self.RDFS.label, Literal( f"Original model {model_checkpoint}", lang="en") ) )
                 for i, model in enumerate(model_files):
                     finemodel = self.gen_id('finetuned_model')
-                    models.append(finemodel)
+                    self.models[finemodel] = model
                     g.add( ( self.nerwf[finemodel], self.RDF.type, self.mesh.D000098342 ) )
                     g.add( ( self.nerwf[finemodel], self.RDFS.label, Literal( f"Finetunned {model}", lang="en") ) )
                     g.add( ( self.nerwf[finemodel], self.nerwf.finetunedFrom, self.nerwf[rootmodel] ) )
@@ -446,12 +486,7 @@ class SemanticDescription:
     def _integrate_model_evaluation_agg_results(self, eval_op_id, stage):
         stage = 'test' # change to train later
         
-        task = 'ner'
-        model_name = self.config['model_checkpoint'].split("/")[-1]
-        fout = self.config['outpath']
-        outDir = os.path.join(fout, f"{self.config['identifier']}-{model_name}-finetuned-{task}" )
-
-        folder = os.path.join( outDir, stage, 'summary_reports' )
+        folder = os.path.join( self.outDir, stage, 'summary_reports' )
         
         g = self.graph
 
@@ -498,19 +533,19 @@ class SemanticDescription:
 	        g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Training step", lang="en") ) )
 	        g.add( ( self.nerwf[proc1], self.nerwf.useInputData, self.nerwf[self.dtrain] ) )
             
-            approach = self.gen_id('mlapproach')
-            g.add( ( self.nerwf[approach], self.RDF.type, self.xmlpo.ClassificationAlgorithm ) )
-            g.add( ( self.nerwf[approach], self.RDFS.label, Literal("Deep Learning - Transformers", lang="en") ) )
-            g.add( ( self.nerwf[proc1], self.stato.0000102, self.nerwf[approach] ) ) # operation executes 
+            self.approach = self.gen_id('mlapproach')
+            g.add( ( self.nerwf[self.approach], self.RDF.type, self.xmlpo.ClassificationAlgorithm ) )
+            g.add( ( self.nerwf[self.approach], self.RDFS.label, Literal("Deep Learning - Transformers", lang="en") ) )
+            g.add( ( self.nerwf[proc1], self.stato.0000102, self.nerwf[self.approach] ) ) # operation executes 
             
             for model_id in models:
-                g.add( ( self.nerwf[approach], self.xmlpo.hasOutput, self.nerwf[model_id] ) )
+                g.add( ( self.nerwf[self.approach], self.xmlpo.hasOutput, self.nerwf[model_id] ) )
                 g.add( ( self.nerwf[proc1], self.nerwf.generatesModel, self.nerwf[model_id] ) )
 	        g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
 
             proc1 = self.gen_id('wfoperation')
             g.add( ( self.nerwf[proc1], self.RDF.type, self.xmlpo.MLModelEvaluation ) )
-            g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Training evaluation", lang="en") ) )
+            g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Training - model evaluation", lang="en") ) )
             g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
             self._integrate_model_evaluation_agg_results(proc1, 'train')
 
@@ -519,26 +554,157 @@ class SemanticDescription:
     def _describe_test(self):
         g = self.graph
 
-        flag = self.__check_results_test_details()
+        stage = 'test'
+        pattern = os.path.join( self.outDir, stage, 'summary_reports', '*.tsv' )
+        files = glob.glob(pattern)
+        flag = ( len(files) > 0 )
         if(flag):
 	        proc1 = self.gen_id('wfoperation') 
 	        g.add( ( self.nerwf[proc1], self.RDF.type, self.xmlpo.Test ) )
 	        g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Test step", lang="en") ) )
 	        g.add( ( self.nerwf[proc1], self.nerwf.useInputData, self.nerwf[self.dtest] ) )
+            
+            approach = self.approach
+            if( self.approach is None ):
+	            approach = self.gen_id('mlapproach')
+	            g.add( ( self.nerwf[approach], self.RDF.type, self.xmlpo.ClassificationAlgorithm ) )
+	            g.add( ( self.nerwf[approach], self.RDFS.label, Literal("Deep Learning - Transformers", lang="en") ) )
+            g.add( ( self.nerwf[proc1], self.stato.0000102, self.nerwf[approach] ) ) # operation executes 
+            
             g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
+            
+            proc1 = self.gen_id('wfoperation')
+            g.add( ( self.nerwf[proc1], self.RDF.type, self.xmlpo.MLModelEvaluation ) )
+            g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Test - model evaluation", lang="en") ) )
+            g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
+            self._integrate_model_evaluation_agg_results(proc1, 'test')
 
         self.graph = g
+
+    def __describe_out_prediction_dataset(self):
+    	g = self.graph
+
+    	ds1 = self.gen_id('wfdataset') 
+        g.add( ( self.nerwf[ds1], self.RDF.type, self.xmlpo.LabeledDataset ) )
+        g.add( ( self.nerwf[ds1], self.RDFS.label, Literal( "Dataset table containing predictions for the input set of text files", lang="en") ) )
+        
+        # Features
+        fe = self.gen_id('feature') 
+        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
+        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature INPUT_FILE", lang="en") ) )
+        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
+        datc = self.gen_id('featureCharacteristics') 
+        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("input_file", lang="en") ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "Original file identifier took from text file name", lang="en" ) ) )
+        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
+
+        fe = self.gen_id('feature') 
+        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
+        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature SCORE", lang="en") ) )
+        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
+        datc = self.gen_id('featureCharacteristics') 
+        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("score", lang="en") ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "Prediction score assigned by the model", lang="en" ) ) )
+        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
+        
+        fe = self.gen_id('feature') 
+        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
+        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature START", lang="en") ) )
+        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
+        datc = self.gen_id('featureCharacteristics') 
+        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("start", lang="en") ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "Start position where the entity span was identified", lang="en" ) ) )
+        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
+        
+        fe = self.gen_id('feature') 
+        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
+        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature END", lang="en") ) )
+        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
+        datc = self.gen_id('featureCharacteristics') 
+        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("end", lang="en") ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "End position where the entity span was identified", lang="en" ) ) )
+        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
+        
+        fe = self.gen_id('feature') 
+        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
+        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature ENTITY_GROUP", lang="en") ) )
+        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
+        datc = self.gen_id('featureCharacteristics') 
+        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("entity_group", lang="en") ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "Entity predicted for the text span", lang="en" ) ) )
+        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
+        
+        fe = self.gen_id('feature') 
+        g.add( ( self.nerwf[fe], self.RDF.type, self.xmlpo.Feature ) )
+        g.add( ( self.nerwf[fe], self.RDFS.label, Literal( "Dataset feature WORD", lang="en") ) )
+        g.add( ( self.nerwf[ds1], self.xmlpo.datasetHasFeature, self.nerwf[fe] ) )
+        datc = self.gen_id('featureCharacteristics') 
+        g.add( ( self.nerwf[datc], self.RDF.type, self.xmlpo.FeatureCharacteristic ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureName, Literal("word", lang="en") ) )
+        g.add( ( self.nerwf[datc], self.xmlpo.FeatureDescription, Literal( "The piece of text that was applied to the entity", lang="en" ) ) )
+        g.add( ( self.nerwf[fe], self.nerwf.describedBy, self.nerwf[datc] ) )
+
+    	self.graph = g
+
+    	return ds1
+
+    def __describe_summary_results_per_entity(self, procedure_id):
+    	stage = 'prediction' # change to train later
+        
+        folder = os.path.join( self.outDir, stage )
+        
+        g = self.graph
+
+        for mid in self.models:
+        	mname = self.models[mid]
+    		path = os.path.join(folder, f"results_{m}.tsv") 
+    		df = pd.read_csv(path, sep='\t')
+    		entities = df.entity.unique()
+    		for e in entities:
+    			aux = df[ df.entity == e ]
+    			n = len(aux)
+    			npmids = len( set( [ x.split('_')[0] for x in aux.input_file ] ))
+
+    			sp = self.gen_id('sp') 
+    			g.add( ( self.nerwf[sp], self.RDF.type, self.nerwf.SummaryPrediction ) )
+		        g.add( ( self.nerwf[sp], self.RDFS.label, Literal( f"Prediction Summary for entity {e} - model {mname}", lang="en") ) )
+		        g.add( ( self.nerwf[sp], self.nerwf.belongsToEntity, Literal(e) ) )
+		        g.add( ( self.nerwf[sp], self.nerwf.predictedByModel, mid ) )
+		        g.add( ( self.nerwf[sp], self.nerwf.hasPredictedItemsCount, Literal(n) ) )
+		        g.add( ( self.nerwf[procedure_id], self.nerwf.hasSummaryPrediction, self.nerwf[sp] ) )
+
+    	self.graph = g
+
 
     def _describe_prediction(self):
         g = self.graph
 
-        flag = self.__check_results_prediction_details()
+        stage = 'prediction'
+        pattern = os.path.join( self.outDir, stage, 'result_*.tsv' )
+        files = glob.glob(pattern)
+        flag = ( len(files) > 0 )
         if(flag):
 	        proc1 = self.gen_id('wfoperation') # edam - Prediction and recognition
 	        g.add( ( self.nerwf[proc1], self.RDF.type, self.edam.operation_2423 ) )
 	        g.add( ( self.nerwf[proc1], self.RDFS.label, Literal("Prediction step on new data", lang="en") ) )
-	        g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
+	        
+	        # Declare input
+	        ds1 = self.gen_id('wfdataset') 
+	        g.add( ( self.nerwf[ds1], self.RDF.type, self.xmlpo.UnlabeledDataset ) )
+	        g.add( ( self.nerwf[ds1], self.RDFS.label, Literal( "Dataset composed of multiple text files", lang="en") ) )
+	        g.add( ( self.nerwf[proc1], self.nerwf.useInputData, self.nerwf[ds1] ) )
+			
+	        # Declare output
+			dsout = self.__describe_out_prediction_dataset()
+	        g.add( ( self.nerwf[proc1], self.nerwf.generatesDataset, self.nerwf[dsout] ) )
+	        self.__describe_summary_results_per_entity(proc1)
 
+	        g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
 
         self.graph = g
 

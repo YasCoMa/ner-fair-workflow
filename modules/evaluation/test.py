@@ -61,6 +61,10 @@ class Test:
         self.logger = logging.getLogger('test')
 
         try:
+            if( 'seed' in self.config ):
+                if( isinstance( self.config['seed'] , int ) ):
+                    self.seed = self.config['seed']
+
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDir = self.config["outpath"]
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step

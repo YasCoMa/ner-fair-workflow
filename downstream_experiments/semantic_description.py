@@ -390,10 +390,12 @@ class SemanticDescription:
 					if( len(pf) > 0 ):
 						hyperparams  = pickle.load( open(pf[0], 'rb' ))
 
+                # Defining hyperparameters
                 trainParamConfig = self.gen_id('paramSetting') 
                 g.add( ( self.nerwf[trainParamConfig], self.RDF.type, self.xmlpo.ParameterSettings ) )
                 g.add( ( self.nerwf[trainParamConfig], self.RDFS.label, Literal("Training hyper parameter configuration", lang="en") ) )
                 g.add( ( self.nerwf[train_id], self.xmlpo.HasParameter, self.nerwf[trainParamConfig] ) )
+
                 for hp in hyperparams:
                     value = hyperparams[hp]
                     param = self.gen_id('hyperparam') 
@@ -401,7 +403,31 @@ class SemanticDescription:
                     g.add( ( self.nerwf[param], self.xmlpo.ParameterName, Literal(hp, lang="en") ) )
                     g.add( ( self.nerwf[param], self.xmlpo.ParameterValue, Literal(value) ) )
                     g.add( ( self.nerwf[trainParamConfig], self.xmlpo.hasParameterCharacteristic, self.nerwf[param] ) )
+
+                # Defining seed
+                self.seed = 42
+                if( 'seed' in self.config ):
+                    if( isinstance( self.config['seed'], int) ):
+                        self.seed = self.config['seed']
+                value = self.seed
+                param = self.gen_id('trainparam') 
+                g.add( ( self.nerwf[param], self.RDF.type, self.xmlpo.ParameterCharacteristic ) )
+                g.add( ( self.nerwf[param], self.xmlpo.ParameterName, Literal("Fixed initial value for random number generator", lang="en") ) )
+                g.add( ( self.nerwf[param], self.xmlpo.ParameterValue, Literal(value) ) )
+                g.add( ( self.nerwf[trainParamConfig], self.xmlpo.hasParameterCharacteristic, self.nerwf[param] ) )
+
+                self.optimization_metric = 'f1'
+                if( 'optimization_metric' in self.config ):
+                    if( self.config['optimization_metric'] in ['f1', 'precision', 'recall', 'accuracy'] ):
+                        self.optimization_metric = self.config['optimization_metric']
+                value = self.optimization_metric
+                param = self.gen_id('trainparam') 
+                g.add( ( self.nerwf[param], self.RDF.type, self.xmlpo.ParameterCharacteristic ) )
+                g.add( ( self.nerwf[param], self.xmlpo.ParameterName, Literal("Optimization metric used for hyperparameter search", lang="en") ) )
+                g.add( ( self.nerwf[param], self.xmlpo.ParameterValue, Literal(value) ) )
+                g.add( ( self.nerwf[trainParamConfig], self.xmlpo.hasParameterCharacteristic, self.nerwf[param] ) )
                 
+                # Defining models
                 rootmodel = self.gen_id('original_model')
                 g.add( ( self.nerwf[rootmodel], self.RDF.type, self.mesh.D000098342 ) )
                 g.add( ( self.nerwf[rootmodel], self.RDFS.label, Literal( f"Original model {model_checkpoint}", lang="en") ) )

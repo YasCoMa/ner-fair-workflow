@@ -40,7 +40,7 @@ class ExperimentValidationBySimilarity:
         self.ctDir = '/aloy/home/ymartins/match_clinical_trial/out/clinical_trials/'
         self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
         self.inPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
-        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
+        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-original-hypersearch-biobert-base-cased-v1.2-finetuned-ner/prediction/'
         self.augdsDir = '/aloy/home/ymartins/match_clinical_trial/experiments/augmented_data/'
         if( not os.path.isdir( self.augdsDir ) ) :
             os.makedirs( self.augdsDir )

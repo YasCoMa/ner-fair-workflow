@@ -77,6 +77,10 @@ class Training:
             self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
+            if( 'seed' in self.config ):
+                if( isinstance( self.config['seed'] , int ) ):
+                    self.seed = self.config['seed']
+
             self.report_summary_stats_metric = 'median'
             if( 'report_summary_stats_metric' in self.config ):
                 if( self.config['report_summary_stats_metric'] in ['max', 'min', 'mean', 'median', 'std'] ):

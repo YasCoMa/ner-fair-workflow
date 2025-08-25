@@ -72,6 +72,11 @@ class Prediction:
             if( 'config_hpc' in self.config ):
                 self.config_path = self.config['config_hpc']
                 self.flag_parallel = True
+            
+            if( 'seed' in self.config ):
+                if( isinstance( self.config['seed'] , int ) ):
+                    self.seed = self.config['seed']
+
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDir = self.config["outpath"]
             self.inpath = self.config["input_prediction"]

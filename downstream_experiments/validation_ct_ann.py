@@ -773,6 +773,7 @@ class ExperimentValidationBySimilarity:
             f.close()
 
         print('Skipped', len(gone))
+        print('cts available', len(cts_available) )
         lines = []
         idx = 0
         k = 10000

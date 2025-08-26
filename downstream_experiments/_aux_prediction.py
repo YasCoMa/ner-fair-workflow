@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import pickle
@@ -25,6 +26,12 @@ if( mode=='ollama' and path_faiss!='none' and os.path.exists(path_faiss)):
     embeddings = OllamaEmbeddings(model="mxbai-embed-large")
     gct_vs = FAISS.load_local( path_faiss, embeddings, allow_dangerous_deserialization=True )
 
+
+def normalize_string(s):
+    s = s.lower()
+    s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
+    return s
+
 def _send_query( snippet, ctid, gct_vs):
     results = []
     rs = gct_vs.similarity_search_with_score( snippet, k = 1, filter = {"source": ctid } )
@@ -40,11 +47,16 @@ def _send_query( snippet, ctid, gct_vs):
 
     return results
 
-def _send_query_fast( snippet, ctlib, ctid):
+def _send_query_fast( snippet, ctlib, ctid, label='all'):
     cutoff = 0.3
     results = []
     ct = ctlib[ctid]
-    for k in ct:
+
+    tags = list(ct)
+    if(label != 'all'):
+        tags = [label]
+
+    for k in tags:
         try:
             elements = [ ct[k] ]
             if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
@@ -53,7 +65,11 @@ def _send_query_fast( snippet, ctlib, ctid):
             for el in elements:
                 el = str(el)
                 clss = 'exact'
-                score = Levenshtein.ratio( snippet, el )
+                
+                nel = normalize_string(el)
+                nsnippet = normalize_string(snippet)
+                
+                score = Levenshtein.ratio( nsnippet, nel )
                 if(score >= cutoff):
                     if( score < 1):
                         clss = 'm'+str(score).split('.')[1][0]+'0'
@@ -77,7 +93,7 @@ def exec(subset, ctlib, model_index, mode, gct_vs):
         ctid, pmid, test_text, test_label = el
         if( ctid in cts_available ):
             if(mode=='fast' or gct_vs==None):
-                results = _send_query_fast( test_text, ctlib, ctid)
+                results = _send_query_fast( test_text, ctlib, ctid, label=test_label )
             elif(mode=='ollama'):
                 results = _send_query( test_text, ctid, gct_vs)
             

@@ -74,7 +74,6 @@ class Training:
             self.expid = self.config["identifier"]
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDir = self.config["outpath"]
-            self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
             if( 'seed' in self.config ):
@@ -112,6 +111,8 @@ class Training:
             fout = self.outDir
         self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
+        self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
+        
         self.out = os.path.join( self.outDir, "training" )
         if( not os.path.exists(self.out) ):
             os.makedirs( self.out )

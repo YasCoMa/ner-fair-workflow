@@ -7,7 +7,7 @@ import argparse
 import logging
 
 import pandas as pd
-from datasets import Dataset, load_dataset, load_from_disk
+from datasets import Dataset, DatasetDict, load_dataset, load_from_disk
 from transformers import AutoTokenizer, LongformerTokenizerFast
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
@@ -67,7 +67,6 @@ class Test:
 
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDir = self.config["outpath"]
-            self.dataDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
             self.target_tags = json.load( open( self.config["target_tags"], 'r') )
             
             self.report_summary_stats_metric = 'median'
@@ -87,6 +86,20 @@ class Test:
             fout = self.outDir
         self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
+        testpath = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1")
+        testkey = "test"
+        if( "test_data" in self.config ):
+            testpath = self.config["test_data"]["path"]
+            testkey = None
+            if( "key" in self.config["test_data"] ):
+                if( self.config["test_data"]["key"] is not None and self.config["test_data"] != ""):
+                    testkey = self.config["test_data"]["key"]
+
+        self.label_list = json.load( open( self.config["target_tags"], 'r') )
+
+        self.dataDir = testpath
+        self.dataKey = testkey
+            
         self.out = os.path.join( self.outDir, "test" )
         if( not os.path.exists(self.out) ):
             os.makedirs( self.out )
@@ -128,14 +141,18 @@ class Test:
         datasets = load_dataset('parquet', data_dir = args['data'], data_files=data_files)
         '''
         self.datasets = load_from_disk( self.dataDir )
-        self.label_list = self.datasets['train'].features[f"{task}_tags"].feature.names
         idsxlabel = {i: label for i, label in enumerate( self.label_list)}
         self.labelxids = {label: i for i, label in enumerate( self.label_list)}
         
         # Preprocessing the data
         label_all_tokens = True
         print("TOKENIZING...")
-        self.tokenized_datasets = self.datasets.map(tokenize_and_align_labels, batched=True, fn_kwargs={"flag_tokenizer": self.flag_tokenizer, "tokenizer": self.tokenizer, "label_all_tokens": label_all_tokens })
+        if( self.dataKey is None and isinstance(self.datasets, Dataset) ):
+            self.datasets = DatasetDict( "test": self.datasets )
+            self.dataKey = "test"
+        tokenized_datasets = self.datasets.map(tokenize_and_align_labels, batched=True, fn_kwargs={"flag_tokenizer": self.flag_tokenizer, "tokenizer": self.tokenizer, "label_all_tokens": label_all_tokens })
+        self.tokenized_dataset = tokenized_datasets[self.dataKey]
+
         self.logger.info("[Test step] Task (Loading input dataset) started -----------")
 
     def __annotate_samples(self, dataset, labels, criteria = 'first_label'):
@@ -185,13 +202,14 @@ class Test:
         save_path = self.outDir
         tokenizer = self.tokenizer
         datasets = self.datasets
-        tokenized_datasets = self.tokenized_datasets
+        tokenized_dataset = self.tokenized_dataset
 
         model_files = [file for file in os.listdir(save_path) if file.startswith("model_")]
         model_files.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         
-        input_ids = torch.tensor(tokenized_datasets["test"]["input_ids"]).to(device)
-        attention_mask = torch.tensor(tokenized_datasets["test"]["attention_mask"]).to(device)     
+        if( self.dataKey is not None)
+        input_ids = torch.tensor(tokenized_dataset["input_ids"]).to(device)
+        attention_mask = torch.tensor(tokenized_dataset["attention_mask"]).to(device)     
         test_data = {'input_ids': input_ids, 'attention_mask': attention_mask}
 
         labels = tokenized_datasets['test']['labels']
@@ -216,7 +234,7 @@ class Test:
             generate_reports_table( outputs.logits, predictions, labels, self.label_list, self.out_report, report_identifier, index=f'{i}', level='token' )
 
             # Per word
-            annotated_samples_first = self.__annotate_samples(tokenized_datasets["test"], predictions)
+            annotated_samples_first = self.__annotate_samples(tokenized_dataset, predictions)
             #generate_reports(annotated_samples_first, datasets['test']['ner_tags'], self.label_list, self.out_report, f"{i}_word_level", self.target_tags)
             generate_reports_table( None, annotated_samples_first, datasets['test']['ner_tags'], self.label_list, self.out_report, report_identifier, index=f'{i}', level='word' )
 
@@ -230,7 +248,7 @@ class Test:
         '''
         # Save predictions for the models in csv files
         # Create a dictionary for the dataset
-        dataset_dict = {'tokens': tokenized_datasets["test"]['tokens'], 'file': tokenized_datasets["test"]['id'], 'true_labels': datasets['test']['ner_tags']}
+        dataset_dict = {'tokens': tokenized_dataset['tokens'], 'file': tokenized_dataset['id'], 'true_labels': datasets['test']['ner_tags']}
         for i in range(len(model_files)):
             dataset_dict[f'Predicted_label_{i}'] = models_predictions[i]
         '''

@@ -715,33 +715,42 @@ class ExperimentValidationBySimilarity:
 
         return dat, pathout
 
-    def _send_query_fast(self, snippet, ctlib, ctid):
-        cutoff = 0.9
-        results = []
-        ct = ctlib[ctid]
-        for k in ct:
-            clss = 'exact'
-            if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
-                for t in ct[k]:
-                    score = Levenshtein.ratio(snippet, t)
-                    if(score > cutoff):
-                        if(score>0.80 and score<0.90):
-                            clss = 'm80'
-                        elif(score>=0.90 and score<1):
-                            clss = 'm90'
-                        results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
-            else:
-                score = Levenshtein.ratio(snippet, ct[k])
-                if(score > cutoff):
-                    if(score>0.80 and score<0.90):
-                        clss = 'm80'
-                    elif(score>=0.90 and score<1):
-                        clss = 'm90'
-                    results.append( { 'hit': t, 'ct_label': k, 'score': f'{score}-{clss}' } )
+    def __normalize_string(s):
+        s = s.lower()
+        s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
+        return s
+
+    def _send_query_fast(self, snippet, ctlib, ctid, label='all'):
+        cutoff = 0.3
+
+        tags = list(ct)
+        if(label != 'all'):
+            tags = [label]
+
+        for k in tags:
+            try:
+                elements = [ ct[k] ]
+                if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
+                    elements = ct[k]
+                    
+                for el in elements:
+                    el = str(el)
+                    clss = 'exact'
+                    
+                    nel = self.normalize_string(el)
+                    nsnippet = self.normalize_string(snippet)
+                    
+                    score = Levenshtein.ratio( nsnippet, nel )
+                    if(score >= cutoff):
+                        if( score < 1):
+                            clss = 'm'+str(score).split('.')[1][0]+'0'
+                        results.append( { 'hit': el, 'ct_label': k, 'score': f'{score}-{clss}' } )
+            except:
+                pass
 
         return results
 
-    def _get_predictions(self, sourcect, ctlib, pathlib, label_result=''):
+    def _get_predictions(self, sourcect, ctlib, pathlib, label_result='', mode='fast' ):
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(res) ):
@@ -774,9 +783,12 @@ class ExperimentValidationBySimilarity:
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
             if( not aux in gone):
                 gone.add(aux)
-                #results = self._send_query_fast( test_text, ctlib, ctid)
+                #results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
                 #if( len(results) == 0 ):
-                results = self._send_query(test_text, ctid)
+                if( mode=='fast' ):
+                    results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
+                else:
+                    results = self._send_query(test_text, ctid)
 
                 for r in results:
                     found_ct_text = r['hit']
@@ -872,14 +884,17 @@ class ExperimentValidationBySimilarity:
             if( len(sys.argv) > 1 ):
                 flag = ( f.find(f'_{ sys.argv[1] }_') != -1)
                 label_aux = 'par_'
+                
             if( f.startswith('general_mapping_') and flag ):
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)
                 print('---- in ', sourcect)
-                #self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}' )
 
-                label_aux = 'predlev'
-                self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'fast', 'none' )
+                label_aux = 'sequential_predlev'
+                self._get_predictions(sourcect, ctlib, pathlib, f'{label_aux}_{fname}', 'fast' )
+
+                #label_aux = 'predlev'
+                #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'fast', 'none' )
 
                 #label_aux = 'ollama'
                 #self._get_predictions_parallel( sourcect, ctlib, pathlib, f'{label_aux}_biobert_{fname}', 'ollama', path_faiss )
@@ -910,7 +925,7 @@ class ExperimentValidationBySimilarity:
     def _concatenate_per_pmid_augmented_txt(self, per_model_path, pmids):
         save_aug = self.augdsDir
         predDir='/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
-        for _id in pmids:
+        for _id in tqdm(pmids):
             path = os.path.join( per_model_path, f'{_id}.txt')
             if( not os.path.isfile(path) ):
                 files = glob.glob( os.path.join( predDir, f"{_id}_*" ) )
@@ -932,81 +947,114 @@ class ExperimentValidationBySimilarity:
 
             if( not key in historic ):
                 historic[key] = {}
-            historic[key][model_name] = score
+            pos = mapped_positions[key][0]
+            historic[key][model_name] = { "score": score, "start": pos["start"], "end": pos["end"] }
 
-            for pos in mapped_positions[key]:
-                start = pos['start']
-                end = pos['end']
+            #for pos in mapped_positions[key]:
+            start = pos['start']
+            end = pos['end']
 
             if(not pmid in cnt):
                 cnt[pmid] = 1
             path = os.path.join( per_model_path, f'{pmid}.ann')
-            if( not os.path.isfile(path) ):
-                with open(path, 'a') as g:
-                    g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
-                cnt[pmid] += 1
+            with open(path, 'a') as g:
+                g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
+            cnt[pmid] += 1
 
         return historic
     
-    def __load_mapped_positions(self, df):
+    def __load_mapped_positions(self, model_name, df):
         mapped_positions = {}
-        for i in df.index:
-            pmid = df.loc[i, 'input_file'].split('_')[0]
-            entity = df.loc[i, 'entity_group']
-            word = df.loc[i, 'word']
-            start = df.loc[i, 'start']
-            end = df.loc[i, 'end']
+        opath = os.path.join( self.out, f"{model_name}_mapped.json")
+        if( os.path.exists(opath) ):
+            mapped_positions = json.load( open(opath, 'r') )
+        else:
+            if( isinstance(df, str) ):
+                df = pd.read_csv(df, sep='\t')
 
-            key = f'{pmid}#$@{entity}#$@{word}'
-            if( not key in mapped_positions ):
-                mapped_positions[key] = []
-            mapped_positions[key].append( { 'start': start, 'end': end } )
+            for i in df.index:
+                pmid = df.loc[i, 'input_file'].split('_')[0]
+                entity = df.loc[i, 'entity_group']
+                word = df.loc[i, 'word']
+                try:
+                    start = int( df.loc[i, 'start'] )
+                    end = int( df.loc[i, 'end'] )
+
+                    key = f'{pmid}#$@{entity}#$@{word}'
+                    if( not key in mapped_positions ):
+                        mapped_positions[key] = []
+                    mapped_positions[key].append( { 'start': start, 'end': end } )
+                except:
+                    pass
+            json.dump(mapped_positions, open(opath, 'w') )
 
         return mapped_positions
 
     def _aggregate_group_predictions(self, label_result):
-        result_path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
-        rdf = pd.read_csv( result_path, sep='\t')
-        rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
-        rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
-        rdf['stat_class'] = [ s.split('-')[1] for s in rdf['score'] ]
-        rdf = rdf.drop('score', axis=1)
-        rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
-
+        path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
-        rdf.to_csv( result_path, sep='\t', index=None )
         
+        if( os.path.isfile(result_path) ):
+            rdf = pd.read_csv( path, sep='\t')
+            rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
+            rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
+            rdf['stat_class'] = [ s.split('-')[1] for s in rdf['score'] ]
+            rdf = rdf.drop('score', axis=1)
+            rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
+
+            result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
+            rdf.to_csv( result_path, sep='\t', index=None )
+        else:
+            rdf = pd.read_csv( result_path, sep='\t')
+
         rdf = rdf[ rdf['val'] >= 0.8 ]
         return rdf
 
-    def _build_historic_predictions_across_models(self, historic, models):
+    def _build_consensus_augDs_from_predictions_across_models(self, historic, models):
+        cnt = {}
         oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
         f = open(oconsensus, 'w')
-        header = '\t'.join( ['pmid', 'entity', 'word', 'mean', 'min', 'max'] + models )
+        header = '\t'.join( ['pmid', 'entity', 'word', 'best_start', 'best_end', 'mean', 'min', 'max'] + models )
         f.write( f"{header}\n")
         for info in historic:
             pmid, entity, word = info.split('#$@')
+            best_start_end = 0
+            start = 0
+            end = 0
+
             aux = {}
             for m in models:
                 aux[m] = 0
                 if( m in historic[info] ):
-                    aux[m] = historic[info][m]
+                    aux[m] = historic[info][m]["score"]
+                    if( aux[m] > best_start_end ):
+                        best_start_end = aux[m]
+                        start = historic[info][m]["start"]
+                        end = historic[info][m]["end"]
 
             vals = [ float(v) for v in aux.values() ]
             _min = min(vals)
             _max = max(vals)
             _mean = sum(vals)/len(vals)
-            values = [pmid, entity, word, _mean, _min, _max] + vals
+            values = [pmid, entity, word, start, end, _mean, _min, _max] + vals
             values = '\t'.join( [ str(v) for v in values ] )
             f.write( f"{values}\n")
+
+            # Feed annotation files that will be the input for another training round
+            if(not pmid in cnt):
+                    cnt[pmid] = 1
+            path = os.path.join( self.augdsDir, f'{pmid}.ann')
+            with open(path, 'a') as g:
+                g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
+            cnt[pmid] += 1
         f.close()
 
-    def integrate_high_scored_to_augment(self):
-        label_aux = 'predlev'
+        #all_pmids = set(cnt)
+        #self._concatenate_per_pmid_augmented_txt( self.augdsDir, all_pmids )
 
-        all_pmids = set()
+    def integrate_high_scored_to_augment(self, label_aux):
+        
         coverage = {}
-        historic = {}
         models = []
         files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
         for i, f in tqdm( enumerate( files ) ):
@@ -1015,10 +1063,6 @@ class ExperimentValidationBySimilarity:
             models.append(model_name)
             print('---- in ', model_name)
 
-            per_model_path = os.path.join(self.augdsDir, model_name)
-            if( not os.path.isdir( per_model_path ) ) :
-                os.makedirs( per_model_path)
-            
             path = os.path.join( self.outPredDir, f)
             df = pd.read_csv(path, sep='\t')
             pred_cov_pmids = set([ s.split('_')[0] for s in df['input_file'] ])
@@ -1027,11 +1071,18 @@ class ExperimentValidationBySimilarity:
             rdf = self._aggregate_group_predictions( label_result)
             sim_cov_pmids = set( rdf.pmid.unique() )
             
-            mapped_positions = self.__load_mapped_positions( df )
+            mapped_positions = self.__load_mapped_positions( model_name, df )
+            
+            '''
+            per_model_path = os.path.join(self.augdsDir, model_name)
+            if( not os.path.isdir( per_model_path ) ) :
+                os.makedirs( per_model_path)
+            
             historic = self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf, historic)
             self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids)
             
             all_pmids.update( list(sim_cov_pmids) )
+            '''
 
             coverage[fname] = { 'number_pmids_prediction': len(pred_cov_pmids), 'number_pmids_validation': len(sim_cov_pmids), 'ratio': ( len(sim_cov_pmids)/len(pred_cov_pmids) ) }
 
@@ -1041,6 +1092,7 @@ class ExperimentValidationBySimilarity:
         
     def get_report_consensus(self):
         label_aux = 'predlev'
+        cnt = {}
         historic = {}
         models = []
         files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
@@ -1048,6 +1100,9 @@ class ExperimentValidationBySimilarity:
             fname = f.split('.')[0].replace('results_','')
             model_name = fname.split('.')[0]
             models.append(model_name)
+
+            path = os.path.join( self.outPredDir, f)
+            mapped_positions = self.__load_mapped_positions( model_name, path )
 
             label_result = f'{label_aux}_biobert_biobert_{model_name}_nct_pubmed'
             result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
@@ -1064,9 +1119,32 @@ class ExperimentValidationBySimilarity:
 
                 if( not key in historic ):
                     historic[key] = {}
-                historic[key][model_name] = score
+                pos = mapped_positions[key][0]
+                historic[key][model_name] = { "score": score, "start": pos["start"], "end": pos["end"] }
 
-        self._build_historic_predictions_across_models(historic, models)
+        self._build_consensus_augDs_from_predictions_across_models(historic, models)
+        self._alt_concatenate_abstract()
+
+    def _alt_concatenate_abstract(self):
+        oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
+        cd = pd.read_csv(oconsensus, sep='\t')
+        pmids = set(cd.pmid.unique())
+
+        oabs = os.path.join( 'out', 'group_abstract_info_pubmed.tsv' )
+        gd = pd.read_csv(oabs, sep='\t')
+        gd = gd[ gd.pmid.isin(pmids) ]
+        gd = gd.fillna('')
+        gd = gd.groupby('pmid')['text'].apply('\n'.join).reset_index()
+
+        for i in tqdm(gd.index):
+            _id = gd.loc[i, 'pmid']
+            abst = gd.loc[i, 'text']
+
+            path = os.path.join( self.augdsDir, f'{_id}.txt')
+            if( not os.path.isfile(path) ):
+                f = open(path, 'w')
+                f.write( abst )
+                f.close()
 
     def run(self):
         #self.perform_validation_gold()
@@ -1080,8 +1158,11 @@ class ExperimentValidationBySimilarity:
         else:
             self.perform_validation_biobert_allct()
         '''
+        self.perform_validation_biobert_allct()
+        
+        label_aux = 'predlev'
         #self.integrate_high_scored_to_augment()
-        self.get_report_consensus()
+        #self.get_report_consensus()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

@@ -17,7 +17,7 @@ class Preprocessing:
         self._get_arguments()
         self._setup_out_folders()
 
-        self.fready = os.path.join( self.logdir, "tasks_data_preprocessing.ready")
+        self.fready = os.path.join( self.logdir, f"{self.expid}-tasks_data_preprocessing.ready")
         self.ready = os.path.exists( self.fready )
         if(self.ready):
             self.logger.info("----------- Preprocessing step skipped since it was already computed -----------")
@@ -36,12 +36,15 @@ class Preprocessing:
 
         with open( args.parameter_file, 'r' ) as g:
             self.config = json.load(g)
-        logf = os.path.join( self.logdir, "preprocessing.log" )
+        
+        self.expid = self.config["identifier"]
+        logf = os.path.join( self.logdir, f"{self.expid}-preprocessing.log" )
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('preprocessing')
 
         try:
+            self.model_checkpoint = self.config["pretrained_model"]
             self.dataDir = self.config["data_text_path"]
             self.outDir = self.config["outpath"]
             self.treat_overlap = True
@@ -56,9 +59,12 @@ class Preprocessing:
             raise Exception("Mandatory fields not found in config. file")
 
     def _setup_out_folders(self):
+        task = 'ner'
+        model_name = self.model_checkpoint.split("/")[-1]
         fout = '.'
         if self.outDir is not None:
             fout = self.outDir
+        self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
         self.out = os.path.join( self.outDir, "preprocessing" )
         if( not os.path.exists(self.out) ):

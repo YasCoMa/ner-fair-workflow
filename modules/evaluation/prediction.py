@@ -222,7 +222,7 @@ class Prediction:
             self.logger.info(f"\tPredicting using model {i+1}")        
             classifier = pipeline("ner", model=model_file, aggregation_strategy = 'average')
 
-            path = os.path.join( self.out, f'results_model_{i}.txt' )
+            path = os.path.join( self.out, f'results_model_{i}.tsv' )
             f = open( path, 'w')
             #f.write('\t'.join([key for key in ['input_file', 'sentence_id', 'sentence']+keys_order])+'\n')
             f.write('\t'.join([key for key in ['input_file']+keys_order])+'\n')
@@ -291,6 +291,59 @@ class Prediction:
 
         self.logger.info("[Prediction step] Task (Get predictions for new data) ended -----------")
 
+    def __build_historic_predictions_across_models(self, historic, models):
+        cutoff = 0.8
+        topconsensus = os.path.join( self.out, 'top_consensus_augmentation_models.tsv' )
+        oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
+        f = open(oconsensus, 'w')
+        header = '\t'.join( ['pmid', 'entity', 'word', 'mean', 'min', 'max'] + models )
+        f.write( f"{header}\n")
+        for info in historic:
+            pmid, entity, word = info.split('#$@')
+            aux = {}
+            for m in models:
+                aux[m] = 0
+                if( m in historic[info] ):
+                    aux[m] = historic[info][m]
+
+            vals = [ float(v) for v in aux.values() ]
+            _mean = sum(vals)/len(vals)
+            _min = min(vals)
+            _max = max(vals)
+            values = [pmid, entity, word, _mean, _min, _max] + vals
+            values = '\t'.join( [ str(v) for v in values ] )
+            f.write( f"{values}\n")
+
+            if( _mean > cutoff ):
+                with open(topconsensus, 'a') as g:
+                    g.write( f"{values}\n")
+        f.close()
+
+    def _get_prediction_consensus(self):
+        historic = {}
+        models = []
+        files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.out ) ))
+        for i, f in tqdm( enumerate( files ) ):
+            fname = f.split('.')[0].replace('results_','')
+            model_name = fname.split('.')[0]
+            models.append(model_name)
+
+            result_path = os.path.join( self.out, f)
+            df = pd.read_csv( result_path, sep='\t')
+            for i in df.index:
+                pmid = df.loc[i, 'input_file'].split('_')[0]
+                entity = df.loc[i, 'entity_group']
+                word = df.loc[i, 'word']
+                score = df.loc[i, 'score']
+
+                key = f'{pmid}#$@{entity}#$@{word}'
+
+                if( not key in historic ):
+                    historic[key] = {}
+                historic[key][model_name] = score
+
+        self.___build_historic_predictions_across_models(historic, models)
+
     def _mark_as_done(self):
         f = open( self.fready, 'w')
         f.close()
@@ -308,6 +361,7 @@ class Prediction:
             self._load_input_data_parallel()
             self._get_predictions_parallel()
 
+        self._get_prediction_consensus()
         self._mark_as_done()
 
 if( __name__ == "__main__" ):

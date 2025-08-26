@@ -725,11 +725,13 @@ class ExperimentValidationBySimilarity:
         results = []
         ct = ctlib[ctid]
 
-        tags = list(ct)
+        keys = list(ct)
         if(label != 'all'):
             tags = []
-            if( label in tags ):
+            if( label in keys ):
                 tags = [label]
+        else:
+            tags = keys
 
         for k in tags:
             try:

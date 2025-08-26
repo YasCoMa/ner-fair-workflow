@@ -753,6 +753,8 @@ class ExperimentValidationBySimilarity:
         return results
 
     def _get_predictions(self, sourcect, ctlib, pathlib, label_result='', mode='fast' ):
+        cts_available = set(ctlib)
+        
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
         gone = set()
         if( os.path.isfile(res) ):
@@ -783,7 +785,7 @@ class ExperimentValidationBySimilarity:
             test_label = df.loc[i, 'label']
 
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
-            if( not aux in gone):
+            f( (ctid in cts_available) and (not aux in gone) ):
                 gone.add(aux)
                 #results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
                 #if( len(results) == 0 ):

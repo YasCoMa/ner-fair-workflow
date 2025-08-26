@@ -715,7 +715,7 @@ class ExperimentValidationBySimilarity:
 
         return dat, pathout
 
-    def __normalize_string(s):
+    def __normalize_string(self, s):
         s = s.lower()
         s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
         return s

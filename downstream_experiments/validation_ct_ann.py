@@ -722,6 +722,8 @@ class ExperimentValidationBySimilarity:
 
     def _send_query_fast(self, snippet, ctlib, ctid, label='all'):
         cutoff = 0.3
+        results = []
+        ct = ctlib[ctid]
 
         tags = list(ct)
         if(label != 'all'):
@@ -884,7 +886,7 @@ class ExperimentValidationBySimilarity:
             if( len(sys.argv) > 1 ):
                 flag = ( f.find(f'_{ sys.argv[1] }_') != -1)
                 label_aux = 'par_'
-                
+
             if( f.startswith('general_mapping_') and flag ):
                 fname = f.split('.')[0].replace('general_mapping_','')
                 sourcect = os.path.join( self.out, f)

@@ -734,7 +734,7 @@ class ExperimentValidationBySimilarity:
             tags = keys
 
         for k in tags:
-            #try:
+            try:
                 elements = [ ct[k] ]
                 if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
                     elements = ct[k]
@@ -743,16 +743,16 @@ class ExperimentValidationBySimilarity:
                     el = str(el)
                     clss = 'exact'
                     
-                    nel = self.normalize_string(el)
-                    nsnippet = self.normalize_string(snippet)
+                    nel = self.__normalize_string(el)
+                    nsnippet = self.__normalize_string(snippet)
                     
                     score = Levenshtein.ratio( nsnippet, nel )
                     if(score >= cutoff):
                         if( score < 1):
                             clss = 'm'+str(score).split('.')[1][0]+'0'
                         results.append( { 'hit': el, 'ct_label': k, 'score': f'{score}-{clss}' } )
-            #except:
-            #    pass
+            except:
+                pass
 
         return results
 

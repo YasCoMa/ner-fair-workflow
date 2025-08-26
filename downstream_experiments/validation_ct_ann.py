@@ -796,7 +796,7 @@ class ExperimentValidationBySimilarity:
                     results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
                 else:
                     results = self._send_query(test_text, ctid)
-
+                print(results)
                 for r in results:
                     found_ct_text = r['hit']
                     found_ct_label = r['ct_label']

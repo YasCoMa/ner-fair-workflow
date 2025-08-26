@@ -54,7 +54,9 @@ def _send_query_fast( snippet, ctlib, ctid, label='all'):
 
     tags = list(ct)
     if(label != 'all'):
-        tags = [label]
+        tags = []
+        if(label in tags):
+            tags = [label]
 
     for k in tags:
         try:

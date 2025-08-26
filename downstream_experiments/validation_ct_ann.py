@@ -727,7 +727,9 @@ class ExperimentValidationBySimilarity:
 
         tags = list(ct)
         if(label != 'all'):
-            tags = [label]
+            tags = []
+            if( label in tags ):
+                tags = [label]
 
         for k in tags:
             try:

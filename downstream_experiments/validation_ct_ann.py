@@ -734,7 +734,7 @@ class ExperimentValidationBySimilarity:
             tags = keys
 
         for k in tags:
-            try:
+            #try:
                 elements = [ ct[k] ]
                 if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
                     elements = ct[k]
@@ -751,8 +751,8 @@ class ExperimentValidationBySimilarity:
                         if( score < 1):
                             clss = 'm'+str(score).split('.')[1][0]+'0'
                         results.append( { 'hit': el, 'ct_label': k, 'score': f'{score}-{clss}' } )
-            except:
-                pass
+            #except:
+            #    pass
 
         return results
 

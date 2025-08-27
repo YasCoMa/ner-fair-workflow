@@ -1218,6 +1218,9 @@ class ExperimentValidationBySimilarity:
         gd = gd.groupby('pmid')['text'].apply(' '.join).reset_index()
 
         losses = 0
+        f = open('losses.txt', 'w')
+        f.close()
+        
         n_articles = set()
         for i in tqdm(gd.index):
             _id = gd.loc[i, 'pmid']
@@ -1250,6 +1253,8 @@ class ExperimentValidationBySimilarity:
                 
                 txt = f"T{ cnt }\t{entity} {start} {end}\t{word}"
                 if(start == -1):
+                    with open('losses.txt', 'a') as g:
+                        g.write(f"{_id}\t{txt}\n")
                     print(_id, txt)
                     losses += 1
                 else:

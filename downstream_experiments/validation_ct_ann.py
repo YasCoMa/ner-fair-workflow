@@ -1013,6 +1013,7 @@ class ExperimentValidationBySimilarity:
         oconsensus = os.path.join( self.out, f'{label_aux}_consensus_augmentation_models.tsv' )
         
         cnt = {}
+        not_found = set()
         df = pd.read_csv(oconsensus, sep='\t')
         for i in df.index:
             _mean = df.loc[i, 'mean']
@@ -1024,29 +1025,37 @@ class ExperimentValidationBySimilarity:
             word = df.loc[i, 'word']
 
             key = f'{pmid}#$@{start}#$@{end}#$@{entity}#$@{word}'
-            outname = mapp[key]
+            if(key in mapp):
+                outname = mapp[key]
 
-            if( _mean >= cutoff_consensus ):
-                # Feed annotation files that will be the input for another training round
-                path = os.path.join( folder_out, f'{outname}.ann')
-                if(not outname in cnt):
-                    cnt[outname] = 1
-                    g = open(path, 'w')
-                    g.close()
+                if( _mean >= cutoff_consensus ):
+                    # Feed annotation files that will be the input for another training round
+                    path = os.path.join( folder_out, f'{outname}.ann')
+                    if(not outname in cnt):
+                        cnt[outname] = 1
+                        g = open(path, 'w')
+                        g.close()
 
-                with open(path, 'a') as g:
-                    g.write( f"T{ cnt[outname] }\t{entity} {start} {end}\t{word}\n" )
-                cnt[outname] += 1
+                    with open(path, 'a') as g:
+                        g.write( f"T{ cnt[outname] }\t{entity} {start} {end}\t{word}\n" )
+                    cnt[outname] += 1
 
-                # Check txt original file
-                inpath = os.path.join(self.inPredDir, f"{outname}.txt")
-                outpath = os.path.join( folder_out, f'{outname}.txt')
-                if( not os.path.isfile(outpath) ):
-                    try:
-                        shutil.copyfile(inpath, outpath)
-                    except:
-                        inpath = inpath.replace('.txt', '..txt')
-                        shutil.copyfile(inpath, outpath)
+                    # Check txt original file
+                    inpath = os.path.join(self.inPredDir, f"{outname}.txt")
+                    outpath = os.path.join( folder_out, f'{outname}.txt')
+                    if( not os.path.isfile(outpath) ):
+                        try:
+                            shutil.copyfile(inpath, outpath)
+                        except:
+                            inpath = inpath.replace('.txt', '..txt')
+                            shutil.copyfile(inpath, outpath)
+            else:
+                not_found.add(key)
+
+        opath = os.path.join( self.out, "keys_not_mapped_result4.txt")
+        f = open(opath, 'w')
+        f.write( '\n'.join(not_found) )
+        f.close()
 
     def __create_annotation_per_pmid(self, folder_out, oconsensus, cutoff_consensus):
         cnt = {}

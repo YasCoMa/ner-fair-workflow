@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from uuid import uuid4
+from string import punctuation
 
 try:
     from langchain_ollama import OllamaEmbeddings
@@ -734,7 +735,7 @@ class ExperimentValidationBySimilarity:
             tags = keys
 
         for k in tags:
-            #try:
+            try:
                 elements = [ ct[k] ]
                 if( isinstance(ct[k], set) or isinstance(ct[k], list) ):
                     elements = ct[k]
@@ -751,8 +752,8 @@ class ExperimentValidationBySimilarity:
                         if( score < 1):
                             clss = 'm'+str(score).split('.')[1][0]+'0'
                         results.append( { 'hit': el, 'ct_label': k, 'score': f'{score}-{clss}' } )
-            #except:
-            #    pass
+            except:
+                pass
 
         return results
 
@@ -786,7 +787,7 @@ class ExperimentValidationBySimilarity:
         for i in tqdm(df.index):
             ctid = df.loc[i, 'ctid']
             pmid = df.loc[i, 'pmid']
-            test_text = df.loc[i, 'text']
+            test_text = str( df.loc[i, 'text'] )
             test_label = df.loc[i, 'label']
 
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
@@ -798,7 +799,7 @@ class ExperimentValidationBySimilarity:
                     results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
                 else:
                     results = self._send_query(test_text, ctid)
-                print(results)
+
                 for r in results:
                     found_ct_text = r['hit']
                     found_ct_label = r['ct_label']
@@ -971,95 +972,6 @@ class ExperimentValidationBySimilarity:
             cnt[pmid] += 1
 
         return historic
-    
-    def __load_mapped_positions(self, model_name, df):
-        mapped_positions = {}
-        opath = os.path.join( self.out, f"{model_name}_mapped.json")
-        if( os.path.exists(opath) ):
-            mapped_positions = json.load( open(opath, 'r') )
-        else:
-            if( isinstance(df, str) ):
-                df = pd.read_csv(df, sep='\t')
-
-            for i in df.index:
-                pmid = df.loc[i, 'input_file'].split('_')[0]
-                entity = df.loc[i, 'entity_group']
-                word = df.loc[i, 'word']
-                try:
-                    start = int( df.loc[i, 'start'] )
-                    end = int( df.loc[i, 'end'] )
-
-                    key = f'{pmid}#$@{entity}#$@{word}'
-                    if( not key in mapped_positions ):
-                        mapped_positions[key] = []
-                    mapped_positions[key].append( { 'start': start, 'end': end } )
-                except:
-                    pass
-            json.dump(mapped_positions, open(opath, 'w') )
-
-        return mapped_positions
-
-    def _aggregate_group_predictions(self, label_result):
-        path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
-        result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
-        
-        if( os.path.isfile(result_path) ):
-            rdf = pd.read_csv( path, sep='\t')
-            rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
-            rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
-            rdf['stat_class'] = [ s.split('-')[1] for s in rdf['score'] ]
-            rdf = rdf.drop('score', axis=1)
-            rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
-
-            result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
-            rdf.to_csv( result_path, sep='\t', index=None )
-        else:
-            rdf = pd.read_csv( result_path, sep='\t')
-
-        rdf = rdf[ rdf['val'] >= 0.8 ]
-        return rdf
-
-    def _build_consensus_augDs_from_predictions_across_models(self, historic, models):
-        cnt = {}
-        oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
-        f = open(oconsensus, 'w')
-        header = '\t'.join( ['pmid', 'entity', 'word', 'best_start', 'best_end', 'mean', 'min', 'max'] + models )
-        f.write( f"{header}\n")
-        for info in historic:
-            pmid, entity, word = info.split('#$@')
-            best_start_end = 0
-            start = 0
-            end = 0
-
-            aux = {}
-            for m in models:
-                aux[m] = 0
-                if( m in historic[info] ):
-                    aux[m] = historic[info][m]["score"]
-                    if( aux[m] > best_start_end ):
-                        best_start_end = aux[m]
-                        start = historic[info][m]["start"]
-                        end = historic[info][m]["end"]
-
-            vals = [ float(v) for v in aux.values() ]
-            _min = min(vals)
-            _max = max(vals)
-            _mean = sum(vals)/len(vals)
-            values = [pmid, entity, word, start, end, _mean, _min, _max] + vals
-            values = '\t'.join( [ str(v) for v in values ] )
-            f.write( f"{values}\n")
-
-            # Feed annotation files that will be the input for another training round
-            if(not pmid in cnt):
-                    cnt[pmid] = 1
-            path = os.path.join( self.augdsDir, f'{pmid}.ann')
-            with open(path, 'a') as g:
-                g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
-            cnt[pmid] += 1
-        f.close()
-
-        #all_pmids = set(cnt)
-        #self._concatenate_per_pmid_augmented_txt( self.augdsDir, all_pmids )
 
     def integrate_high_scored_to_augment(self, label_aux):
         
@@ -1097,10 +1009,120 @@ class ExperimentValidationBySimilarity:
 
         opath = os.path.join( self.out, 'validation_coverage_predlev.json')
         json.dump(coverage, open(opath,'w') )
+    
+    def __load_mapped_positions(self, model_name, df):
+        mapped_positions = {}
+        opath = os.path.join( self.out, f"{model_name}_mapped.json")
+        if( os.path.exists(opath) ):
+            mapped_positions = json.load( open(opath, 'r') )
+        else:
+            if( isinstance(df, str) ):
+                df = pd.read_csv(df, sep='\t')
+
+            for i in df.index:
+                pmid = df.loc[i, 'input_file'].split('_')[0]
+                entity = df.loc[i, 'entity_group']
+                word = df.loc[i, 'word']
+                try:
+                    start = int( df.loc[i, 'start'] )
+                    end = int( df.loc[i, 'end'] )
+
+                    key = f'{pmid}#$@{entity}#$@{word}'
+                    if( not key in mapped_positions ):
+                        mapped_positions[key] = []
+                    mapped_positions[key].append( { 'start': start, 'end': end } )
+                except:
+                    pass
+            json.dump(mapped_positions, open(opath, 'w') )
+
+        return mapped_positions
+
+    def _aggregate_group_predictions(self, label_result):
+        path = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
+        result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
+        
+        if( not os.path.isfile(result_path) ):
+            rdf = pd.read_csv( path, sep='\t')
+            rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
+            rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
+            rdf['stat_class'] = [ s.split('-')[1] for s in rdf['score'] ]
+            rdf = rdf.drop('score', axis=1)
+            rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
+
+            result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
+            rdf.to_csv( result_path, sep='\t', index=None )
+        else:
+            rdf = pd.read_csv( result_path, sep='\t')
+
+        rdf = rdf[ rdf['val'] >= 0.8 ]
+        return rdf
+
+    def _build_consensus_augDs_from_predictions_across_models(self, historic, models, label_aux, cutoff_consensus):
+        folder_out = os.path.join( self.augdsDir, label_aux )
+
+        oconsensus = os.path.join( self.out, f'{label_aux}_consensus_augmentation_models.tsv' )
+        if( not os.path.isfile(oconsensus) ):
+            f = open(oconsensus, 'w')
+            header = '\t'.join( ['pmid', 'entity', 'word', 'best_start', 'best_end', 'mean', 'min', 'max'] + models )
+            f.write( f"{header}\n")
+            for info in historic:
+                pmid, entity, word = info.split('#$@')
+                best_start_end = 0
+                start = 0
+                end = 0
+
+                aux = {}
+                for m in models:
+                    aux[m] = 0
+                    if( m in historic[info] ):
+                        aux[m] = historic[info][m]["score"]
+                        if( aux[m] > best_start_end ):
+                            best_start_end = aux[m]
+                            start = historic[info][m]["start"]
+                            end = historic[info][m]["end"]
+
+                vals = [ float(v) for v in aux.values() ]
+                _min = min(vals)
+                _max = max(vals)
+                _mean = sum(vals)/len(vals)
+                values = [pmid, entity, word, start, end, _mean, _min, _max] + vals
+                values = '\t'.join( [ str(v) for v in values ] )
+                f.write( f"{values}\n")
+                
+            f.close()
+
+        cnt = {}
+        df = pd.read_csv(oconsensus, sep='\t')
+        for i in df.index:
+            pmid = df.loc[i, 'pmid']
+            _mean = df.loc[i, 'mean']
+            start = df.loc[i, 'best_start']
+            end = df.loc[i, 'best_end']
+            entity = df.loc[i, 'entity']
+            word = df.loc[i, 'word']
+
+            if( _mean >= cutoff_consensus ):
+                # Feed annotation files that will be the input for another training round
+                path = os.path.join( folder_out, f'{pmid}_tmp.ann')
+                if(not pmid in cnt):
+                    cnt[pmid] = 1
+                    g = open(path, 'w')
+                    g.close()
+
+                with open(path, 'a') as g:
+                    g.write( f"T{ cnt[pmid] }\t{entity} {start} {end}\t{word}\n" )
+                cnt[pmid] += 1
+
+        #all_pmids = set(cnt)
+        #self._concatenate_per_pmid_augmented_txt( self.augdsDir, all_pmids )
 
         
-    def get_report_consensus(self):
-        label_aux = 'predlev'
+    def get_report_consensus(self, label_aux, cutoff_consensus=0.8):
+
+        folder_out = os.path.join( self.augdsDir, label_aux )
+        if( not os.path.isdir(folder_out) ):
+            os.makedirs(folder_out)
+
         cnt = {}
         historic = {}
         models = []
@@ -1113,10 +1135,14 @@ class ExperimentValidationBySimilarity:
             path = os.path.join( self.outPredDir, f)
             mapped_positions = self.__load_mapped_positions( model_name, path )
 
-            label_result = f'{label_aux}_biobert_biobert_{model_name}_nct_pubmed'
+            label_result = f'{label_aux}_biobert_{model_name}_nct_pubmed'
+            df = self._aggregate_group_predictions( label_result)
+
+            '''
             result_path = os.path.join( self.out, f'grouped_{label_result}_results_validation.tsv')
             df = pd.read_csv( result_path, sep='\t')
             df = df[ df['val'] >= 0.8 ]
+            '''
 
             for i in df.index:
                 pmid = df.loc[i, 'pmid']
@@ -1131,29 +1157,113 @@ class ExperimentValidationBySimilarity:
                 pos = mapped_positions[key][0]
                 historic[key][model_name] = { "score": score, "start": pos["start"], "end": pos["end"] }
 
-        self._build_consensus_augDs_from_predictions_across_models(historic, models)
-        self._alt_concatenate_abstract()
+        self._build_consensus_augDs_from_predictions_across_models(historic, models, label_aux, cutoff_consensus)
+        self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
 
-    def _alt_concatenate_abstract(self):
-        oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
+    def __load_pmdid_predictions(self, folder_out, pmid):
+        mapp = {}
+        path = os.path.join( folder_out, f'{pmid}_tmp.ann')
+        f = open(path, 'r')
+        for line in f:
+            l = line.replace('\n', '').split('\t')
+            if( len(l) == 3 ):
+                word = l[-1].replace("'", '')
+                entity = l[1].split(' ')[0]
+                mapp[word] = entity
+        f.close()
+
+        return mapp
+
+    def __treat_text(self, abst):
+        stop_chars = set(['®', '™'])
+        chars = set(punctuation)
+        chars.update( [ '±', '≥', '≤', '+' ] )
+        
+        abst = re.sub(r'[^\x00-\x7F]', '', abst)
+        abst = re.sub(r'\s', ' ', abst)
+        
+        floats = re.findall( r'[0-9]\. [0-9]', abst )
+        for v in floats:
+            abst = abst.replace('. ', '.')
+
+        years = re.findall( r'[0-9]+[a-zA-Z]+s?', abst )
+        for v in years:
+            vs = re.findall(r'[a-zA-Z]+s?', v)[0]
+            abst = abst.replace(vs, f' {vs}')
+
+        abst = abst.replace("'", "")
+        for el in chars:
+            if( el != '.' ):
+                abst = abst.replace(el, f" {el} ")
+        for el in stop_chars:
+            abst = abst.replace(el, "")
+        abst = ' '.join( list( filter( lambda x: x!='', abst.split(' '))) )
+        abst = abst.lower()
+
+        return abst
+
+    def _alt_concatenate_abstract_repositionate_words(self, label_aux, cutoff_consensus, force_rewrite=False ):
+        folder_out = os.path.join( self.augdsDir, label_aux )
+
+        oconsensus = os.path.join( self.out, f'{label_aux}_consensus_augmentation_models.tsv' )
         cd = pd.read_csv(oconsensus, sep='\t')
+        cd = cd[ cd['mean'] >= cutoff_consensus ]
         pmids = set(cd.pmid.unique())
 
         oabs = os.path.join( 'out', 'group_abstract_info_pubmed.tsv' )
         gd = pd.read_csv(oabs, sep='\t')
         gd = gd[ gd.pmid.isin(pmids) ]
         gd = gd.fillna('')
-        gd = gd.groupby('pmid')['text'].apply('\n'.join).reset_index()
+        #gd = gd.groupby('pmid')['text'].apply('\n'.join).reset_index()
+        gd = gd.groupby('pmid')['text'].apply(' '.join).reset_index()
 
+        losses = 0
+        n_articles = set()
         for i in tqdm(gd.index):
             _id = gd.loc[i, 'pmid']
             abst = gd.loc[i, 'text']
 
-            path = os.path.join( self.augdsDir, f'{_id}.txt')
-            if( not os.path.isfile(path) ):
+            # Treating text
+            abst = self.__treat_text(abst)
+            
+            n_articles.add(_id)
+
+            # Recalculating start and end positions of the words
+            path = os.path.join( folder_out, f'{_id}.txt')
+            if( not os.path.isfile(path) or force_rewrite ):
                 f = open(path, 'w')
                 f.write( abst )
                 f.close()
+
+            lines = []
+            m = self.__load_pmdid_predictions( folder_out, _id)
+            if( _id == 23216998):
+                print(abst)
+                print(m)
+            cnt = 1
+            for word in m:
+                entity = m[word]
+                word = self.__treat_text(word)
+                
+                start = abst.find(word)
+                end = abst.find(word)+len(word)
+                
+                txt = f"T{ cnt }\t{entity} {start} {end}\t{word}"
+                if(start == -1):
+                    print(_id, txt)
+                    losses += 1
+                else:
+                    lines.append( txt )
+
+                cnt += 1
+
+            path = os.path.join( folder_out, f'{_id}.ann')
+            with open(path, 'w') as g:
+                text = '\n'.join(lines)
+                g.write(text)
+
+        print('Final number of covered articles', len(n_articles) )
+        print('Annotations not found', losses)
 
     def run(self):
         #self.perform_validation_gold()
@@ -1167,11 +1277,15 @@ class ExperimentValidationBySimilarity:
         else:
             self.perform_validation_biobert_allct()
         '''
-        self.perform_validation_biobert_allct()
+        #self.perform_validation_biobert_allct()
         
         label_aux = 'predlev'
         #self.integrate_high_scored_to_augment()
-        #self.get_report_consensus()
+        
+        label_aux = 'sequential_predlev'
+        cutoff_consensus = 0.8
+        #self.get_report_consensus(label_aux, cutoff_consensus)
+        self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

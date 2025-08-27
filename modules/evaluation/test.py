@@ -148,7 +148,7 @@ class Test:
         label_all_tokens = True
         print("TOKENIZING...")
         if( self.dataKey is None and isinstance(self.datasets, Dataset) ):
-            self.datasets = DatasetDict( "test": self.datasets )
+            self.datasets = DatasetDict( { "test": self.datasets } )
             self.dataKey = "test"
         tokenized_datasets = self.datasets.map(tokenize_and_align_labels, batched=True, fn_kwargs={"flag_tokenizer": self.flag_tokenizer, "tokenizer": self.tokenizer, "label_all_tokens": label_all_tokens })
         self.tokenized_dataset = tokenized_datasets[self.dataKey]
@@ -236,7 +236,7 @@ class Test:
             # Per word
             annotated_samples_first = self.__annotate_samples(tokenized_dataset, predictions)
             #generate_reports(annotated_samples_first, datasets['test']['ner_tags'], self.label_list, self.out_report, f"{i}_word_level", self.target_tags)
-            generate_reports_table( None, annotated_samples_first, datasets['test']['ner_tags'], self.label_list, self.out_report, report_identifier, index=f'{i}', level='word' )
+            generate_reports_table( None, annotated_samples_first, tokenized_dataset['ner_tags'], self.label_list, self.out_report, report_identifier, index=f'{i}', level='word' )
 
             models_predictions.append(annotated_samples_first)
 

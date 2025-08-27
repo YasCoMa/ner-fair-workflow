@@ -986,11 +986,8 @@ class ExperimentValidationBySimilarity:
         if( not os.path.isfile(path) ):
             files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
             for i, f in tqdm( enumerate( files ) ):
-                fname = f.split('.')[0].replace('results_','')
-                model_name = fname.split('.')[0]
-                models.append(model_name)
-
                 path = os.path.join( self.outPredDir, f)
+
                 df = pd.read_csv(path, sep='\t')
                 for i in df.index:
                     ofile = df.loc[i, 'input_file']
@@ -1017,8 +1014,9 @@ class ExperimentValidationBySimilarity:
         cnt = {}
         df = pd.read_csv(oconsensus, sep='\t')
         for i in df.index:
-            pmid = df.loc[i, 'pmid']
             _mean = df.loc[i, 'mean']
+            
+            pmid = df.loc[i, 'pmid']
             start = df.loc[i, 'best_start']
             end = df.loc[i, 'best_end']
             entity = df.loc[i, 'entity']

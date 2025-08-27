@@ -1015,7 +1015,7 @@ class ExperimentValidationBySimilarity:
         df = pd.read_csv(oconsensus, sep='\t')
         for i in df.index:
             _mean = df.loc[i, 'mean']
-            
+
             pmid = df.loc[i, 'pmid']
             start = df.loc[i, 'best_start']
             end = df.loc[i, 'best_end']
@@ -1271,6 +1271,10 @@ class ExperimentValidationBySimilarity:
         
         label_aux = 'sequential_predlev'
         cutoff_consensus = 0.8
+        folder_out = os.path.join( self.augdsDir, label_aux )
+        if( not os.path.isdir(folder_out) ):
+            os.makedirs(folder_out)
+            
         #self.get_report_consensus(label_aux, cutoff_consensus)
         self._create_annotation_txt_per_section( label_aux, cutoff_consensus )
 

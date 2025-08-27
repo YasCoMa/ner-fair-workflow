@@ -1006,7 +1006,7 @@ class ExperimentValidationBySimilarity:
 
         return mapp
 
-    def _create_annotation_txt_per_section(self, label_aux, cutoff_consensus):
+    def _create_annotation_txt_per_section(self, label_aux, cutoff_consensus, force_rewrite=False ):
         mapp = self.__load_origin_input_file()
         
         folder_out = os.path.join( self.augdsDir, label_aux )
@@ -1043,12 +1043,13 @@ class ExperimentValidationBySimilarity:
                     # Check txt original file
                     inpath = os.path.join(self.inPredDir, f"{outname}.txt")
                     outpath = os.path.join( folder_out, f'{outname}.txt')
-                    if( not os.path.isfile(outpath) ):
-                        try:
-                            shutil.copyfile(inpath, outpath)
-                        except:
+                    if( not os.path.isfile(outpath) or force_rewrite ):
+                        if( not os.path.isfile(inpath) ):
                             inpath = inpath.replace('.txt', '..txt')
-                            shutil.copyfile(inpath, outpath)
+
+                        text = open(inpath).read()
+                        with open(outpath) as g:
+                            g.write( text.strip() )
             else:
                 not_found.add(key)
 
@@ -1156,7 +1157,7 @@ class ExperimentValidationBySimilarity:
                 historic[key][model_name] = { "score": score, "start": pos["start"], "end": pos["end"] }
 
         self._build_consensus_augDs_from_predictions_across_models(historic, models, label_aux, cutoff_consensus)
-        self._create_annotation_txt_per_section( label_aux, cutoff_consensus)
+        self._create_annotation_txt_per_section( label_aux, cutoff_consensus, force_rewrite=True )
 
         #self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
 
@@ -1295,7 +1296,7 @@ class ExperimentValidationBySimilarity:
             os.makedirs(folder_out)
 
         #self.get_report_consensus(label_aux, cutoff_consensus)
-        self._create_annotation_txt_per_section( label_aux, cutoff_consensus )
+        self._create_annotation_txt_per_section( label_aux, cutoff_consensus, force_rewrite=True )
 
         #self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
 

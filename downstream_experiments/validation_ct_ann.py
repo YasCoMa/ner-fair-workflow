@@ -5,6 +5,7 @@ import json
 import glob
 import faiss
 import pickle
+import shutil
 import Levenshtein
 import numpy as np
 import pandas as pd
@@ -932,84 +933,6 @@ class ExperimentValidationBySimilarity:
         print('Fraction gold/current for Articles', len(gpmids)/len(widepmids))
 
     
-    def _concatenate_per_pmid_augmented_txt(self, per_model_path, pmids):
-        save_aug = self.augdsDir
-        predDir='/aloy/home/ymartins/match_clinical_trial/experiments/new_data/'
-        for _id in tqdm(pmids):
-            path = os.path.join( per_model_path, f'{_id}.txt')
-            if( not os.path.isfile(path) ):
-                files = glob.glob( os.path.join( predDir, f"{_id}_*" ) )
-                texts = list( map( lambda f: open(f, 'r').read(), files ))
-
-                f = open(path, 'w')
-                f.write( ('\n'.join(texts)).replace("\n\n", "\n") )
-                f.close()
-
-    def _build_annotations_augmented_ann(self, per_model_path, model_name, mapped_positions, df, historic):
-        cnt = {}
-        for i in df.index:
-            pmid = df.loc[i, 'pmid']
-            entity = df.loc[i, 'test_label']
-            word = df.loc[i, 'test_text']
-            score = df.loc[i, 'val']
-
-            key = f'{pmid}#$@{entity}#$@{word}'
-
-            if( not key in historic ):
-                historic[key] = {}
-            pos = mapped_positions[key][0]
-            historic[key][model_name] = { "score": score, "start": pos["start"], "end": pos["end"] }
-
-            #for pos in mapped_positions[key]:
-            start = pos['start']
-            end = pos['end']
-
-            if(not pmid in cnt):
-                cnt[pmid] = 1
-            path = os.path.join( per_model_path, f'{pmid}.ann')
-            with open(path, 'a') as g:
-                g.write( f"T{ cnt[pmid] }\t{entity}\t{start}\t{end}\t{word}\n" )
-            cnt[pmid] += 1
-
-        return historic
-
-    def integrate_high_scored_to_augment(self, label_aux):
-        
-        coverage = {}
-        models = []
-        files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
-        for i, f in tqdm( enumerate( files ) ):
-            fname = f.split('.')[0].replace('results_','')
-            model_name = fname.split('.')[0]
-            models.append(model_name)
-            print('---- in ', model_name)
-
-            path = os.path.join( self.outPredDir, f)
-            df = pd.read_csv(path, sep='\t')
-            pred_cov_pmids = set([ s.split('_')[0] for s in df['input_file'] ])
-
-            label_result = f'{label_aux}_biobert_biobert_{model_name}_nct_pubmed'
-            rdf = self._aggregate_group_predictions( label_result)
-            sim_cov_pmids = set( rdf.pmid.unique() )
-            
-            mapped_positions = self.__load_mapped_positions( model_name, df )
-            
-            '''
-            per_model_path = os.path.join(self.augdsDir, model_name)
-            if( not os.path.isdir( per_model_path ) ) :
-                os.makedirs( per_model_path)
-            
-            historic = self._build_annotations_augmented_ann( per_model_path, model_name, mapped_positions, rdf, historic)
-            self._concatenate_per_pmid_augmented_txt( per_model_path, sim_cov_pmids)
-            
-            all_pmids.update( list(sim_cov_pmids) )
-            '''
-
-            coverage[fname] = { 'number_pmids_prediction': len(pred_cov_pmids), 'number_pmids_validation': len(sim_cov_pmids), 'ratio': ( len(sim_cov_pmids)/len(pred_cov_pmids) ) }
-
-        opath = os.path.join( self.out, 'validation_coverage_predlev.json')
-        json.dump(coverage, open(opath,'w') )
-    
     def __load_mapped_positions(self, model_name, df):
         mapped_positions = {}
         opath = os.path.join( self.out, f"{model_name}_mapped.json")
@@ -1057,9 +980,96 @@ class ExperimentValidationBySimilarity:
         rdf = rdf[ rdf['val'] >= 0.8 ]
         return rdf
 
+    def __load_origin_input_file(self):
+        mapp = {}
+        path = os.path.join( self.out, 'mapp_prediction_originalfile.json')
+        if( not os.path.isfile(path) ):
+            files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
+            for i, f in tqdm( enumerate( files ) ):
+                fname = f.split('.')[0].replace('results_','')
+                model_name = fname.split('.')[0]
+                models.append(model_name)
+
+                path = os.path.join( self.outPredDir, f)
+                df = pd.read_csv(path, sep='\t')
+                for i in df.index:
+                    ofile = df.loc[i, 'input_file']
+                    pmid = df.loc[i, 'input_file'].split('_')[0]
+                    start = df.loc[i, 'start']
+                    end = df.loc[i, 'end']
+                    entity = df.loc[i, 'entity_group']
+                    word = df.loc[i, 'word']
+
+                    key = f'{pmid}#$@{start}#$@{end}#$@{entity}#$@{word}'
+                    mapp[key] = ofile
+            json.dump( mapp, open(path, 'w') )
+        else:
+            mapp = json.load( open(path, 'r') )
+
+        return mapp
+
+    def _create_annotation_txt_per_section(self, label_aux, cutoff_consensus):
+        mapp = self.__load_origin_input_file()
+        
+        folder_out = os.path.join( self.augdsDir, label_aux )
+        oconsensus = os.path.join( self.out, f'{label_aux}_consensus_augmentation_models.tsv' )
+        
+        cnt = {}
+        df = pd.read_csv(oconsensus, sep='\t')
+        for i in df.index:
+            pmid = df.loc[i, 'pmid']
+            _mean = df.loc[i, 'mean']
+            start = df.loc[i, 'best_start']
+            end = df.loc[i, 'best_end']
+            entity = df.loc[i, 'entity']
+            word = df.loc[i, 'word']
+
+            key = f'{pmid}#$@{start}#$@{end}#$@{entity}#$@{word}'
+            outname = mapp[key]
+
+            if( _mean >= cutoff_consensus ):
+                # Feed annotation files that will be the input for another training round
+                path = os.path.join( folder_out, f'{outname}.ann')
+                if(not pmid in cnt):
+                    cnt[pmid] = 1
+                    g = open(path, 'w')
+                    g.close()
+
+                with open(path, 'a') as g:
+                    g.write( f"T{ cnt[pmid] }\t{entity} {start} {end}\t{word}\n" )
+                cnt[pmid] += 1
+
+                # Check txt original file
+                inpath = os.path.join(self.inPredDir, f"{outname}.txt")
+                outpath = os.path.join( folder_out, f'{outname}.txt')
+                if( not os.path.isfile(outpath) ):
+                    shutil.copyfile(inpath, outpath)
+
+    def __create_annotation_per_pmid(self, folder_out, oconsensus, cutoff_consensus):
+        cnt = {}
+        df = pd.read_csv(oconsensus, sep='\t')
+        for i in df.index:
+            pmid = df.loc[i, 'pmid']
+            _mean = df.loc[i, 'mean']
+            start = df.loc[i, 'best_start']
+            end = df.loc[i, 'best_end']
+            entity = df.loc[i, 'entity']
+            word = df.loc[i, 'word']
+
+            if( _mean >= cutoff_consensus ):
+                # Feed annotation files that will be the input for another training round
+                path = os.path.join( folder_out, f'{pmid}_tmp.ann')
+                if(not pmid in cnt):
+                    cnt[pmid] = 1
+                    g = open(path, 'w')
+                    g.close()
+
+                with open(path, 'a') as g:
+                    g.write( f"T{ cnt[pmid] }\t{entity} {start} {end}\t{word}\n" )
+                cnt[pmid] += 1
+
     def _build_consensus_augDs_from_predictions_across_models(self, historic, models, label_aux, cutoff_consensus):
         folder_out = os.path.join( self.augdsDir, label_aux )
-
         oconsensus = os.path.join( self.out, f'{label_aux}_consensus_augmentation_models.tsv' )
         if( not os.path.isfile(oconsensus) ):
             f = open(oconsensus, 'w')
@@ -1091,31 +1101,7 @@ class ExperimentValidationBySimilarity:
                 
             f.close()
 
-        cnt = {}
-        df = pd.read_csv(oconsensus, sep='\t')
-        for i in df.index:
-            pmid = df.loc[i, 'pmid']
-            _mean = df.loc[i, 'mean']
-            start = df.loc[i, 'best_start']
-            end = df.loc[i, 'best_end']
-            entity = df.loc[i, 'entity']
-            word = df.loc[i, 'word']
-
-            if( _mean >= cutoff_consensus ):
-                # Feed annotation files that will be the input for another training round
-                path = os.path.join( folder_out, f'{pmid}_tmp.ann')
-                if(not pmid in cnt):
-                    cnt[pmid] = 1
-                    g = open(path, 'w')
-                    g.close()
-
-                with open(path, 'a') as g:
-                    g.write( f"T{ cnt[pmid] }\t{entity} {start} {end}\t{word}\n" )
-                cnt[pmid] += 1
-
-        #all_pmids = set(cnt)
-        #self._concatenate_per_pmid_augmented_txt( self.augdsDir, all_pmids )
-
+        #self.__create_annotation_per_pmid( folder_out, oconsensus, cutoff_consensus)
         
     def get_report_consensus(self, label_aux, cutoff_consensus=0.8):
 
@@ -1158,8 +1144,11 @@ class ExperimentValidationBySimilarity:
                 historic[key][model_name] = { "score": score, "start": pos["start"], "end": pos["end"] }
 
         self._build_consensus_augDs_from_predictions_across_models(historic, models, label_aux, cutoff_consensus)
-        self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
+        self._create_annotation_txt_per_section( label_aux, cutoff_consensus)
 
+        #self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
+
+    # ---------------- it is better not touch the original text
     def __load_pmdid_predictions(self, folder_out, pmid):
         mapp = {}
         path = os.path.join( folder_out, f'{pmid}_tmp.ann')
@@ -1285,7 +1274,9 @@ class ExperimentValidationBySimilarity:
         label_aux = 'sequential_predlev'
         cutoff_consensus = 0.8
         #self.get_report_consensus(label_aux, cutoff_consensus)
-        self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
+        self._create_annotation_txt_per_section( label_aux, cutoff_consensus )
+
+        #self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

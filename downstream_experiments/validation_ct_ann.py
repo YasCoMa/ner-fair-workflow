@@ -1029,20 +1029,24 @@ class ExperimentValidationBySimilarity:
             if( _mean >= cutoff_consensus ):
                 # Feed annotation files that will be the input for another training round
                 path = os.path.join( folder_out, f'{outname}.ann')
-                if(not pmid in cnt):
-                    cnt[pmid] = 1
+                if(not outname in cnt):
+                    cnt[outname] = 1
                     g = open(path, 'w')
                     g.close()
 
                 with open(path, 'a') as g:
-                    g.write( f"T{ cnt[pmid] }\t{entity} {start} {end}\t{word}\n" )
-                cnt[pmid] += 1
+                    g.write( f"T{ cnt[outname] }\t{entity} {start} {end}\t{word}\n" )
+                cnt[outname] += 1
 
                 # Check txt original file
                 inpath = os.path.join(self.inPredDir, f"{outname}.txt")
                 outpath = os.path.join( folder_out, f'{outname}.txt')
                 if( not os.path.isfile(outpath) ):
-                    shutil.copyfile(inpath, outpath)
+                    try:
+                        shutil.copyfile(inpath, outpath)
+                    except:
+                        inpath = inpath.replace('.txt', '..txt')
+                        shutil.copyfile(inpath, outpath)
 
     def __create_annotation_per_pmid(self, folder_out, oconsensus, cutoff_consensus):
         cnt = {}

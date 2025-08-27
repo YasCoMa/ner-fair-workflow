@@ -1047,8 +1047,8 @@ class ExperimentValidationBySimilarity:
                         if( not os.path.isfile(inpath) ):
                             inpath = inpath.replace('.txt', '..txt')
 
-                        text = open(inpath).read()
-                        with open(outpath) as g:
+                        text = open(inpath, 'r').read()
+                        with open(outpath, 'w') as g:
                             g.write( text.strip() )
             else:
                 not_found.add(key)

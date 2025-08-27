@@ -982,7 +982,7 @@ class ExperimentValidationBySimilarity:
 
     def __load_origin_input_file(self):
         mapp = {}
-        path = os.path.join( self.out, 'mapp_prediction_originalfile.json')
+        opath = os.path.join( self.out, 'mapp_prediction_originalfile.json')
         if( not os.path.isfile(path) ):
             files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
             for i, f in tqdm( enumerate( files ) ):
@@ -999,9 +999,10 @@ class ExperimentValidationBySimilarity:
 
                     key = f'{pmid}#$@{start}#$@{end}#$@{entity}#$@{word}'
                     mapp[key] = ofile
-            json.dump( mapp, open(path, 'w') )
+                    
+            json.dump( mapp, open(opath, 'w') )
         else:
-            mapp = json.load( open(path, 'r') )
+            mapp = json.load( open(opath, 'r') )
 
         return mapp
 
@@ -1279,7 +1280,7 @@ class ExperimentValidationBySimilarity:
         folder_out = os.path.join( self.augdsDir, label_aux )
         if( not os.path.isdir(folder_out) ):
             os.makedirs(folder_out)
-            
+
         #self.get_report_consensus(label_aux, cutoff_consensus)
         self._create_annotation_txt_per_section( label_aux, cutoff_consensus )
 

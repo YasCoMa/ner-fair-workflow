@@ -983,7 +983,7 @@ class ExperimentValidationBySimilarity:
     def __load_origin_input_file(self):
         mapp = {}
         opath = os.path.join( self.out, 'mapp_prediction_originalfile.json')
-        if( not os.path.isfile(path) ):
+        if( not os.path.isfile(opath) ):
             files = list( filter( lambda x: x.startswith('results_'), os.listdir( self.outPredDir ) ))
             for i, f in tqdm( enumerate( files ) ):
                 path = os.path.join( self.outPredDir, f)
@@ -999,7 +999,7 @@ class ExperimentValidationBySimilarity:
 
                     key = f'{pmid}#$@{start}#$@{end}#$@{entity}#$@{word}'
                     mapp[key] = ofile
-                    
+
             json.dump( mapp, open(opath, 'w') )
         else:
             mapp = json.load( open(opath, 'r') )

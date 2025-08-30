@@ -82,6 +82,32 @@ process PROCESS_PredictionTasks {
         "python3 ${projectDir}/modules/evaluation/prediction.py -execDir $outDir -paramFile $parameterFile "
 }
 
+process PROCESS_MetaEnrichmentTasks {
+    input:
+    path outDir 
+    path parameterFile
+    val flow
+    
+    output:
+    path "$outDir/logs/tasks_semantic_description.ready"
+        
+    script:
+        "python3 ${projectDir}/modules/semantic_description.py -execDir $outDir -paramFile $parameterFile "
+}
+
+process PROCESS_SignificanceAnalysisTasks {
+    input:
+    path outDir 
+    path parameterFile
+    val flow
+    
+    output:
+    path "$outDir/logs/tasks_significance_analysis.ready"
+        
+    script:
+        "python3 ${projectDir}/modules/significance_analysis.py -execDir $outDir -paramFile $parameterFile "
+}
+
 workflow {
     result = setEnvironment()
 
@@ -99,6 +125,14 @@ workflow {
 
     if( params.mode == "prediction" | params.mode == "all" ){
         result = PROCESS_PredictionTasks( params.dataDir, params.runningConfig, result )
+    }
+
+    if( params.mode == "metadata_enrichment" | params.mode == "all" ){
+        result = PROCESS_MetaEnrichmentTasks( params.dataDir, params.runningConfig, result )
+    }
+
+    if( params.mode == "significance_analysis" ){
+        result = PROCESS_SignificanceAnalysisTasks( params.dataDir, params.runningConfig, result )
     }
 
 }

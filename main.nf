@@ -137,7 +137,7 @@ workflow {
 
 }
 
-// nextflow run -bg /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/experiments/longformer/ --runningConfig /aloy/home/ymartins/match_clinical_trial/experiments/config_biobert.json --mode "all"
+// nextflow run -bg /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/ --runningConfig /aloy/home/ymartins/match_clinical_trial/experiments/config_biobert.json --mode "all"
 
 workflow.onComplete {
     log.info ( workflow.success ? "\nDone! Models were trained and evaluated!\n" : "Oops .. something went wrong" )

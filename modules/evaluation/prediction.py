@@ -355,7 +355,7 @@ class Prediction:
                     historic[key] = {}
                 historic[key][model_name] = { "original": ofile, "score": score, "start": start, "end": end }
 
-        self.___build_historic_predictions_across_models(historic, models)
+        self.__build_historic_predictions_across_models(historic, models)
 
     def _mark_as_done(self):
         f = open( self.fready, 'w')

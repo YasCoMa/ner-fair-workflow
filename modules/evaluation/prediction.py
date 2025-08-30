@@ -11,6 +11,7 @@ from uuid import uuid4
 from transformers import pipeline
 from transformers import AutoTokenizer, LongformerTokenizerFast, AutoModelForTokenClassification, TrainingArguments, Trainer, DataCollatorForTokenClassification
 from spacy.lang.en import English
+from tqdm import tqdm
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
 sys.path.append( root_path )
@@ -373,7 +374,7 @@ class Prediction:
         else:
             self._load_input_data_parallel()
             self._get_predictions_parallel()
-
+        
         self._get_prediction_consensus()
         self._mark_as_done()
 
@@ -381,3 +382,4 @@ if( __name__ == "__main__" ):
     i = Prediction( )
     if( not i.ready ):
         i.run()
+

@@ -1242,9 +1242,7 @@ class ExperimentValidationBySimilarity:
 
             lines = []
             m = self.__load_pmdid_predictions( folder_out, _id)
-            if( _id == 23216998):
-                print(abst)
-                print(m)
+            
             cnt = 1
             for word in m:
                 entity = m[word]

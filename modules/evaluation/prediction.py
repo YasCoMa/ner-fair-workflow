@@ -296,21 +296,31 @@ class Prediction:
         topconsensus = os.path.join( self.out, 'top_consensus_augmentation_models.tsv' )
         oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
         f = open(oconsensus, 'w')
-        header = '\t'.join( ['pmid', 'entity', 'word', 'mean', 'min', 'max'] + models )
+        header = '\t'.join( ['input_file', 'pmid', 'entity_group', 'word', 'start', 'end', 'mean', 'min', 'max'] + models )
         f.write( f"{header}\n")
         for info in historic:
             pmid, entity, word = info.split('#$@')
+            best_start_end = 0
+            start = 0
+            end = 0
+            original = ""
+
             aux = {}
             for m in models:
                 aux[m] = 0
                 if( m in historic[info] ):
-                    aux[m] = historic[info][m]
+                    aux[m] = historic[info][m]["score"]
+                    if( aux[m] > best_start_end ):
+                        best_start_end = aux[m]
+                        start = historic[info][m]["start"]
+                        end = historic[info][m]["end"]
+                        original = historic[info][m]["original"]
 
             vals = [ float(v) for v in aux.values() ]
             _mean = sum(vals)/len(vals)
             _min = min(vals)
             _max = max(vals)
-            values = [pmid, entity, word, _mean, _min, _max] + vals
+            values = [original, pmid, entity, word, start, end, _mean, _min, _max] + vals
             values = '\t'.join( [ str(v) for v in values ] )
             f.write( f"{values}\n")
 
@@ -331,16 +341,19 @@ class Prediction:
             result_path = os.path.join( self.out, f)
             df = pd.read_csv( result_path, sep='\t')
             for i in df.index:
+                ofile = df.loc[i, 'input_file']
                 pmid = df.loc[i, 'input_file'].split('_')[0]
                 entity = df.loc[i, 'entity_group']
                 word = df.loc[i, 'word']
                 score = df.loc[i, 'score']
+                start = int( df.loc[i, 'start'] )
+                end = int( df.loc[i, 'end'] )
 
                 key = f'{pmid}#$@{entity}#$@{word}'
 
                 if( not key in historic ):
                     historic[key] = {}
-                historic[key][model_name] = score
+                historic[key][model_name] = { "original": ofile, "score": score, "start": start, "end": end }
 
         self.___build_historic_predictions_across_models(historic, models)
 

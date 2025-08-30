@@ -15,31 +15,33 @@ class AnalysisStatisticalSignificance:
 	def _acquire_data(self):
 		data = {}
 
-		folders = glob.glob( os.path.join(self.root_path, f"*-finetuned-*", self.stage, 'summary_reports') )
+		stages = ["training", "test"]
+		for stage in stages:
+			folders = glob.glob( os.path.join(self.root_path, f"*-finetuned-*", stage, 'summary_reports') )
 
-		evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
-        levels = ['token', 'word']
-        for mode in evaluation_modes:
-            for level in levels:
-            	for folder in folders:
-            		fid = os.path.dirname( folder + os.path.sep ).split( os.path.sep )[-3]
+			evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
+	        levels = ['token', 'word']
+	        for mode in evaluation_modes:
+	            for level in levels:
+	            	for folder in folders:
+	            		fid = os.path.dirname( folder + os.path.sep ).split( os.path.sep )[-3]
 
-	                files = glob.glob( os.path.join(folder, f"{mode}_summary-report_*-l{level}.tsv") )
-	                if( len(files) > 0 ):
-	                	for f in files:
-	                        df = pd.read_csv(f, sep='\t')
-	                        for i in df.index:
-	                            evalMetric = df.loc[i, 'evaluation_metric']
-	                            entity = df.loc[i, 'Entity']
-	                            values = df.iloc[i, 4:].values
+		                files = glob.glob( os.path.join(folder, f"{mode}_summary-report_*-l{level}.tsv") )
+		                if( len(files) > 0 ):
+		                	for f in files:
+		                        df = pd.read_csv(f, sep='\t')
+		                        for i in df.index:
+		                            evalMetric = df.loc[i, 'evaluation_metric']
+		                            entity = df.loc[i, 'Entity']
+		                            values = df.iloc[i, 4:].values
 
-	                            key = f"{mode}_{level}"
-	                            if( not key in data ):
-	                            	data[key] = {}
-	                            if( not fid in data[key] ):
-	                            	data[key][fid] = {}
+		                            key = f"{stage}_{mode}_{level}"
+		                            if( not key in data ):
+		                            	data[key] = {}
+		                            if( not fid in data[key] ):
+		                            	data[key][fid] = {}
 
-	                            data[key][fid][ f"{entity}#$@{evalMetric}" ] = values
+		                            data[key][fid][ f"{entity}#$@{evalMetric}" ] = values
 
 		return data
 

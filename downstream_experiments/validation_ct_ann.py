@@ -3,14 +3,14 @@ import re
 import sys
 import json
 import glob
-import faiss
 import pickle
-import shutil
 import Levenshtein
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
 from uuid import uuid4
+import faiss
 from string import punctuation
 
 try:

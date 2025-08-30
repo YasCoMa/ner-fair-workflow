@@ -14,6 +14,19 @@ class SemanticDescription:
         model_name = self.config['model_checkpoint'].split("/")[-1]
         self.outDir = os.path.join(self.outDirRoot, f"{self.config['identifier']}-{model_name}-finetuned-{task}" )
 
+        self.approach = None
+
+        self._get_info_config()
+        self._setup_namespaces()
+
+    def gen_id(self, prefix):
+        _id = uuid4().hex
+        return f'{prefix}_{_id}'
+
+    def _get_info_config(self):
+        config = self.config
+
+        self.exp_identifier = config["identifier"]
         self.exp_metadata = {  }
         if( 'experiment_metadata' in config ):
             self.exp_metadata = config['experiment_metadata']
@@ -28,13 +41,6 @@ class SemanticDescription:
             self.exp_metadata['domain'] = ''
         if( 'source' not in self.exp_metadata):
             self.exp_metadata['source'] = ''
-        
-    	
-        self.approach = None
-
-    def gen_id(self, prefix):
-        _id = uuid4().hex
-        return f'{prefix}_{_id}'
 
     def _setup_namespaces(self):
         g = self.graph
@@ -54,6 +60,8 @@ class SemanticDescription:
         g.bind("vcard", self.vcard)
         self.edam = Namespace("http://edamontology.org/")
         g.bind("edam", self.edam)
+        self.nero = Namespace("http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#")
+        g.bind("nero", self.nero)
 
         self.graph = g
         
@@ -191,18 +199,18 @@ class SemanticDescription:
         g.add(( self.nerwf.hasSummaryPrediction, RDFS.label,   Literal("hasSummaryPrediction", lang="en")))
         g.add(( self.nerwf.hasSummaryPrediction, RDFS.comment,   Literal("Generation of a predictive model as a product of an operation execution", lang="en")))
         
+        g.add(( self.nerwf.belongsToEntity, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.belongsToEntity, RDFS.domain, self.nerwf.NEREvaluationMeasure )) 
+        g.add(( self.nerwf.belongsToEntity, RDFS.range,  self.nero.NamedEntity ))
+        g.add(( self.nerwf.belongsToEntity, RDFS.label,   Literal("belongsToEntity", lang="en")))
+        g.add(( self.nerwf.belongsToEntity, RDFS.comment,   Literal("Specify the name of the entity related to the score instance", lang="en")))
+        
         # --------- Datatype Properties
         g.add(( self.nerwf.hasReplicateNumber, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.hasReplicateNumber, RDFS.domain, self.OWL.Class )) 
         g.add(( self.nerwf.hasReplicateNumber, RDFS.range,  XSD.integer))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.label,   Literal("hasReplicateNumber", lang="en")))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.comment,   Literal("The replicate index of the asset (model or other output)", lang="en")))
-        
-        g.add(( self.nerwf.belongsToEntity, RDF.type, OWL.DatatypeProperty) )
-        g.add(( self.nerwf.belongsToEntity, RDFS.domain, self.nerwf.NEREvaluationMeasure )) 
-        g.add(( self.nerwf.belongsToEntity, RDFS.range,  XSD.string))
-        g.add(( self.nerwf.belongsToEntity, RDFS.label,   Literal("belongsToEntity", lang="en")))
-        g.add(( self.nerwf.belongsToEntity, RDFS.comment,   Literal("Specify the name of the entity related to the score instance", lang="en")))
         
         g.add(( self.nerwf.isAggregatedValue, RDF.type, OWL.DatatypeProperty) )
         domain_union = BNode()
@@ -511,9 +519,13 @@ class SemanticDescription:
                             statsMetric = df.loc[i, 'stats_agg_name']
                             value = df.loc[i, 'stats_agg_value']
 
+                            ent = self.gen_id('entity') 
+                            g.add( ( self.nerwf[ent], self.RDF.type, self.nero.NamedEntity ) )
+                            g.add( ( self.nerwf[ent], self.RDFS.label, entity ) )
+
                             score = self.gen_id('evalScore') 
                             g.add( ( self.nerwf[score], self.RDF.type, self.nerwf.NEREvaluationMeasure ) )
-                            g.add( ( self.nerwf[score], self.nerwf.belongsToEntity, Literal(entity) ) )
+                            g.add( ( self.nerwf[score], self.nerwf.belongsToEntity, self.nerwf[ent] ) )
                             g.add( ( self.nerwf[score], self.nerwf.isAggregatedValue, Literal(True) ) )
                             g.add( ( self.nerwf[score], self.vcard.hasValue, Literal( value ) ) )
                             g.add( ( self.nerwf[score], self.nerwf.aggregatedByStatsFunction, Literal( statsMetric, lang="en" ) ) )
@@ -708,13 +720,18 @@ class SemanticDescription:
 
         self.graph = g
 
-
+    def _export_graph(self):
+        g = self.graph
+        path = os.path.join( self.out, f'experiment_graph_{ self.exp_identifier }.ttl' )
+        g.serialize( destination = path )
+    
     def run(self):
     	self._describe_experiment()
     	self._describe_data_preprocessing()
     	self._describe_training()
     	self._describe_test()
     	self._describe_prediction()
+        self._export_graph()
 
         # describe experiment
         # describe workflow

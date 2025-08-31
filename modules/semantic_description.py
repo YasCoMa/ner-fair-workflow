@@ -193,7 +193,7 @@ class SemanticDescription:
         
         g.add(( self.nerwf.fromEvaluationMetric, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.fromEvaluationMetric, RDFS.domain, self.nerwf.NEREvaluationMeasure )) # Model
-        g.add(( self.nerwf.fromEvaluationMetric, RDFS.range,  self.stato.0000039)) # stato statistic
+        g.add(( self.nerwf.fromEvaluationMetric, RDFS.range,  self.stato["0000039"])) # stato statistic
         g.add(( self.nerwf.fromEvaluationMetric, RDFS.label,   Literal("fromEvaluationMetric", lang="en")))
         g.add(( self.nerwf.fromEvaluationMetric, RDFS.comment,   Literal("It can be used to specify the model parameters (hyper parameters)", lang="en")))
         
@@ -560,7 +560,7 @@ class SemanticDescription:
         
         g = self.graph
 
-        eval_links = { 'accuracy': self.stato.0000415, 'precision': self.stato.0000416, 'recall': self.stato.0000233, 'aucroc': self.stato.0000608, 'f1-score': self.stato.0000628, 'mcc': self.stato.0000524, 'kappa': self.stato.0000630 }
+        eval_links = { 'accuracy': self.stato["0000415"], 'precision': self.stato["0000416"], 'recall': self.stato["0000233"], 'aucroc': self.stato["0000608"], 'f1-score': self.stato["0000628"], 'mcc': self.stato["0000524"], 'kappa': self.stato["0000630"] }
         evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
         levels = ['token', 'word']
         for mode in evaluation_modes:
@@ -612,7 +612,7 @@ class SemanticDescription:
             self.approach = self.gen_id('mlapproach')
             g.add( ( self.nerwf[self.approach], self.RDF.type, self.xmlpo.ClassificationAlgorithm ) )
             g.add( ( self.nerwf[self.approach], self.RDFS.label, Literal("Deep Learning - Transformers", lang="en") ) )
-            g.add( ( self.nerwf[proc1], self.stato.0000102, self.nerwf[self.approach] ) ) # operation executes 
+            g.add( ( self.nerwf[proc1], self.stato["0000102"], self.nerwf[self.approach] ) ) # operation executes 
             
             for model_id in models:
                 g.add( ( self.nerwf[self.approach], self.xmlpo.hasOutput, self.nerwf[model_id] ) )
@@ -649,7 +649,7 @@ class SemanticDescription:
                 approach = self.gen_id('mlapproach')
                 g.add( ( self.nerwf[approach], self.RDF.type, self.xmlpo.ClassificationAlgorithm ) )
                 g.add( ( self.nerwf[approach], self.RDFS.label, Literal("Deep Learning - Transformers", lang="en") ) )
-            g.add( ( self.nerwf[proc1], self.stato.0000102, self.nerwf[approach] ) ) # operation executes 
+            g.add( ( self.nerwf[proc1], self.stato["0000102"], self.nerwf[approach] ) ) # operation executes 
             
             g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
             

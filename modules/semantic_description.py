@@ -554,7 +554,7 @@ class SemanticDescription:
                 # Defining models
                 rootmodel = self.gen_id('original_model')
                 g.add( ( self.nerwf[rootmodel], RDF.type, self.mesh.D000098342 ) )
-                g.add( ( self.nerwf[rootmodel], RDFS.label, Literal( f"Original model {model_checkpoint}", lang="en") ) )
+                g.add( ( self.nerwf[rootmodel], RDFS.label, Literal( f"Original model {self.model_checkpoint}", lang="en") ) )
                 for i, model in enumerate(model_files):
                     finemodel = self.gen_id('finetuned_model')
                     self.models[finemodel] = model

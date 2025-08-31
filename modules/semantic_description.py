@@ -117,7 +117,7 @@ class SemanticDescription:
         
     def __define_tagging_format_instances(self):
         g = self.graph
-        
+
         g.add( ( self.nerwf.nlpformat_io, RDF.type, self.nerwf.TaggingFormat ) )
         g.add( ( self.nerwf.nlpformat_io, RDFS.label, Literal( "IO" ) ) )
         
@@ -181,7 +181,7 @@ class SemanticDescription:
         g.add(( self.nerwf.executedBy, RDFS.comment,   Literal("Experiments executed by workflow, a step of workflow can also be executed by an algorithm", lang="en")))
 
         g.add(( self.nerwf.describedBy, RDF.type, OWL.ObjectProperty) )
-        g.add(( self.nerwf.describedBy, RDFS.domain, self.OWL.Class ))
+        g.add(( self.nerwf.describedBy, RDFS.domain, OWL.Class ))
         g.add(( self.nerwf.describedBy, RDFS.range,  self.xmlpo.Quality))
         g.add(( self.nerwf.describedBy, RDFS.label,   Literal("describedBy", lang="en")))
         g.add(( self.nerwf.describedBy, RDFS.comment,   Literal("Classes may be described by an object of Quality class of its subclasses that specify characteristics", lang="en")))
@@ -263,7 +263,7 @@ class SemanticDescription:
         
         # --------- Datatype Properties
         g.add(( self.nerwf.hasReplicateNumber, RDF.type, OWL.DatatypeProperty) )
-        g.add(( self.nerwf.hasReplicateNumber, RDFS.domain, self.OWL.Class )) 
+        g.add(( self.nerwf.hasReplicateNumber, RDFS.domain, OWL.Class )) 
         g.add(( self.nerwf.hasReplicateNumber, RDFS.range,  XSD.integer))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.label,   Literal("hasReplicateNumber", lang="en")))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.comment,   Literal("The replicate index of the asset (model or other output)", lang="en")))
@@ -304,7 +304,6 @@ class SemanticDescription:
         self.graph = g
 
         self.logger.info("[Semantic description step] Task (Defining ontology elements) ended -----------")
-        
 
     def __describe_workflow(self):
         self.logger.info("[Semantic description step] Task (Describing workflow) started -----------")

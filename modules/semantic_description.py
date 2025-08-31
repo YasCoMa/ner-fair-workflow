@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import glob
+import pandas as pd
 from uuid import uuid4
 from datasets import load_from_disk
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode

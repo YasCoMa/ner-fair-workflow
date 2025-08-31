@@ -2,6 +2,7 @@ import os
 import sys
 import json
 from uuid import uuid4
+from datasets import load_from_disk
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
 from rdflib.collection import Collection

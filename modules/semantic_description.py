@@ -10,7 +10,7 @@ import logging
 
 class SemanticDescription:
     
-    def __init__(self, fout):
+    def __init__(self):
         self._get_arguments()
         self._setup_out_folders()
 

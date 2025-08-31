@@ -22,6 +22,8 @@ class SemanticDescription:
         
         self.approach = None
 
+        self.graph = Graph()
+        
         self._get_info_config()
         self._setup_namespaces()
 

@@ -352,8 +352,8 @@ class SemanticDescription:
         ecid = self.gen_id('expChar')
         g.add( ( self.nerwf[ecid], RDF.type, self.xmlpo.ExperimentCharacteristics ) )
         g.add( ( self.nerwf[ecid], self.xmlpo.ExperimentType, Literal("Named entity recognition", lang="en") ) )
-        g.add( ( self.nerwf[ecid], self.xmlpo.ExperimentDomain, self.exp_metadata['domain'] ) )
-        g.add( ( self.nerwf[ecid], self.xmlpo.ExperimentDescription, self.exp_metadata['description'] ) )
+        g.add( ( self.nerwf[ecid], self.xmlpo.ExperimentDomain, Literal(self.exp_metadata['domain']) ) )
+        g.add( ( self.nerwf[ecid], self.xmlpo.ExperimentDescription, Literal(self.exp_metadata['description']) ) )
         g.add( ( self.nerwf[_id], self.nerwf.describedBy, self.nerwf[ecid] ) )
 
         self.__describe_workflow()

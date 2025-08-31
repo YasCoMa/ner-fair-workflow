@@ -597,7 +597,7 @@ class SemanticDescription:
 
                             ent = self.gen_id('entity') 
                             g.add( ( self.nerwf[ent], RDF.type, self.nero.NamedEntity ) )
-                            g.add( ( self.nerwf[ent], RDFS.label, entity ) )
+                            g.add( ( self.nerwf[ent], RDFS.label, Literal(entity) ) )
 
                             score = self.gen_id('evalScore') 
                             g.add( ( self.nerwf[score], RDF.type, self.nerwf.NEREvaluationMeasure ) )

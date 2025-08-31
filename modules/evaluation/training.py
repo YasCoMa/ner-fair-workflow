@@ -204,27 +204,27 @@ class Training:
 
                 hpath = os.path.join(self.out, 'hyperparameter_search')
                 args = TrainingArguments(
-                hpath,
-                learning_rate=trial.suggest_float("learning_rate", low=2e-5, high=5e-5, log=True),
-                weight_decay=trial.suggest_float("weight_decay", 4e-5, 0.01, log=True),
-                num_train_epochs=10,
-                eval_strategy = "epoch",
-                save_strategy="epoch",
-                load_best_model_at_end=True,
-                greater_is_better = False,
-                eval_accumulation_steps=1,
-                **hyperparameters_space
+                    hpath,
+                    learning_rate=trial.suggest_float("learning_rate", low=2e-5, high=5e-5, log=True),
+                    weight_decay=trial.suggest_float("weight_decay", 4e-5, 0.01, log=True),
+                    num_train_epochs=10,
+                    eval_strategy = "epoch",
+                    save_strategy="epoch",
+                    load_best_model_at_end=True,
+                    greater_is_better = False,
+                    eval_accumulation_steps=1,
+                    **hyperparameters_space
                 )
 
                 data_collator = DataCollatorForTokenClassification(tokenizer)
 
                 trainer = Trainer(
-                model,
-                args,
-                train_dataset=tokenized_datasets['train'],
-                eval_dataset=tokenized_datasets['valid'],
-                data_collator=data_collator,
-                tokenizer=tokenizer,
+                    model,
+                    args,
+                    train_dataset=tokenized_datasets['train'],
+                    eval_dataset=tokenized_datasets['valid'],
+                    data_collator=data_collator,
+                    tokenizer=tokenizer,
                 )
             
                 trainer.train()

@@ -565,7 +565,7 @@ class SemanticDescription:
 
         self.graph = g
 
-        return flag, models    
+        return flag, self.models    
 
     def _integrate_model_evaluation_agg_results(self, eval_op_id, stage):
         folder = os.path.join( self.outDir, stage, 'summary_reports' )

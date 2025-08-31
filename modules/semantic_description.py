@@ -299,7 +299,7 @@ class SemanticDescription:
         self.logger.info("[Semantic description step] Task (Defining ontology elements) ended -----------")
         
 
-    def __describe_workflow(self);
+    def __describe_workflow(self):
         self.logger.info("[Semantic description step] Task (Describing workflow) started -----------")
         
         g = self.graph

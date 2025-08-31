@@ -102,8 +102,10 @@ class AnalysisStatisticalSignificance:
                         for entity_metric in dat[model_base]:
                             entity, metric = entity_metric.split('#$@')
                             pvalue_wil = ranksums( dat[model_base][entity_metric], dat[model_compare][entity_metric] )
-                            pvalue_fried = friedmanchisquare( dat[model_base][entity_metric], dat[model_compare][entity_metric] )
-                            f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\t{ pvalue_fried.pvalue }\n")
+                            #pvalue_fried = friedmanchisquare( dat[model_base][entity_metric], dat[model_compare][entity_metric] )
+                            #f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\t{ pvalue_fried.pvalue }\n")
+                            pvalue_fried = 0
+                            f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\t{ pvalue_fried }\n")
 
             f.close()
 

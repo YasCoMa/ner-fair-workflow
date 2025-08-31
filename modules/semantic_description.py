@@ -23,7 +23,7 @@ class SemanticDescription:
         self.approach = None
 
         self.graph = Graph()
-        
+
         self._get_info_config()
         self._setup_namespaces()
 
@@ -93,6 +93,7 @@ class SemanticDescription:
 
     def _setup_namespaces(self):
         g = self.graph
+
         self.nerwf = Namespace("http://example.org/")
         g.bind("nerwf", self.nerwf)
         self.xmlpo = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/") # https://github.com/OntoUML/ontouml-models/raw/refs/heads/master/models/xhani2023xmlpo/ontology.ttl
@@ -115,6 +116,8 @@ class SemanticDescription:
         self.graph = g
         
     def __define_tagging_format_instances(self):
+        g = self.graph
+        
         g.add( ( self.nerwf.nlpformat_io, RDF.type, self.nerwf.TaggingFormat ) )
         g.add( ( self.nerwf.nlpformat_io, RDFS.label, Literal( "IO" ) ) )
         
@@ -123,6 +126,8 @@ class SemanticDescription:
         
         g.add( ( self.nerwf.nlpformat_bioes, RDF.type, self.nerwf.TaggingFormat ) )
         g.add( ( self.nerwf.nlpformat_bioes, RDFS.label, Literal( "BIOES" ) ) )
+
+        self.graph = g
         
     def _define_new_onto_elements(self):
         self.logger.info("[Semantic description step] Task (Defining ontology elements) started -----------")

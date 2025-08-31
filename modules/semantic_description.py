@@ -4,6 +4,7 @@ import json
 from uuid import uuid4
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
+from rdflib.collection import Collection
 
 import argparse
 import logging
@@ -231,8 +232,9 @@ class SemanticDescription:
         g.add(( self.nerwf.useInputData, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.useInputData, RDFS.domain, self.xmlpo.Operation )) 
         range_union = BNode()
-        g.add((range_union, RDF.type, OWL.Class))
-        g.add((range_union, OWL.unionOf, RDF.collection([ self.xmlpo.Dataset, self.xmlpo.Data ]) ) )
+        Collection(g, range_union, [ self.xmlpo.Dataset, self.xmlpo.Data ])
+        #g.add((range_union, RDF.type, OWL.Class))
+        #g.add((range_union, OWL.unionOf, RDF.collection([ self.xmlpo.Dataset, self.xmlpo.Data ]) ) )
         g.add(( self.nerwf.useInputData, RDFS.range,  range_union ))
         g.add(( self.nerwf.useInputData, RDFS.label,   Literal("useInputData", lang="en")))
         g.add(( self.nerwf.useInputData, RDFS.comment,   Literal("Correlates operation with some declared input data", lang="en")))
@@ -270,8 +272,9 @@ class SemanticDescription:
         
         g.add(( self.nerwf.isAggregatedValue, RDF.type, OWL.DatatypeProperty) )
         domain_union = BNode()
-        g.add((domain_union, RDF.type, OWL.Class))
-        g.add((domain_union, OWL.unionOf, RDF.collection([ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ]) ) )
+        #g.add((domain_union, RDF.type, OWL.Class))
+        #g.add((domain_union, OWL.unionOf, RDF.collection([ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ]) ) )
+        Collection(g, domain_union, [ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ])
         g.add(( self.nerwf.isAggregatedValue, RDFS.domain, domain_union )) 
         g.add(( self.nerwf.isAggregatedValue, RDFS.range,  XSD.boolean))
         g.add(( self.nerwf.isAggregatedValue, RDFS.label,   Literal("isAggregatedValue", lang="en")))
@@ -313,9 +316,11 @@ class SemanticDescription:
         g.add( ( self.nerwf[_id], RDF.type, self.xmlpo.workflow ) )
         g.add( ( self.nerwf[_id], RDFS.label, Literal( "NER FAIR workflow", lang="en" ) ) )
         g.add( ( self.nerwf[_id], DCTERMS.description, Literal( self.exp_metadata['description']) ) )
+        
         subject_union = BNode()
-        g.add((subject_union, RDF.type, OWL.Class))
-        g.add((subject_union, OWL.unionOf, RDF.collection([ self.edam.topic_0218, self.edam.topic_0769 ]) ) )
+        #g.add((subject_union, RDF.type, OWL.Class))
+        #g.add((subject_union, OWL.unionOf, RDF.collection([ self.edam.topic_0218, self.edam.topic_0769 ]) ) )
+        Collection(g, subject_union, [ self.edam.topic_0218, self.edam.topic_0769 ])
         g.add( ( self.nerwf[_id], DCTERMS.subject, subject_union ) )
         
         self.graph = g

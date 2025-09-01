@@ -1,6 +1,7 @@
 """Run job in local system."""
 import os
 import re
+import sys
 import glob
 import uuid
 import pickle
@@ -8,7 +9,9 @@ import tarfile
 import subprocess
 import numpy as np
 
-from updatedbs.util import logged
+root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
+sys.path.append( root_path )
+from utils import logged
 
 STARTED = "started"
 DONE = "done"

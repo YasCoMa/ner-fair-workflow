@@ -207,12 +207,11 @@ class Test:
         model_files = [file for file in os.listdir(save_path) if file.startswith("model_")]
         model_files.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         
-        if( self.dataKey is not None)
         input_ids = torch.tensor(tokenized_dataset["input_ids"]).to(device)
         attention_mask = torch.tensor(tokenized_dataset["attention_mask"]).to(device)     
         test_data = {'input_ids': input_ids, 'attention_mask': attention_mask}
 
-        labels = tokenized_datasets['test']['labels']
+        labels = tokenized_dataset['labels']
 
         report_identifier = 'test-model'
 

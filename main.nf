@@ -37,7 +37,8 @@ process PROCESS_PreProcessTasks {
     val flow
     
     output:
-    path "$outDir/logs/tasks_data_preprocessing.ready"
+    val 1, emit: flag
+    //path "$outDir/logs/tasks_data_preprocessing.ready"
         
     script:
         "python3 ${projectDir}/modules/preprocessing/preprocessing.py -execDir $outDir -paramFile $parameterFile "
@@ -50,7 +51,8 @@ process PROCESS_TrainTasks {
     val flow
     
     output:
-    path "$outDir/logs/tasks_training.ready"
+    val 1, emit: flag
+    //path "$outDir/logs/tasks_training.ready"
         
     script:
         "python3 ${projectDir}/modules/evaluation/training.py -execDir $outDir -paramFile $parameterFile "
@@ -63,7 +65,8 @@ process PROCESS_TestTasks {
     val flow
     
     output:
-    path "$outDir/logs/tasks_test.ready"
+    val 1, emit: flag
+    //path "$outDir/logs/tasks_test.ready"
         
     script:
         "python3 ${projectDir}/modules/evaluation/test.py -execDir $outDir -paramFile $parameterFile "
@@ -76,7 +79,8 @@ process PROCESS_PredictionTasks {
     val flow
     
     output:
-    path "$outDir/logs/tasks_prediction.ready"
+    val 1, emit: flag
+    //path "$outDir/logs/tasks_prediction.ready"
         
     script:
         "python3 ${projectDir}/modules/evaluation/prediction.py -execDir $outDir -paramFile $parameterFile "
@@ -89,7 +93,8 @@ process PROCESS_MetaEnrichmentTasks {
     val flow
     
     output:
-    path "$outDir/logs/tasks_semantic_description.ready"
+    val 1, emit: flag
+    //path "$outDir/logs/tasks_semantic_description.ready"
         
     script:
         "python3 ${projectDir}/modules/semantic_description.py -execDir $outDir -paramFile $parameterFile "

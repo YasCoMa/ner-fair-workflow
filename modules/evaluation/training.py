@@ -330,6 +330,9 @@ class Training:
         tokenized_datasets = self.tokenized_datasets
         hyperparameters_loaded = self.hyperparameters_loaded
 
+        report_identifier = 'training-model'
+        
+
         def compute_metrics(p):
             '''
             Compute accuracy, F1 score, and classification report for the given predictions and labels.
@@ -381,8 +384,7 @@ class Training:
         
         self.logger.info(f"\tTraining with hyperparameters: \n {hyperparameters_loaded}")
         #TRAINING
-        report_identifier = 'training-model'
-
+        
         for i in range(5):
             self.logger.info("\t\tTRAINING... round {i}")
             #Define the model
@@ -438,6 +440,7 @@ class Training:
             #generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
         
         #generate_csv_comparison( self.out_report, type_level=['token_level'])
+        
         entry_point = self.out_report
         out_path = self.out_agg_report
         aggregate_reports(entry_point, report_identifier, out_path, agg_stats_metric = self.report_summary_stats_metric, levels = ['word', 'token'])

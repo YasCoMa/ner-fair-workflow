@@ -66,30 +66,40 @@ class Prediction:
         logging.basicConfig( filename=logf, encoding="utf-8", filemode="a", level=logging.INFO, format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('prediction')
 
-        try:
-            self.expid = self.config["identifier"]
-            self.config_path = None
-            self.flag_parallel = False
-            if( 'config_hpc' in self.config ):
-                self.config_path = self.config['config_hpc']
-                self.flag_parallel = True
-            
-            if( 'seed' in self.config ):
-                if( isinstance( self.config['seed'] , int ) ):
-                    self.seed = self.config['seed']
+        flag_prediction = True
+        if( "input_prediction" in self.config ):
+            flag_prediction = os.path.exists( self.config["input_prediction"] )
 
-            self.model_checkpoint = self.config["pretrained_model"]
-            self.outDir = self.config["outpath"]
-            self.inpath = self.config["input_prediction"]
-            self.infile = None
-            self.indir = None
-            if( os.path.isfile(self.inpath) ):
-                self.infile = self.inpath
-            elif( os.path.isdir(self.inpath) ):
-                self.indir = self.inpath
-            self.logger.info("----------- Prediction step started -----------")
-        except:
-            raise Exception("Mandatory fields not found in config. file")
+        else:
+            flag_prediction = False
+
+        if( not flag_prediction ):
+            self._mark_as_done()
+        else:
+            try:
+                self.expid = self.config["identifier"]
+                self.config_path = None
+                self.flag_parallel = False
+                if( 'config_hpc' in self.config ):
+                    self.config_path = self.config['config_hpc']
+                    self.flag_parallel = True
+                
+                if( 'seed' in self.config ):
+                    if( isinstance( self.config['seed'] , int ) ):
+                        self.seed = self.config['seed']
+
+                self.model_checkpoint = self.config["pretrained_model"]
+                self.outDir = self.config["outpath"]
+                self.inpath = self.config["input_prediction"]
+                self.infile = None
+                self.indir = None
+                if( os.path.isfile(self.inpath) ):
+                    self.infile = self.inpath
+                elif( os.path.isdir(self.inpath) ):
+                    self.indir = self.inpath
+                self.logger.info("----------- Prediction step started -----------")
+            except:
+                raise Exception("Mandatory fields not found in config. file")
 
     def _setup_out_folders(self):
         task = 'ner'

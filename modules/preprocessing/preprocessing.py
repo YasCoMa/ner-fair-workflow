@@ -152,7 +152,7 @@ class Preprocessing:
         opath = os.path.join(self.tmp, 'data_added_sentenceId.csv')
         data_df = pd.read_csv(opath)
 
-        File_ID = data_df['File_ID'].unique()
+        File_ID = [ str(x) for x in data_df['File_ID'].unique() ]
         # Create a new random generator
         rng = np.random.default_rng(20)
 

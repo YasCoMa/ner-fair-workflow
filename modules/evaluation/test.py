@@ -8,7 +8,7 @@ import logging
 
 import pandas as pd
 from datasets import Dataset, DatasetDict, load_dataset, load_from_disk
-from transformers import AutoTokenizer, LongformerTokenizerFast
+from transformers import AutoTokenizer, LongformerTokenizerFast, AutoModel
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
 sys.path.append( root_path )
@@ -244,6 +244,7 @@ class Test:
         out_path = self.out_agg_report
         aggregate_reports(entry_point, report_identifier, out_path, agg_stats_metric = self.report_summary_stats_metric, levels = ['word', 'token'])
 
+
         '''
         # Save predictions for the models in csv files
         # Create a dictionary for the dataset
@@ -255,6 +256,39 @@ class Test:
         self.logger.info("[Test step] Task (Get predictions for test set) ended -----------")
 
         #return dataset_dict
+
+    def _get_predictions_baseline(self):
+        device = self.device
+        save_path = self.outDir
+        tokenizer = self.tokenizer
+        datasets = self.datasets
+        tokenized_dataset = self.tokenized_dataset
+
+        input_ids = torch.tensor(tokenized_dataset["input_ids"]).to(device)
+        attention_mask = torch.tensor(tokenized_dataset["attention_mask"]).to(device)     
+        test_data = {'input_ids': input_ids, 'attention_mask': attention_mask}
+
+        labels = tokenized_dataset['labels']
+
+        report_identifier = 'baseline-zeroshot'
+
+        # Applying base model zero-shot
+        model = AutoModel.from_pretrained(self.model_checkpoint)
+        model.to(device)
+        model.eval()
+        with torch.no_grad():
+            outputs = model(**test_data)
+
+        predictions = torch.argmax(outputs.logits, dim=2).to("cpu").numpy()
+        torch.cuda.empty_cache()
+
+        # Per token
+        #generate_reports(predictions, labels, self.label_list, self.out_report, f"{i}_token_level", self.target_tags)
+        generate_reports_table( outputs.logits, predictions, labels, self.label_list, self.out_report, report_identifier, index="unique", level='token' )
+
+        # Per word
+        annotated_samples_first = self.__annotate_samples(tokenized_dataset, predictions)
+        generate_reports_table( None, annotated_samples_first, tokenized_dataset['ner_tags'], self.label_list, self.out_report, report_identifier, index="unique", level='word' )
 
     def _save_most_common_predictions(self, dataset_dict):
         save_path = self.outDir
@@ -308,6 +342,7 @@ class Test:
         self._load_input_data()
         dataset_dict = self._get_predictions()
         #self._save_most_common_predictions(dataset_dict)
+        self._get_predictions_baseline()
         self._mark_as_done()
 
 if( __name__ == "__main__" ):

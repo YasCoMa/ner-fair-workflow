@@ -289,7 +289,7 @@ class Prediction:
                 script_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), '_aux_prediction.py')
                 command = "python3 "+script_path
                 config = self.config_path
-                prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'slurm', config_path=config )
+                prepare_job_array( job_name, job_path, command, filetasksFolder=None, taskList=elements, chunk_size=chunk_size, ignore_check = True, wait=True, destroy=True, execpy='python3', hpc_env = 'sge', config_path=config )
 
                 test_path_partial = os.path.join( job_path, f'part-task-1.tsv' )
                 if( os.path.exists(test_path_partial) ):
@@ -304,10 +304,16 @@ class Prediction:
 
     def __build_historic_predictions_across_models(self, historic, models):
         cutoff = 0.8
+        header = '\t'.join( ['input_file', 'pmid', 'entity_group', 'word', 'start', 'end', 'mean', 'min', 'max'] + models )
+        
         topconsensus = os.path.join( self.out, 'top_consensus_augmentation_models.tsv' )
+        f = open(topconsensus, 'w')
+        header = '\t'.join( ['input_file', 'pmid', 'entity_group', 'word', 'start', 'end', 'mean', 'min', 'max'] + models )
+        f.write( f"{header}\n")
+        f.close()
+
         oconsensus = os.path.join( self.out, 'consensus_augmentation_models.tsv' )
         f = open(oconsensus, 'w')
-        header = '\t'.join( ['input_file', 'pmid', 'entity_group', 'word', 'start', 'end', 'mean', 'min', 'max'] + models )
         f.write( f"{header}\n")
         for info in historic:
             pmid, entity, word = info.split('#$@')

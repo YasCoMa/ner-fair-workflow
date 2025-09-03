@@ -63,7 +63,6 @@ fi
         self.nodelist = kwargs.get("nodelist", None )
         self.pre_exports = kwargs.get("pre_exports", '''
 source /apps/manual/Singularity/3.7.3/etc/profile
-export SINGULARITY_BIND="/home/sbnb:/aloy/home,/data/sbnb/data:/aloy/data,/data/sbnb/scratch:/aloy/scratch,/data/sbnb/chemicalchecker:/aloy/web_checker,/data/sbnb/web_updates:/aloy/web_repository"
 export SINGULARITY_BINDPATH="/aloy/home,/aloy/data,/aloy/web_repository,/aloy/scratch"
             ''')
         self.username = kwargs.get("username", '')

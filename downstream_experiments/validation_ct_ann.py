@@ -38,6 +38,8 @@ Experiment on gold dataset of annotated PICO entities
 
 class ExperimentValidationBySimilarity:
     def __init__(self, fout):
+        self.stopwords = ["other", "key", "inclusion criteria", "exclusion criteria", "not specified", "see disease characteristics"]
+
         self.config_path = '/aloy/home/ymartins/match_clinical_trial/config_hpc.json'
         self.ctDir = '/aloy/home/ymartins/match_clinical_trial/out/clinical_trials/'
         self.goldDir = '/aloy/home/ymartins/match_clinical_trial/experiments/data/'
@@ -247,6 +249,14 @@ class ExperimentValidationBySimilarity:
                         studies.append(s)
         return studies
         
+    def __check_stopwords( self, term):
+        flag = True
+        for st in self.stopwords:
+            if( term.lower().find(st) != -1 ):
+                return False
+        
+        return flag
+
     def _treat_eligibility(self, s):
         inc = []
         exc = []
@@ -873,8 +883,11 @@ class ExperimentValidationBySimilarity:
     def perform_validation_gold(self):
         self._map_nctid_pmid_gold()
         sourcect = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
-        self.embed_save_ncict(sourcect, 'ctdoc_')
-        self._get_predictions(sourcect, 'gold')
+        df = pd.read_csv( sourcect, sep='\t' )
+        ids = set(df.ctid.unique())
+        ctlib, pathlib = self.__load_cts_library(ids)
+        #self.embed_save_ncict(sourcect, 'ctdoc_')
+        self._get_predictions(sourcect, ctlib, pathlib, 'fast_gold', 'fast' )
     
     def perform_validation_biobert_allct(self):
         
@@ -1271,7 +1284,8 @@ class ExperimentValidationBySimilarity:
         print('Annotations not found', losses)
 
     def run(self):
-        #self.perform_validation_gold()
+        self.perform_validation_gold()
+
         #self._extract_info_ct()
         #self.perform_validation_allct()
         #self.get_diff_stats_gold_newds()
@@ -1288,6 +1302,7 @@ class ExperimentValidationBySimilarity:
         #self.integrate_high_scored_to_augment()
         
         label_aux = 'sequential_predlev'
+        '''
         cutoff_consensus = 0.8
         folder_out = os.path.join( self.augdsDir, label_aux )
         if( not os.path.isdir(folder_out) ):
@@ -1295,6 +1310,7 @@ class ExperimentValidationBySimilarity:
 
         #self.get_report_consensus(label_aux, cutoff_consensus)
         self._create_annotation_txt_per_section( label_aux, cutoff_consensus, force_rewrite=True )
+        '''
 
         #self._alt_concatenate_abstract_repositionate_words( label_aux, cutoff_consensus, force_rewrite=True )
 

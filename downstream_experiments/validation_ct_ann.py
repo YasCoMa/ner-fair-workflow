@@ -56,6 +56,7 @@ class ExperimentValidationBySimilarity:
         self.out_ct_processed = os.path.join( self.out, "processed_cts" )
         if( not os.path.isdir( self.out_ct_processed ) ) :
             os.makedirs( self.out_ct_processed )
+        self.out_ct_processed = '/aloy/home/ymartins/match_clinical_trial/experiments/validation/validation/processed_cts'
         
         try:
             self.embeddings = OllamaEmbeddings(model="mxbai-embed-large")

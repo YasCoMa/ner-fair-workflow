@@ -219,7 +219,7 @@ class Test:
         for i, model_file in enumerate(model_files):
             #print(i, model_file)
             print(f"EVALUATING... model {i+1}")
-            model = torch.load(f"{save_path}/{model_file}", weights_only=False)
+            model = torch.load(f"{save_path}/{model_file}", weights_only=False, map_location=torch.device('cpu'))
             model.to(device)
             model.eval()
             with torch.no_grad():
@@ -342,7 +342,7 @@ class Test:
         self._load_input_data()
         dataset_dict = self._get_predictions()
         #self._save_most_common_predictions(dataset_dict)
-        self._get_predictions_baseline()
+        #self._get_predictions_baseline()
         self._mark_as_done()
 
 if( __name__ == "__main__" ):

@@ -416,7 +416,7 @@ class Training:
                 train_dataset=tokenized_datasets['train'],
                 eval_dataset=tokenized_datasets['valid'],
                 data_collator=data_collator,
-                tokenizer=tokenizer,
+                processing_class=tokenizer,
                 compute_metrics=compute_metrics
             )
 

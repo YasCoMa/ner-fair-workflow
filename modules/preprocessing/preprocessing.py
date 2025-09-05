@@ -186,6 +186,11 @@ class Preprocessing:
         valid_df = data_df[data_df['File_ID'].isin(list(valid))]
         test_df = data_df[data_df['File_ID'].isin(list(test))]
         not_in_train_df = data_df[data_df['File_ID'].isin(list(not_in_train))]
+        if( len(train_df) == 0 ):
+            train_df = data_df[data_df['File_ID'].isin( [int(x) for x in train] )]
+            valid_df = data_df[data_df['File_ID'].isin( [int(x) for x in valid]  )]
+            test_df = data_df[data_df['File_ID'].isin( [int(x) for x in test] )]
+            not_in_train_df = data_df[data_df['File_ID'].isin( [int(x) for x in test] )]
 
         self.logger.info("[Preprocessing step] Task (Split indexes) ended -----------")
 

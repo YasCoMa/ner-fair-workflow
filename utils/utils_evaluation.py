@@ -198,7 +198,7 @@ def __get_probabilities( labels, target_tags, outputs_logits, labels_to_ignore=[
     probs = []
     for idx, sentence_labels in enumerate(labels):
         for lidx, l in enumerate(sentence_labels):
-            if(l not in labels_to_ignore):
+            if( (l not in labels_to_ignore) and (l < len(target_tags)) ):
                 px = arr[idx][lidx]
 
                 if(remove_prefix):
@@ -216,7 +216,7 @@ def __get_binary_truey(labels, target_tags, labels_to_ignore=[-100, 0], remove_p
     y = []
     for idx, sentence_labels in enumerate(labels):
         for lidx, l in enumerate(sentence_labels):
-            if(l not in labels_to_ignore):
+            if( (l not in labels_to_ignore) and (l < len(target_tags)) ):
                 v = [ target_tags[l] ]
                 if(remove_prefix):
                     v = __remove_prefix_tags(v)
@@ -265,7 +265,7 @@ def _rename_label_predictions(predictions, labels, target_tags, labels_to_ignore
         mlen = len(predictions[idx])
         
         for lidx, l in enumerate(sentence_labels):
-            if( (lidx < mlen) and (l not in labels_to_ignore) ):
+            if( (lidx < mlen) and (l not in labels_to_ignore) and (l < len(target_tags)) ):
                 auxy.append( target_tags[l] )
                 auxp.append( target_tags[ predictions[idx][lidx] ] )
         y.append( auxy )

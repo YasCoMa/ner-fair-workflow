@@ -9,7 +9,7 @@ root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).spli
 sys.path.append( root_path )
 from downstream_experiments.similarity_metrics import *
 
-def objective(trial):
+def objective_distance(trial):
     metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
     m = trial.suggest_categorical("metric", metrics)
 
@@ -21,7 +21,7 @@ def objective(trial):
         a = str(df.loc[i, 'found_ct_text'])
         b = str(df.loc[i, 'test_text'])
         try:
-            dist = eval(f"compute_{m}")(a, b)
+            dist = eval(f"compute_distance_{m}")(a, b)
         except:
             dist = 'invalid'
             pass
@@ -31,6 +31,32 @@ def objective(trial):
     #tmp['score'] = tmp.score / tmp.score.abs().max()
 
     tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).min().reset_index()
+    mean = tmp.score.mean()
+    
+    return mean
+
+def objective_similarity(trial):
+    metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
+    m = trial.suggest_categorical("metric", metrics)
+
+    scores = []
+    df = pd.read_csv('/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv', sep='\t')
+    tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
+    df = df[ ['found_ct_text', 'test_text'] ]
+    for i in df.index:
+        a = str(df.loc[i, 'found_ct_text'])
+        b = str(df.loc[i, 'test_text'])
+        try:
+            dist = eval(f"compute_similarity_{m}")(a, b)
+        except:
+            dist = 'invalid'
+            pass
+        scores.append(dist)
+    tmp['score'] = scores
+    tmp = tmp[ tmp.score != 'invalid' ]
+    #tmp['score'] = tmp.score / tmp.score.abs().max()
+
+    tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
     mean = tmp.score.mean()
     
     return mean
@@ -57,13 +83,19 @@ class ExplorationPICOAttr:
         fig.write_image('valout/gold_grouped_distribution_scoresim.png')
 
     def check_best_string_sim_metric(self):
-        study = optuna.create_study(direction="minimize")
-        study.optimize(objective, n_trials=100)
-        print(study.best_trial)
+        studies = { 'similarity': 'maximize', 'distance': 'minimize' }
+        for s in studies:
+            print("Optimizing for ", s)
+            func = eval( f'objective_{s}' )
+            direction = studies[s]
 
-        file = open(f"{self.out}/best_params.pkl", "wb")
-        pickle.dump(study.best_params, file)
-        file.close()
+            study = optuna.create_study( direction = direction )
+            study.optimize( func, n_trials=100)
+            print('\tBest params:', study.best_params)
+
+            file = open(f"{self.out}/by_{s}_best_params.pkl", "wb")
+            pickle.dump(study.best_params, file)
+            file.close()
 
     # -------- General
     def __solve_retrieve_processed_cts(self, allids):

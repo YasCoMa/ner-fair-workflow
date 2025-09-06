@@ -15,17 +15,25 @@ def __normalize_string( s):
         s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
         return s
 
+def _process_pair(a, b, with_norm = 'yes'):
+    a = str(a)
+    b = str(b)
+    if(with_norm == 'yes'):
+        a = __normalize_string(a)
+        b = __normalize_string(b)
+    return a, b
+
 def objective_distance(trial):
     metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
+    norm = trial.suggest_categorical("normalization", ['no', 'yes'])
     m = trial.suggest_categorical("metric", metrics)
-
+    
     scores = []
     df = pd.read_csv('/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv', sep='\t')
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a = __normalize_string( str(df.loc[i, 'found_ct_text']) )
-        b = __normalize_string( str(df.loc[i, 'test_text']) )
+        a, b = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
         try:
             dist = eval(f"compute_distance_{m}")(a, b)
         except:
@@ -42,6 +50,7 @@ def objective_distance(trial):
 
 def objective_similarity(trial):
     metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
+    norm = trial.suggest_categorical("normalization", ['no', 'yes'])
     m = trial.suggest_categorical("metric", metrics)
 
     scores = []
@@ -49,8 +58,7 @@ def objective_similarity(trial):
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a = __normalize_string( str(df.loc[i, 'found_ct_text']) )
-        b = __normalize_string( str(df.loc[i, 'test_text']) )
+        a, b = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
         try:
             dist = eval(f"compute_similarity_{m}")(a, b)
         except:
@@ -96,11 +104,11 @@ class ExplorationPICOAttr:
             direction = studies[s]
 
             study = optuna.create_study( direction = direction )
-            study.optimize( func, n_trials=100)
-            print('\tBest params:', study.best_params)
+            study.optimize( func, n_trials = 50 )
+            print('\tBest params:', study.best_trial)
 
             file = open(f"{self.out}/by_{s}_best_params.pkl", "wb")
-            pickle.dump(study.best_params, file)
+            pickle.dump(study.best_trial, file)
             file.close()
 
     # -------- General

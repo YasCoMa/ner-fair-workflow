@@ -68,8 +68,9 @@ class ExplorationPICOAttr:
         subdf["Cosine similarity"] = scores_nyes + scores_nno
 
         pvalue = ranksums(scores_nyes, scores_nno).pvalue
-        subdf[ "Transformation (P-value: %.2f)" %(pvalue) ] = ['With normalization']*len(scores_nyes) + ['Without normalization']*len(scores_nno)
-        fig = px.box( subdf, x="Entity", y="Cosine similarity", color = "Transformation", points="all")
+        title = "Transformation (P-value: %.2f)" %(pvalue)
+        subdf[ title ] = ['With normalization']*len(scores_nyes) + ['Without normalization']*len(scores_nno)
+        fig = px.box( subdf, x="Entity", y="Cosine similarity", color = title )
         opath = os.path.join(self.out, 'cosine_gold_all_distribution_scoresim.png')
         fig.write_image( opath )
 

@@ -9,7 +9,7 @@ def compute_damerau(a, b):
 	return dist
 
 def compute_jaccard(a, b):
-	dist = jaccard.Jaccard().distance(a, b)
+	dist = jaccard.Jaccard(1).distance(a, b)
 	return dist
 
 def compute_cosine(a, b):

@@ -13,7 +13,7 @@ def compute_jaccard(a, b):
 	return dist
 
 def compute_cosine(a, b):
-	dist = cosine.Cosine().distance(a, b)
+	dist = cosine.Cosine(1).distance(a, b)
 	return dist
 
 def compute_jaro_winkler(a, b):

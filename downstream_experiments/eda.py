@@ -28,8 +28,8 @@ def objective(trial):
     return mean
 
 class ExplorationPICOAttr:
-	def __init__(self, fout):
-		self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
+    def __init__(self, fout):
+        self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
         
         self.out = os.path.join(fout, 'eda_pico')
         if( not os.path.isdir( self.out ) ) :

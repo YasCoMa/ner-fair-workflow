@@ -19,8 +19,8 @@ def objective(trial):
     for i in df.index:
         a = df.loc[i, 'found_ct_text']
         b = df.loc[i, 'test_text']
-        score.append( eval(f"compute_{m}")(a, b) )
-    tmp['score'] = score
+        scores.append( eval(f"compute_{m}")(a, b) )
+    tmp['score'] = scores
 
     tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
     score = tmp.score.mean()

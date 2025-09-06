@@ -17,10 +17,16 @@ def objective(trial):
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a = df.loc[i, 'found_ct_text']
-        b = df.loc[i, 'test_text']
-        scores.append( eval(f"compute_{m}")(a, b) )
+        a = str(df.loc[i, 'found_ct_text'])
+        b = str(df.loc[i, 'test_text'])
+        try:
+            dist = eval(f"compute_{m}")(a, b)
+        except:
+            dist = 'invalid'
+            pass
+        scores.append(dist)
     tmp['score'] = scores
+    tmp = tmp[ tmp.score != 'invalid' ]
     #tmp['score'] = tmp.score / tmp.score.abs().max()
 
     tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).min().reset_index()

@@ -6,6 +6,8 @@ from .jaro_winkler import JaroWinkler
 from .longest_common_subsequence import LongestCommonSubsequence
 from .overlap_coefficient import OverlapCoefficient
 
+To be added in__init__.py file
+
 So that, it is possible to use the new similarity metrics implemented.
 '''
 

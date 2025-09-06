@@ -13,7 +13,7 @@ def objective(trial):
     m = trial.suggest_categorical("metric", metrics)
 
     scores = []
-    df = pd.read_csv('valout/fast_gold_results_test_validation.tsv', sep='\t')
+    df = pd.read_csv('/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv', sep='\t')
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:

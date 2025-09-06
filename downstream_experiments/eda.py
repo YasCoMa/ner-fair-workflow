@@ -10,71 +10,6 @@ root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).spli
 sys.path.append( root_path )
 from downstream_experiments.similarity_metrics import *
 
-def __normalize_string( s):
-        s = s.lower()
-        s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
-        return s
-
-def _process_pair(a, b, with_norm = 'yes'):
-    a = str(a)
-    b = str(b)
-    if(with_norm == 'yes'):
-        a = __normalize_string(a)
-        b = __normalize_string(b)
-    return a, b
-
-def objective_distance(trial):
-    metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
-    norm = trial.suggest_categorical("normalization", ['no', 'yes'])
-    m = trial.suggest_categorical("metric", metrics)
-    
-    scores = []
-    df = pd.read_csv('/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv', sep='\t')
-    tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
-    df = df[ ['found_ct_text', 'test_text'] ]
-    for i in df.index:
-        a, b = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
-        try:
-            dist = eval(f"compute_distance_{m}")(a, b)
-        except:
-            dist = 'invalid'
-            pass
-        scores.append(dist)
-    tmp['score'] = scores
-    tmp = tmp[ tmp.score != 'invalid' ]
-
-    tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).min().reset_index()
-    mean = tmp.score.mean()
-    
-    return mean
-
-def objective_similarity(trial):
-    metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
-    norm = trial.suggest_categorical("normalization", ['no', 'yes'])
-    m = trial.suggest_categorical("metric", metrics)
-
-    scores = []
-    df = pd.read_csv('/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv', sep='\t')
-    tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
-    df = df[ ['found_ct_text', 'test_text'] ]
-    for i in df.index:
-        a, b = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
-        try:
-            dist = eval(f"compute_similarity_{m}")(a, b)
-        except:
-            dist = 'invalid'
-            pass
-        scores.append(dist)
-    tmp['score'] = scores
-    tmp = tmp[ tmp.score != 'invalid' ]
-
-    mean = 0
-    if( len(tmp) > 0 ): # Not all the metrics have the similarity function implemented
-        tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
-        mean = tmp.score.mean()
-    
-    return mean
-
 class ExplorationPICOAttr:
     def __init__(self, fout):
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
@@ -92,9 +27,45 @@ class ExplorationPICOAttr:
         print("Number of CTs:", len(df.ctid.unique()) ) # 117
         print("Number of PMIDs:", len(df.pmid.unique()) ) # 129
 
-        df = pd.read_csv('/aloy/home/ymartins/match_clinical_trial/valout/grouped_fast_gold_results_test_validation.tsv', sep='\t')
-        fig = px.box(df, x="test_label", y="val", points="all")
-        fig.write_image('valout/gold_grouped_distribution_scoresim.png')
+        # transform results
+        scores_nyes = []
+        scores_nno = []
+        entities = []
+        opath = '/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv'
+        df = pd.read_csv( opath, sep='\t')
+        for i in df.index:
+            entities.append( df.loc[i, 'test_label'] )
+
+            ay, by = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], 'yes' )
+            an, bn = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], 'no' )
+            try:
+                sim_nyes = compute_similarity_cosine(ay, by)
+                sim_nno = compute_similarity_cosine(an, bn)
+            except:
+                sim_nyes = 0
+                sim_nno = 0
+            scores_nyes.append(sim_nyes)
+            scores_nno.append(sim_nno)
+
+        df['cosine_score_with_norm'] = scores_nyes
+        df['cosine_score_without_norm'] = scores_nno
+        df.to_csv( opath, sep='\t', index=None)
+        
+        opath = '/aloy/home/ymartins/match_clinical_trial/valout/cosine_grouped_fast_gold_results_test_validation.tsv'
+        df = df.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
+        df.to_csv( opath, sep='\t', index=None)
+        
+        df = df[ ['test_label', 'cosine_score_with_norm'] ]
+        df.columns = ["Entity", 'Cosine similarity']
+        fig = px.box(df, x="Entity", y="Cosine similarity", points="all")
+        fig.write_image('valout/cosine_gold_grouped_distribution_scoresim.png')
+
+        subdf = pd.DataFrame()
+        subdf["Entity"] = entities * 2
+        subdf["Cosine similarity"] = scores_nyes + scores_nno
+        subdf["Transformation"] = ['With normalization']*len(scores_nyes) + ['Without normalization']*len(scores_nno)
+        fig = px.box( subdf, x="Entity", y="Cosine similarity", color = "Transformation", points="all")
+        fig.write_image('valout/cosine_gold_all_distribution_scoresim.png')
 
     def check_best_string_sim_metric(self):
         studies = { 'similarity': 'maximize', 'distance': 'minimize' }
@@ -153,7 +124,8 @@ class ExplorationPICOAttr:
         print("")
 
     def run(self):
-        self.check_best_string_sim_metric()
+        #self.check_best_string_sim_metric()
+        self.get_coverage_gold_ctapi()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/valout'

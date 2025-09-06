@@ -7,7 +7,7 @@ def __normalize_string( s):
         s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
         return s
 
-def _process_pair(a, b, with_norm = 'yes'):
+def process_pair(a, b, with_norm = 'yes'):
     a = str(a)
     b = str(b)
     if(with_norm == 'yes'):
@@ -25,7 +25,7 @@ def objective_distance(trial):
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a, b = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
+        a, b = process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
         try:
             dist = eval(f"compute_distance_{m}")(a, b)
         except:
@@ -50,7 +50,7 @@ def objective_similarity(trial):
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a, b = _process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
+        a, b = process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], norm )
         try:
             dist = eval(f"compute_similarity_{m}")(a, b)
         except:

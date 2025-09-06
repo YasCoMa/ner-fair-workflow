@@ -21,7 +21,7 @@ def objective(trial):
         b = df.loc[i, 'test_text']
         scores.append( eval(f"compute_{m}")(a, b) )
     tmp['score'] = scores
-    tmp['score'] = tmp.score / tmp.score.abs().max()
+    #tmp['score'] = tmp.score / tmp.score.abs().max()
 
     tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).min().reset_index()
     mean = tmp.score.mean()

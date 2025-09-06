@@ -9,6 +9,11 @@ root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).spli
 sys.path.append( root_path )
 from downstream_experiments.similarity_metrics import *
 
+def __normalize_string( s):
+        s = s.lower()
+        s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
+        return s
+
 def objective_distance(trial):
     metrics = ['levenshtein', 'damerau', 'jaccard', 'cosine', 'jaro_winkler', 'longest_common_subsequence', 'metric_lcs', 'ngram', 'optimal_string_alignment', 'overlap_coefficient', 'qgram', 'sorensen_dice']
     m = trial.suggest_categorical("metric", metrics)
@@ -18,8 +23,8 @@ def objective_distance(trial):
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a = str(df.loc[i, 'found_ct_text'])
-        b = str(df.loc[i, 'test_text'])
+        a = __normalize_string( str(df.loc[i, 'found_ct_text']) )
+        b = __normalize_string( str(df.loc[i, 'test_text']) )
         try:
             dist = eval(f"compute_distance_{m}")(a, b)
         except:
@@ -28,7 +33,6 @@ def objective_distance(trial):
         scores.append(dist)
     tmp['score'] = scores
     tmp = tmp[ tmp.score != 'invalid' ]
-    #tmp['score'] = tmp.score / tmp.score.abs().max()
 
     tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).min().reset_index()
     mean = tmp.score.mean()
@@ -44,8 +48,8 @@ def objective_similarity(trial):
     tmp = df[ ['ctid', 'pmid', 'test_text', 'test_label'] ]
     df = df[ ['found_ct_text', 'test_text'] ]
     for i in df.index:
-        a = str(df.loc[i, 'found_ct_text'])
-        b = str(df.loc[i, 'test_text'])
+        a = __normalize_string( str(df.loc[i, 'found_ct_text']) )
+        b = __normalize_string( str(df.loc[i, 'test_text']) )
         try:
             dist = eval(f"compute_similarity_{m}")(a, b)
         except:
@@ -54,10 +58,11 @@ def objective_similarity(trial):
         scores.append(dist)
     tmp['score'] = scores
     tmp = tmp[ tmp.score != 'invalid' ]
-    #tmp['score'] = tmp.score / tmp.score.abs().max()
 
-    tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
-    mean = tmp.score.mean()
+    mean = 0
+    if( len(tmp) > 0 ): # Not all the metrics have the similarity function implemented
+        tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
+        mean = tmp.score.mean()
     
     return mean
 

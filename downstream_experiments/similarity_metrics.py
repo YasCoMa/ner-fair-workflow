@@ -63,10 +63,6 @@ def compute_similarity_levenshtein(a, b):
 	dist = normalized_levenshtein.NormalizedLevenshtein().similarity(a, b)
 	return dist
 
-def compute_similarity_damerau(a, b):
-	dist = damerau.Damerau().similarity(a, b)
-	return dist
-
 def compute_similarity_jaccard(a, b):
 	dist = jaccard.Jaccard(1).similarity(a, b)
 	return dist
@@ -79,28 +75,8 @@ def compute_similarity_jaro_winkler(a, b):
 	dist = jaro_winkler.JaroWinkler().similarity(a, b)
 	return dist
 
-def compute_similarity_longest_common_subsequence(a, b):
-	dist = longest_common_subsequence.LongestCommonSubsequence().similarity(a, b)
-	return dist
-
-def compute_similarity_metric_lcs(a, b):
-	dist = metric_lcs.MetricLCS().similarity(a, b)
-	return dist
-
-def compute_similarity_ngram(a, b):
-	dist = ngram.NGram().similarity(a, b)
-	return dist
-
-def compute_similarity_optimal_string_alignment(a, b):
-	dist = optimal_string_alignment.OptimalStringAlignment().similarity(a, b)
-	return dist
-
 def compute_similarity_overlap_coefficient(a, b):
 	dist = overlap_coefficient.OverlapCoefficient().similarity(a, b)
-	return dist
-
-def compute_similarity_qgram(a, b):
-	dist = qgram.QGram().similarity(a, b)
 	return dist
 
 def compute_similarity_sorensen_dice(a, b):

@@ -23,7 +23,7 @@ def objective(trial):
     tmp['score'] = scores
 
     tmp = tmp.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
-    score = tmp.score.mean()
+    mean = tmp.score.mean()
     
     return mean
 

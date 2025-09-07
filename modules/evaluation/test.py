@@ -283,7 +283,7 @@ class Test:
         report_identifier = 'baseline-zeroshot'
 
         # Applying base model zero-shot
-        model = AutoModelForTokenClassification.from_pretrained(self.basemodel)
+        model = AutoModelForTokenClassification.from_pretrained(self.baselinemodel)
         model.to(device)
         model.eval()
         with torch.no_grad():

@@ -272,8 +272,9 @@ class Test:
 
         report_identifier = 'baseline-zeroshot'
 
+        self.basemodel = "urchade/gliner_large_bio-v0.1"
         # Applying base model zero-shot
-        model = AutoModelForTokenClassification.from_pretrained(self.model_checkpoint)
+        model = AutoModelForTokenClassification.from_pretrained(self.basemodel)
         model.to(device)
         model.eval()
         with torch.no_grad():
@@ -340,9 +341,9 @@ class Test:
         self._setup_seed()
         self._setup_model()
         self._load_input_data()
-        dataset_dict = self._get_predictions()
+        #dataset_dict = self._get_predictions()
         #self._save_most_common_predictions(dataset_dict)
-        #self._get_predictions_baseline()
+        self._get_predictions_baseline()
         self._mark_as_done()
 
 if( __name__ == "__main__" ):

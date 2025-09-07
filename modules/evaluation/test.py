@@ -86,6 +86,10 @@ class Test:
             fout = self.outDir
         self.outDir = os.path.join(fout, f"{self.expid}-{model_name}-finetuned-{task}" )
 
+        self.baselinemodel = self.model_checkpoint
+        if( "baseline" in self.config ):
+            self.baselinemodel = self.config["baseline"]
+
         testpath = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1")
         testkey = "test"
         if( "test_data" in self.config ):
@@ -120,7 +124,10 @@ class Test:
         torch.random.manual_seed(seed)
         torch.cuda.manual_seed(seed)
 
-    def _setup_model(self):
+    def _setup_model(self, model=None):
+        if( model is None ):
+            model = self.model_checkpoint
+
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_checkpoint)
         self.flag_tokenizer = None
 
@@ -258,6 +265,9 @@ class Test:
         #return dataset_dict
 
     def _get_predictions_baseline(self):
+        self._setup_model( self.baselinemodel )
+        self._load_input_data()
+        
         device = self.device
         save_path = self.outDir
         tokenizer = self.tokenizer
@@ -272,7 +282,6 @@ class Test:
 
         report_identifier = 'baseline-zeroshot'
 
-        self.basemodel = "urchade/gliner_large_bio-v0.1"
         # Applying base model zero-shot
         model = AutoModelForTokenClassification.from_pretrained(self.basemodel)
         model.to(device)

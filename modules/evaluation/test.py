@@ -8,7 +8,7 @@ import logging
 
 import pandas as pd
 from datasets import Dataset, DatasetDict, load_dataset, load_from_disk
-from transformers import AutoTokenizer, LongformerTokenizerFast, AutoModel
+from transformers import AutoTokenizer, LongformerTokenizerFast, AutoModel, AutoModelForTokenClassification
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
 sys.path.append( root_path )
@@ -273,7 +273,7 @@ class Test:
         report_identifier = 'baseline-zeroshot'
 
         # Applying base model zero-shot
-        model = AutoModel.from_pretrained(self.model_checkpoint)
+        model = AutoModelForTokenClassification.from_pretrained(self.model_checkpoint)
         model.to(device)
         model.eval()
         with torch.no_grad():

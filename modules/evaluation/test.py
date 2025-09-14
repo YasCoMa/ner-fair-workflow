@@ -350,7 +350,7 @@ class Test:
         self._setup_seed()
         self._setup_model()
         self._load_input_data()
-        #dataset_dict = self._get_predictions()
+        dataset_dict = self._get_predictions()
         #self._save_most_common_predictions(dataset_dict)
         self._get_predictions_baseline()
         self._mark_as_done()

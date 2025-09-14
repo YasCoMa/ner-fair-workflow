@@ -92,11 +92,20 @@ class Test:
 
         testpath = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1")
         testkey = "test"
+        self.report_id = "test-model"
         if( "test_data" in self.config ):
             testpath = self.config["test_data"]["path"]
+            self.report_id = testpath.split(os.path.sep)[-1]
+            if(self.report_id == ''):
+                self.report_id = testpath.split(os.path.sep)[-2]
+
+            if( "identifier" in self.config["test_data"] ):
+                if( self.config["test_data"]["identifier"] is not None and self.config["test_data"]["identifier"] != ""):
+                    self.report_id = self.config["test_data"]["identifier"]
+
             testkey = None
             if( "key" in self.config["test_data"] ):
-                if( self.config["test_data"]["key"] is not None and self.config["test_data"] != ""):
+                if( self.config["test_data"]["key"] is not None and self.config["test_data"]["key"] != ""):
                     testkey = self.config["test_data"]["key"]
 
         self.label_list = json.load( open( self.config["target_tags"], 'r') )
@@ -220,7 +229,7 @@ class Test:
 
         labels = tokenized_dataset['labels']
 
-        report_identifier = 'test-model'
+        report_identifier = self.report_id
 
         models_predictions = []
         for i, model_file in enumerate(model_files):

@@ -66,45 +66,6 @@ class ExperimentValidationBySimilarity:
             self.gann_vs = FAISS( embedding_function = self.embeddings, index = self.gold_ann_index, docstore = InMemoryDocstore(), index_to_docstore_id = {}, ) #  Snippets labeled
         except:
             pass
-
-    def _get_snippets_labels(self, pmid):
-        anns = []
-        f = f"{pmid}.ann"
-        path = os.path.join( self.goldDir, f)
-        f = open(path, 'r')
-        for line in f:
-            l = line.replace('\n','').split('\t')
-            label = l[1].split(' ')[0]
-            term = l[2]
-            anns.append( [term, label] )
-        f.close()
-        
-        return anns
-    
-    def _map_nctid_pmid_gold(self):
-        omap = os.path.join( self.out, 'goldds_labelled_mapping_nct_pubmed.tsv')
-        f = open( omap, 'w' )
-        f.write( 'pmid\tctid\ttext\tlabel\n' )
-        f.close()
-        
-        for f in os.listdir( self.goldDir ):
-            if( f.endswith('.txt') ):
-                pmid = f.split('.')[0]
-                
-                path = os.path.join( self.goldDir, f)
-                abs = open(path).read()
-                tokens = abs.split(' ')
-                ncts = list( filter( lambda x: (x.find('NCT0') != -1), tokens ))
-                if( len(ncts) > 0 ):
-                    for nid in ncts:
-                        tr = re.findall( r'(NCT[0-9]+)', nid )
-                        if( len(tr) > 0 ):
-                            ctid = tr[0]
-                            anns = self._get_snippets_labels( pmid )
-                            for a in anns:
-                                line = '\t'.join( [pmid, ctid]+a )
-                                with open( omap, 'a' ) as g:
-                                    g.write( line+'\n' )
     
     def _get_snippets_pred_labels(self, pmid):
         f = self.predictions_df[ self.predictions_df['input_file'].str.startswith(pmid) ]
@@ -729,7 +690,7 @@ class ExperimentValidationBySimilarity:
         return dat, pathout
 
     def __normalize_string(self, s):
-        s = s.lower()
+        s = str(s).lower()
         s = ' '.join( re.findall(r'[a-zA-Z0-9\-]+',s) )
         return s
 
@@ -769,7 +730,7 @@ class ExperimentValidationBySimilarity:
 
         return results
 
-    def _get_predictions(self, sourcect, ctlib, pathlib, label_result='', mode='fast' ):
+    def _get_predictions(self, sourcect, ctlib, pathlib, label_result='' ):
         cts_available = set(ctlib)
 
         res = os.path.join( self.out, f'{label_result}_results_test_validation.tsv')
@@ -805,13 +766,8 @@ class ExperimentValidationBySimilarity:
             aux = f"{ctid}\t{pmid}\t{test_label}\t{test_text}"
             if( (ctid in cts_available) and (not aux in gone) ):
                 gone.add(aux)
-                #results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
-                #if( len(results) == 0 ):
-                if( mode=='fast' ):
-                    results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
-                else:
-                    results = self._send_query(test_text, ctid)
-
+                results = self._send_query_fast( test_text, ctlib, ctid, label=test_label )
+                
                 for r in results:
                     found_ct_text = r['hit']
                     found_ct_label = r['ct_label']
@@ -982,7 +938,6 @@ class ExperimentValidationBySimilarity:
             rdf = pd.read_csv( path, sep='\t')
             rdf = rdf[ ['ctid', 'pmid','test_label','test_text', 'score'] ]
             rdf['val'] = [ float(s.split('-')[0]) for s in rdf['score'] ]
-            rdf['stat_class'] = [ s.split('-')[1] for s in rdf['score'] ]
             rdf = rdf.drop('score', axis=1)
             rdf = rdf.groupby(['ctid', 'pmid','test_label','test_text']).max().reset_index()
 

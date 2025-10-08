@@ -9,9 +9,8 @@ from scipy.stats import ranksums
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
 sys.path.append( root_path )
-from downstream_experiments.similarity_metrics import *
 
-class ExplorationPICOAttr:
+class ExplorationBenchmarkDss:
     def __init__(self, fout):
         self.ingold = '/aloy/home/ymartins/match_clinical_trial/valout/fast_gold_results_test_validation.tsv'
         self.outPredDir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-base-cased-v1.2-finetuned-ner/prediction/'
@@ -22,74 +21,36 @@ class ExplorationPICOAttr:
             
         self.out_ct_processed = os.path.join( fout, "processed_cts" )
 
-    # -------- Gold ds
-    def get_coverage_gold_ctapi(self):
-        path = self.ingold
-        df = pd.read_csv( path, sep='\t')
-        print("Number of CTs:", len(df.ctid.unique()) ) # 117
-        print("Number of PMIDs:", len(df.pmid.unique()) ) # 129
-
-        # transform results
-        scores_nyes = []
-        scores_nno = []
-        entities = []
-        opath = self.ingold
-        df = pd.read_csv( opath, sep='\t')
-        for i in df.index:
-            entities.append( df.loc[i, 'test_label'] )
-
-            ay, by = process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], 'yes' )
-            an, bn = process_pair( df.loc[i, 'found_ct_text'], df.loc[i, 'test_text'], 'no' )
-            try:
-                sim_nyes = compute_similarity_cosine(ay, by)
-                sim_nno = compute_similarity_cosine(an, bn)
-            except:
-                sim_nyes = 0
-                sim_nno = 0
-            scores_nyes.append(sim_nyes)
-            scores_nno.append(sim_nno)
-
-        df['cosine_score_with_norm'] = scores_nyes
-        df['cosine_score_without_norm'] = scores_nno
-        df.to_csv( opath, sep='\t', index=None)
-        
-        opath = '/aloy/home/ymartins/match_clinical_trial/valout/cosine_grouped_fast_gold_results_test_validation.tsv'
-        df = df.groupby( ['ctid', 'pmid', 'test_text', 'test_label'] ).max().reset_index()
-        df.to_csv( opath, sep='\t', index=None)
-        
-        df = df[ ['test_label', 'cosine_score_with_norm'] ]
-        df.columns = ["Entity", 'Cosine similarity']
-        fig = px.box(df, x="Entity", y="Cosine similarity", points="all")
-        opath = os.path.join(self.out, 'cosine_gold_grouped_distribution_scoresim.png')
-        fig.write_image( opath )
-
-        subdf = pd.DataFrame()
-        subdf["Entity"] = entities * 2
-        subdf["Cosine similarity"] = scores_nyes + scores_nno
-
-        pvalue = ranksums(scores_nyes, scores_nno).pvalue
-        title = "Transformation (P-value: %.5f)" %(pvalue)
-        subdf[ title ] = ['With normalization']*len(scores_nyes) + ['Without normalization']*len(scores_nno)
-        fig = px.box( subdf, x="Entity", y="Cosine similarity", color = title )
-        opath = os.path.join(self.out, 'cosine_gold_all_distribution_scoresim.png')
-        fig.write_image( opath )
-
-    def check_best_string_sim_metric(self):
-        studies = { 'similarity': 'maximize', 'distance': 'minimize' }
-        for s in studies:
-            print("Optimizing for ", s)
-            func = eval( f'objective_{s}' )
-            direction = studies[s]
-
-            study = optuna.create_study( direction = direction )
-            study.optimize( func, n_trials = 50 )
-            print('\tBest params:', study.best_trial)
-
-            file = open(f"{self.out}/by_{s}_best_params.pkl", "wb")
-            pickle.dump(study.best_trial, file)
-            file.close()
-
     # -------- General
+    def wrap_dss_eval_metrics_reprod(self):
+        evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
+        levels = ['ltoken', 'lword']
+        target_metrics = ['mcc', 'f1-score']
+
+        indir = '/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/biobert-__db__-hypersearch-biobert-base-cased-v1.2-finetuned-ner'
+        dss = [ "bc5cdr", "ncbi", "biored", "chiads", "merged_train"]
+        
+        # Choose mode eval with best metric values (f1 and mcc)
+        best = {}
+        for ds in dss:
+            pathdir = os.path.join( indir.replace('__db__', ds), 'test', 'summary_reports' )
+            for level in levels:
+                key = f"{ds}_{level}"
+                if(not key in best):
+                    best[key] = {}
+
+                for m in target_metrics:
+                    dat = {}
+                    for mode in evaluation_modes:
+                        fname = f"{mode}_summary-report_test-model-{level}.tsv"
+                        path = os.path.join(pathdir, fname)
+                        df = pd.read_csv( path, sep= '\t')
+                        aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') ]
+                        dat[mode] = aux.stats_agg_value.max()
+                    odat = dict( sorted( dat.items(), key=lambda item: item[1], reverse=True ) )
+                    best[key][m] = list(odat)[0]
+
+
     def __solve_retrieve_processed_cts(self, allids):
         gone = set()
         for _id in allids:

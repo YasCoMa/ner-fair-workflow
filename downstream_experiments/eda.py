@@ -15,8 +15,6 @@ class ExplorationBenchmarkDss:
         self.out = os.path.join(fout, 'eda_paper_material')
         if( not os.path.isdir( self.out ) ) :
             os.makedirs( self.out )
-            
-        self.out_ct_processed = os.path.join( fout, "processed_cts" )
 
     # -------- General
     def wrap_picods_comp_metrics_reprod(self):
@@ -30,26 +28,26 @@ class ExplorationBenchmarkDss:
             "per device eval batch size": dict(zip( hprefs, ["16", "16", "16"] ))
         }
         lines = [ ['Parameter/Experiment'] + hprefs ]
-        lines[0] = [ f"\\textbf\{ {v} \}" for v in lines[0] ]
+        lines[0] = [ f"\\textbf{{ {v} }}" for v in lines[0] ]
         for k in hyperparams:
             lines.append( [k] + list( hyperparams[k].values() ) )
-        lines = list( map( lambda x: ' & '.join(x), lines ))
+        lines = list( map( lambda x: ' & '.join(x)+'\\\\', lines ))
 
         opath = os.path.join(self.out, "table_latex_hyperparams.txt")
         f = open( opath, 'w')
         f.write("""
-\\begin\{table\}[]
-\\begin\{tabular\}\{llll\}
+\\begin{table}[]
+\\begin{tabular}{llll}
             """)
         f.write( '\n'.join(lines)+'\\\\\n' )
         f.write("""
-\\end\{tabular\}
-\\end\{table\}
+\\end{tabular}
+\\end{table}
             """)
         f.close()
 
         ## Generate comparison table of f1-scores
-        sota = """Entity Ref[6] Experiment-1 Experiment-2
+        sota = """Entity PICO-Reference Experiment-1 Experiment-2
 total-participants 0.94 0.9065(+-0.0096) 0.9313(+-0.0048)
 intervention-participants 0.85 0.7431(+-0.0123) 0.8177(+-0.0135)
 control-participants 0.88 0.7846(+-0.0108) 0.8480(+-0.0124)
@@ -76,9 +74,9 @@ iv-cont-q1 0 0.0000(+-0.0000) *
 cv-cont-q1 0 0.0000(+-0.0000) *
 iv-cont-q3 0 0.0000(+-0.0000) *
 cv-cont-q3 0 0.0000(+-0.0000) *
-micro avg - 0.6845(+-0.0032) 0.7261(+-0.0119)
-macro avg 0.6973 0.5495(+-0.0022) 0.7043(+-0.0138)
-weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
+micro-avg - 0.6845(+-0.0032) 0.7261(+-0.0119)
+macro-avg 0.6973 0.5495(+-0.0022) 0.7043(+-0.0138)
+weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         dat = {}
         lines = sota.split('\n')
         exps = lines[0].split(' ')[1:]
@@ -87,21 +85,20 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
             dat[ els[0] ] = { "nerfairwf": {} }
             for i,v in enumerate(els[1:]):
                 parts = v.split('(+-')
-                dat[ els[0] ][ exps[i] ]['mean'] = parts[0]
-                dat[ els[0] ][ exps[i] ]['std'] = ""
+                dat[ els[0] ][ exps[i] ] = { 'mean': parts[0], 'std': '' }
                 if( len(parts) > 1 ):
-                    dat[ els[0] ][ exps[i] ]['std'] = parts[1]
+                    dat[ els[0] ][ exps[i] ]['std'] = parts[1].replace(')','')
 
         mode = "sk-without-prefix"
         level = "ltoken"
         m = "f1-score"
-        indir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-original-hypersearch-biobert-base-cased-v1.2-finetuned-ner/test/'
+        indir = '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-original-hypersearch-biobert-base-cased-v1.2-finetuned-ner/'
         pathdir = os.path.join( indir, 'test', 'summary_reports' )
         fname = f"{mode}_summary-report_test-model-{level}.tsv"
         path = os.path.join(pathdir, fname)
         df = pd.read_csv( path, sep= '\t')
         aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'].isin(['mean','std']) ) ]
-        for i in df.index:
+        for i in aux.index:
             entity = df.loc[i,'Entity']
             aggf = df.loc[i, 'stats_agg_name']
             aggv = df.loc[i, 'stats_agg_value']
@@ -109,28 +106,36 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
 
         exps += ['nerfairwf']
         lines = [ ['Entity/Experiment'] + exps ]
-        lines[0] = [ f"\\textbf\{ {v} \}" for v in lines[0] ]
+        lines[0] = [ f"\\textbf{{ {v} }}" for v in lines[0] ]
         for e in dat:
-            l = [e]
-            for k in exps:
-                mean = dat[e][k]['mean']
-                std = dat[e][k]['std']
-                v = f"{mean} (+- {std})"
-                l.append( v )
-            lines.append( l )
-
-        lines = list( map( lambda x: ' & '.join(x), lines ))
+            try:
+                l = [e]
+                for k in exps:
+                    mean = dat[e][k]['mean']
+                    std = dat[e][k]['std']
+                    if( std != ''):
+                        v = "%.4f (+- %.4f)" %( float(mean), float(std) )
+                    else:
+                        if( mean.isnumeric() ):
+                            v = "%.4f" %( float(mean) )
+                        else:
+                            v = "%s" %( mean )
+                    l.append( v )
+                lines.append( l )
+            except:
+                pass
+        lines = list( map( lambda x: ' & '.join(x)+'\\\\', lines ))
 
         opath = os.path.join(self.out, "table_latex_pico_metrics.txt")
         f = open( opath, 'w')
         f.write("""
-\\begin\{table\}[]
-\\begin\{tabular\}\{lllll\}
+\\begin{table}[]
+\\begin{tabular}{llll}
             """)
         f.write( '\n'.join(lines)+'\\\\\n' )
         f.write("""
-\\end\{tabular\}
-\\end\{table\}
+\\end{tabular}
+\\end{table}
             """)
         f.close()
 
@@ -147,7 +152,7 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         for ds in dss:
             pathdir = os.path.join( indir.replace('__db__', ds), 'test', 'summary_reports' )
             for level in levels:
-                key = f"{ds}_{level}"
+                key = f"{ds}#{level}"
                 if(not key in best):
                     best[key] = {}
 
@@ -156,6 +161,10 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                     for mode in evaluation_modes:
                         fname = f"{mode}_summary-report_test-model-{level}.tsv"
                         path = os.path.join(pathdir, fname)
+                        if( not os.path.exists(path) ):
+                            fname = f"{mode}_summary-report_merged-test-{level}.tsv"
+                            path = os.path.join(pathdir, fname)
+
                         df = pd.read_csv( path, sep= '\t')
                         aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') ]
                         dat[mode] = aux.stats_agg_value.max()
@@ -163,22 +172,28 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                     best[key][m] = list(odat)[0]
 
         lines = []
-        l = ["dataset", "entity", "level", "metric", "value"]
+        l = ["Dataset", "Entity", "Level", "Metric", "Value"]
+        l = '\t'.join( [ str(x) for x in l] )
         lines.append(l)
         for k in best:
-            ds, level = k.split('_')
+            ds, level = k.split('#')
             pathdir = os.path.join( indir.replace('__db__', ds), 'test', 'summary_reports' )
             for m in best[k]:
                 mode = best[key][m]
                 fname = f"{mode}_summary-report_test-model-{level}.tsv"
                 path = os.path.join(pathdir, fname)
+                if( not os.path.exists(path) ):
+                    fname = f"{mode}_summary-report_merged-test-{level}.tsv"
+                    path = os.path.join(pathdir, fname)
+
                 df = pd.read_csv( path, sep= '\t')
-                aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') ]
+                ents = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') & (df['stats_agg_value'] > 0.5) ].Entity.unique()
+                aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') & (df['Entity'].isin(ents)) ]
                 for i in aux.index:
                     entity = df.iloc[i, 0]
                     values = df.iloc[i, 4:]
                     for v in values:
-                        l = [ ds, entity, level, level, m, v ]
+                        l = [ ds, entity, level, m, v ]
                         l = '\t'.join( [ str(x) for x in l] )
                         lines.append(l)
         opath = os.path.join(self.out, "table_comp_sota.tsv")
@@ -189,8 +204,10 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         m = 'f1-score'
         df = pd.read_csv( opath, sep= '\t')
         for ds in dss:
-            aux = df[ (df["dataset"] == ds) && (df["metric"] == m) ]
-            fig = px.box( aux, x="entity", y="value", color="level")
+            aux = df[ (df["Dataset"] == ds) & (df["Metric"] == m) ]
+            aux.columns = ["Dataset", "Entity", "Level", "Metric", "F1-score"]
+            fig = px.box( aux, x="Entity", y="F1-score", color="Level")
+            fig.update_layout( title_text = "Dataset "+ds, yaxis_range = [0, 1] )
             opath = os.path.join(self.out, f'{ds}_{m}_comparison_sota.png')
             fig.write_image( opath )
 
@@ -199,6 +216,6 @@ weighted avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         self.wrap_bench_dss_eval_metrics_reprod()
 
 if( __name__ == "__main__" ):
-    odir = '/aloy/home/ymartins/match_clinical_trial/valout'
+    odir = '/aloy/home/ymartins/match_clinical_trial/outnerwf'
     i = ExplorationBenchmarkDss( odir )
     i.run()

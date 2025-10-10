@@ -4,8 +4,10 @@ import sys
 import pickle
 import optuna
 import pandas as pd
+from tqdm import tqdm
 import plotly.express as px
 from scipy.stats import ranksums
+from scipy import stats
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
 sys.path.append( root_path )
@@ -17,6 +19,22 @@ class ExplorationBenchmarkDss:
             os.makedirs( self.out )
 
     # -------- General
+    def _write_latex_table(self, opath, lines):
+        ncols = len( lines[0].split(' & ') )
+
+        f = open( opath, 'w')
+        f.write("""
+\\begin{table}[]
+\\begin{tabular}{%s}
+            """ %( ('l')*ncols ) )
+        f.write( '\n'.join(lines)+'\\\\\n' )
+        f.write("""
+\\end{tabular}
+\\end{table}
+            """)
+        f.close()
+
+
     def wrap_picods_comp_metrics_reprod(self):
         # PICO reproducibility
         ## Generate table with hyperparameters
@@ -34,17 +52,7 @@ class ExplorationBenchmarkDss:
         lines = list( map( lambda x: ' & '.join(x)+'\\\\', lines ))
 
         opath = os.path.join(self.out, "table_latex_hyperparams.txt")
-        f = open( opath, 'w')
-        f.write("""
-\\begin{table}[]
-\\begin{tabular}{llll}
-            """)
-        f.write( '\n'.join(lines)+'\\\\\n' )
-        f.write("""
-\\end{tabular}
-\\end{table}
-            """)
-        f.close()
+        self._write_latex_table(opath, lines)
 
         ## Generate comparison table of f1-scores
         sota = """Entity PICO-Reference Experiment-1 Experiment-2
@@ -127,17 +135,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         lines = list( map( lambda x: ' & '.join(x)+'\\\\', lines ))
 
         opath = os.path.join(self.out, "table_latex_pico_metrics.txt")
-        f = open( opath, 'w')
-        f.write("""
-\\begin{table}[]
-\\begin{tabular}{llll}
-            """)
-        f.write( '\n'.join(lines)+'\\\\\n' )
-        f.write("""
-\\end{tabular}
-\\end{table}
-            """)
-        f.close()
+        self._write_latex_table(opath, lines)
 
     def wrap_bench_dss_eval_metrics_reprod(self):
         evaluation_modes = ['seqeval-default', 'seqeval-strict', 'sk-with-prefix', 'sk-without-prefix']
@@ -211,9 +209,113 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
             opath = os.path.join(self.out, f'{ds}_{m}_comparison_sota.png')
             fig.write_image( opath )
 
+    def _count_annotations(self, pathdir, files):
+        dat = {}
+        total_classes = 0
+        for f in files:
+            path = os.path.join( pathdir, f )
+            pmid = f.split('.')[0]
+            f = open(path, 'r')
+            for line in f:
+                l = line.split('\t')
+                entity = l[1].split(' ')[0]
+                uid = l[0]
+                annkey = f"{pmid}_{uid}"
+                if( not entity in dat ):
+                    dat[entity] = { 'pmids': set(), 'annotations': set() }
+                dat[entity]['pmids'].add(pmid)
+                dat[entity]['annotations'].add(annkey)
+            f.close()
+
+            total_classes = len(dat)
+
+        return dat, total_classes
+
+    def gen_suppTable_counts_annotations(self):
+        dat = {}
+
+        # ---------- PICO gold dataset
+        indir = '/aloy/home/ymartins/match_clinical_trial/experiments/data'
+        ds = 'pico_gold'
+        pathdir = indir
+        files = list( filter( lambda x: x.endswith('.ann'), os.listdir(pathdir) ) )
+            
+        dt, total_classes = self._count_annotations( pathdir, files)
+        dat[ds] = {}
+        dat[ds]['details'] = dt
+        dat[ds]['count_classes'] = total_classes
+        
+        # ---------- Benchmark datasets
+        indir = '/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/'
+        dss = [ "bc5cdr", "ncbi", "biored", "chiads", "merged_train"]
+        for ds in tqdm(dss):
+            dat[ds] = {}
+
+            pathdir = os.path.join(indir, 'nerdata', ds, 'processed')
+            if( ds.startswith("merged") ):
+                pathdir = os.path.join(indir, ds)
+            files = list( filter( lambda x: x.endswith('.ann'), os.listdir(pathdir) ) )
+            
+            dt, total_classes = self._count_annotations( pathdir, files)
+            dat[ds]['details'] = dt
+            dat[ds]['count_classes'] = total_classes
+        
+        # Parsing and writing information
+        lines = []
+        header = ["dataset", "entity", "number_entities", "number_papers", "number_annotations"]
+        lines.append( '\t'.join(header) )
+        for ds in dat:
+            total = dat[ds]['count_classes']
+            info = dat[ds]['details']
+            for e in info:
+                cnt_pub = len( info[e]['pmids'] )
+                cnt_ann = len( info[e]['annotations'] )
+                l = '\t'.join( [ ds, e, str(total), str(cnt_pub), str(cnt_ann) ] )
+                lines.append(l)
+        
+        opath = os.path.join( self.out, 'datasets_meta_metrics.tsv')
+        f = open( opath, 'w')
+        f.write( '\n'.join(lines)+'\n' )
+        f.close()
+
+        ltines = list( map( lambda x: ' & '.join( x.split('\t') )+'\\\\', lines ))
+        opath = os.path.join(self.out, "table_latex_dss_meta_metrics.txt")
+        self._write_latex_table(opath, ltines)
+
+    def _check_correlation_count_eval(self):
+        entities = set()
+        cp = []
+        opath = os.path.join(self.out, "table_latex_pico_metrics.txt")
+        f = open( opath, 'r')
+        for line in f:
+            if(line.find('+-') != -1):
+                l = line.split(' & ')
+                ent = l[0]
+                entities.add(ent)
+                cp.append( float(l[-1].split(' ')[0]) )
+        f.close()
+
+        opath = os.path.join( self.out, 'datasets_meta_metrics.tsv')
+        df = pd.read_csv( opath, sep='\t')
+        df = df[ ( df['dataset'] == 'pico_gold' ) & ( df['entity'].isin(entities) ) ]
+        entities = df.entity.unique()
+        cpaper = df.number_papers.values.tolist()
+        canns = df.number_annotations.values.tolist()
+
+        # Papers x f1
+        res = stats.pearsonr(cpaper, cp)
+        print("Papers - Corr.:", res.statistic, ' P-value:', res.pvalue)
+
+        # Annotations x f1
+        res = stats.pearsonr(canns, cp)
+        print("Annotations - Corr.:", res.statistic, ' P-value:', res.pvalue)
+
+
     def run(self):
-        self.wrap_picods_comp_metrics_reprod()
-        self.wrap_bench_dss_eval_metrics_reprod()
+        #self.wrap_picods_comp_metrics_reprod()
+        #self.wrap_bench_dss_eval_metrics_reprod()
+        #self.gen_suppTable_counts_annotations()
+        self._check_correlation_count_eval()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/outnerwf'

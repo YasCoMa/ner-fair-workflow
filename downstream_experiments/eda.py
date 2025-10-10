@@ -169,6 +169,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                     odat = dict( sorted( dat.items(), key=lambda item: item[1], reverse=True ) )
                     best[key][m] = [ list(odat)[0], list(odat.values())[0] ]
 
+
         lines = []
         l = ["Dataset", "Entity", "Level", "Metric", "Value"]
         l = '\t'.join( [ str(x) for x in l] )
@@ -179,7 +180,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
             pathdir = os.path.join( indir.replace('__db__', ds), 'test', 'summary_reports' )
             for m in best[k]:
                 mode = best[key][m]
-                print(ds, level, m, mode)
+                #print(ds, level, m, mode)
                 mode = mode[0]
 
                 fname = f"{mode}_summary-report_test-model-{level}.tsv"
@@ -189,7 +190,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                     path = os.path.join(pathdir, fname)
 
                 df = pd.read_csv( path, sep= '\t')
-                ents = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') & (df['stats_agg_value'] > 0.5) ].Entity.unique()
+                ents = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') ].Entity.unique()
                 aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') & (df['Entity'].isin(ents)) ]
                 for i in aux.index:
                     entity = df.iloc[i, 0]
@@ -207,9 +208,12 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         df = pd.read_csv( opath, sep= '\t')
         for m in target_metrics:
             for ds in dss:
-                aux = df[ (df["Dataset"] == ds) & (df["Metric"] == m) ]
-                aux.columns = ["Dataset", "Entity", "Level", "Metric", "F1-score"]
-                fig = px.box( aux, x="Entity", y="F1-score", color="Level")
+                cutoff = 0.5
+                if( m == 'mcc' ):
+                    cutoff = 0
+                aux = df[ (df["Dataset"] == ds) & (df["Metric"] == m) & (df['Value'] > cutoff) ]
+                aux.columns = ["Dataset", "Entity", "Level", "Metric", m]
+                fig = px.box( aux, x="Entity", y=m, color="Level")
                 fig.update_layout( title_text = "Dataset "+ds, yaxis_range = [0, 1] )
                 opath = os.path.join(self.out, f'{ds}_{m}_comparison_sota.png')
                 fig.write_image( opath )

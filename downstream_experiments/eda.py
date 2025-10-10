@@ -175,9 +175,12 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         lines.append(l)
         for k in best:
             ds, level = k.split('#')
+
             pathdir = os.path.join( indir.replace('__db__', ds), 'test', 'summary_reports' )
             for m in best[k]:
                 mode = best[key][m]
+                print(ds, level, m, mode)
+                
                 fname = f"{mode}_summary-report_test-model-{level}.tsv"
                 path = os.path.join(pathdir, fname)
                 if( not os.path.exists(path) ):
@@ -201,13 +204,14 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
 
         m = 'f1-score'
         df = pd.read_csv( opath, sep= '\t')
-        for ds in dss:
-            aux = df[ (df["Dataset"] == ds) & (df["Metric"] == m) ]
-            aux.columns = ["Dataset", "Entity", "Level", "Metric", "F1-score"]
-            fig = px.box( aux, x="Entity", y="F1-score", color="Level")
-            fig.update_layout( title_text = "Dataset "+ds, yaxis_range = [0, 1] )
-            opath = os.path.join(self.out, f'{ds}_{m}_comparison_sota.png')
-            fig.write_image( opath )
+        for m in target_metrics:
+            for ds in dss:
+                aux = df[ (df["Dataset"] == ds) & (df["Metric"] == m) ]
+                aux.columns = ["Dataset", "Entity", "Level", "Metric", "F1-score"]
+                fig = px.box( aux, x="Entity", y="F1-score", color="Level")
+                fig.update_layout( title_text = "Dataset "+ds, yaxis_range = [0, 1] )
+                opath = os.path.join(self.out, f'{ds}_{m}_comparison_sota.png')
+                fig.write_image( opath )
 
     def _count_annotations(self, pathdir, files):
         dat = {}
@@ -313,9 +317,9 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
 
     def run(self):
         #self.wrap_picods_comp_metrics_reprod()
-        #self.wrap_bench_dss_eval_metrics_reprod()
+        self.wrap_bench_dss_eval_metrics_reprod()
         #self.gen_suppTable_counts_annotations()
-        self._check_correlation_count_eval()
+        #self._check_correlation_count_eval()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/outnerwf'

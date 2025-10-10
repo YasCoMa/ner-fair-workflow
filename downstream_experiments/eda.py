@@ -167,7 +167,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                         aux = df[ (df['evaluation_metric'] == m) & (df['stats_agg_name'] == 'mean') ]
                         dat[mode] = aux.stats_agg_value.max()
                     odat = dict( sorted( dat.items(), key=lambda item: item[1], reverse=True ) )
-                    best[key][m] = list(odat)[0]
+                    best[key][m] = [ list(odat)[0], list(odat.values())[0] ]
 
         lines = []
         l = ["Dataset", "Entity", "Level", "Metric", "Value"]
@@ -180,7 +180,8 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
             for m in best[k]:
                 mode = best[key][m]
                 print(ds, level, m, mode)
-                
+                mode = mode[0]
+
                 fname = f"{mode}_summary-report_test-model-{level}.tsv"
                 path = os.path.join(pathdir, fname)
                 if( not os.path.exists(path) ):

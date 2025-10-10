@@ -168,7 +168,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                         dat[mode] = aux.stats_agg_value.max()
                     odat = dict( sorted( dat.items(), key=lambda item: item[1], reverse=True ) )
                     best[key][m] = [ list(odat)[0], list(odat.values())[0] ]
-
+                    print(key, m, best[key][m])
 
         lines = []
         l = ["Dataset", "Entity", "Level", "Metric", "Value"]

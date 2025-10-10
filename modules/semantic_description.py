@@ -369,7 +369,7 @@ class SemanticDescription:
     def __describe_preproc_dataset(self):
         g = self.graph
         
-        dataPreprocDir = os.path.join(self.outDirRoot, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
+        dataPreprocDir = os.path.join(self.outDir, "preprocessing", "dataset_train_valid_test_split_v0.1") # Transformers dataset utput from preproc step
         flag = os.path.isdir(dataPreprocDir)
         if( flag ):
             ds = load_from_disk(dataPreprocDir)

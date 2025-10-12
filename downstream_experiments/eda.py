@@ -320,12 +320,63 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         res = stats.pearsonr(canns, cp)
         print("Annotations - Corr.:", res.statistic, ' P-value:', res.pvalue)
 
+    def check_best_merged_individual_models(self):
+        dat = {}
+        
+        inpath = os.path.join( self.out, 'table_comp_sota.tsv')
+        df = pd.read_csv( inpath, sep='\t')
+        merg_ents = df[ df['Dataset'] == 'merged_train' ].Entity.unique()
+
+        # organize data
+        for i in df.index:
+            ent = df.loc[i, 'Entity']
+            lv = df.loc[i, 'Level']
+            mt = df.loc[i, 'Metric']
+            key = f"{ent}#{lv}#{mt}"
+            if( not key in dat):
+                    dat[key] = {}
+
+            ds = df.loc[i, 'Dataset']
+            if( not ds in dat[key]):
+                dat[key][ds] = []
+
+            v = df.loc[i, 'Value']
+            dat[key][ds].append(v)
+
+        # process and compute best for each entity, metirc and level
+        lines = []
+        header =  ["Entity", "Level", "Metric", "Dataset", "Mean Dataset", "Mean Merged", "Best", "p-value"]
+        lines.append( '\t'.join(header) )
+        for k in dat:
+            ent, level, metric = k.split('#')
+            arrm = dat[k]["merged_train"]
+            mean_merg = sum(arrm)/len(arrm)
+
+            for ds in dat[k]:
+                if( ds != "merged_train" ):
+                    arrd = dat[k][ds]
+                    mean_ds = sum(arrd)/len(arrd)
+                    best = 'merged_train'
+                    if( mean_ds > mean_merg ):
+                        best = 'individual'
+                    pval = ranksums(arrm, arrd).pvalue
+                    l = [ent, level, metric, ds, mean_ds, mean_merg, best, pval]
+                    l = '\t'.join( [ str(v) for v in l ] )
+                    lines.append(l)
+
+        # export result
+        opath = os.path.join( self.out, 'table_comp_summary_mergedxInd_sota.tsv')
+        f = open( opath, 'w')
+        f.write( '\n'.join(lines)+'\n' )
+        f.close()
 
     def run(self):
         #self.wrap_picods_comp_metrics_reprod()
-        self.wrap_bench_dss_eval_metrics_reprod()
+        #self.wrap_bench_dss_eval_metrics_reprod()
         #self.gen_suppTable_counts_annotations()
         #self._check_correlation_count_eval()
+
+        self.check_best_merged_individual_models()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/outnerwf'

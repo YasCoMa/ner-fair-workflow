@@ -2,7 +2,9 @@ import os
 import re
 import sys
 import pickle
-import optuna
+
+import rdflib
+
 import pandas as pd
 from tqdm import tqdm
 import plotly.express as px
@@ -23,6 +25,13 @@ class ExplorationSemanticResults:
         cp nerfairwf_experiments/trials/biobert-*-hypersearch-biobert-base-cased-v1.2-finetuned-ner/experiment_metadata/experiment_graph_biobert-*-hypersearch.ttl ./out_eda_semantic/data
 
         '''
+
+    def load_graphs(self):
+        g = rdflib.Graph()
+        indir = os.path.join(self.out, 'data')
+        for f in os.listdir(indir):
+            path = os.pathjoin(indir, f)
+            g.parse(path)
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

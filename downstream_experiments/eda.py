@@ -345,7 +345,7 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
 
         # process and compute best for each entity, metirc and level
         lines = []
-        header =  ["Entity", "Level", "Metric", "Dataset", "Mean Dataset", "Mean Merged", "Best", "p-value"]
+        header =  ["Entity", "Level", "Metric", "Dataset", "Mean Dataset", "Mean Merged", "Best", "p-value", "diff (merged - ds)"]
         lines.append( '\t'.join(header) )
         for k in dat:
             ent, level, metric = k.split('#')
@@ -360,7 +360,8 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
                     if( mean_ds > mean_merg ):
                         best = 'individual'
                     pval = ranksums(arrm, arrd).pvalue
-                    l = [ent, level, metric, ds, mean_ds, mean_merg, best, pval]
+                    diff = mean_merg - mean_ds
+                    l = [ent, level, metric, ds, mean_ds, mean_merg, best, pval, diff]
                     l = '\t'.join( [ str(v) for v in l ] )
                     lines.append(l)
 
@@ -369,6 +370,23 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         f = open( opath, 'w')
         f.write( '\n'.join(lines)+'\n' )
         f.close()
+
+        # exploring it:
+        '''
+        df = pd.read_csv('outnerwf/eda_paper_material/table_comp_summary_mergedxInd_sota.tsv', sep='\t')
+        # Datasets positively affected by merged model:
+        dss = df[ df['Best']=='merged_train' ].Dataset.unique()
+
+        # Entities positively affected by merged model:
+        df[ df['Best']=='merged_train' ].Entity.unique()
+
+        # Counts of entities grouped by level, metric, dataset
+        cgrouped = df[ df['Best']=='merged_train' ].groupby(['Level','Metric','Dataset']).count()
+        
+        # Getting expressive differences:
+        df['diff'] = df['Mean Merged'] - df['Mean Dataset']
+        df_highest_diffs = df[ df['Best']=='merged_train' ].sort_values(by='diff', ascending=False).head(30)
+        '''
 
     def run(self):
         #self.wrap_picods_comp_metrics_reprod()

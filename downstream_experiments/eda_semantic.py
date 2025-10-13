@@ -72,7 +72,7 @@ class ExplorationSemanticResults:
 
         meta = { 'classes': 'owl:Class', 'object_properties': 'OWL:ObjectProperty', 'data_properties': 'OWL:DatatypeProperty' }
         res = {}
-        for k in res:
+        for k in meta:
             q = '''
     SELECT ( count( DISTINCT ?s ) as ?cnt)
     WHERE {
@@ -80,6 +80,7 @@ class ExplorationSemanticResults:
 
     }
             ''' %( meta[k] )
+            
             qres = g.query(q, initNs={'rdf': RDF, 'owl': OWL})
             for row in qres:
                 print( f"{row.cnt} {k}" )

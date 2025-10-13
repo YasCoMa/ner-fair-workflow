@@ -67,23 +67,29 @@ class ExplorationSemanticResults:
 
         self.graph = g
 
-    def count_classes(self):
+    def count_new_classes_properties(self):
         g = self.graph
 
-        q = '''
-SELECT ( count( DISTINCT ?s ) as ?cnt)
-WHERE {
-    ?s rdf:type owl:Class .
+        meta = { 'classes': 'owl:Class', 'object_properties': 'OWL:ObjectProperty', 'data_properties': 'OWL:DatatypeProperty' }
+        res = {}
+        for k in res:
+            q = '''
+    SELECT ( count( DISTINCT ?s ) as ?cnt)
+    WHERE {
+        ?s rdf:type %s .
 
-}
-        '''
-        qres = g.query(q, initNs={'rdf': RDF, 'owl': OWL})
-        for row in qres:
-            print( f"{row.cnt} classes" )
+    }
+            ''' %( meta[k] )
+            qres = g.query(q, initNs={'rdf': RDF, 'owl': OWL})
+            for row in qres:
+                print( f"{row.cnt} {k}" )
+                res[k] = row.cnt
+        
+        return res
 
     def run(self):
         self.load_graphs()
-        self.count_classes()
+        self.count_new_classes_properties()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

@@ -70,7 +70,7 @@ class ExplorationSemanticResults:
     def count_new_classes_properties(self):
         g = self.graph
 
-        meta = { 'classes': 'owl:Class', 'object_properties': 'OWL:ObjectProperty', 'data_properties': 'OWL:DatatypeProperty' }
+        meta = { 'classes': 'owl:Class', 'object_properties': 'owl:ObjectProperty', 'data_properties': 'owl:DatatypeProperty' }
         res = {}
         for k in meta:
             q = '''
@@ -80,7 +80,7 @@ class ExplorationSemanticResults:
 
     }
             ''' %( meta[k] )
-            
+
             qres = g.query(q, initNs={'rdf': RDF, 'owl': OWL})
             for row in qres:
                 print( f"{row.cnt} {k}" )

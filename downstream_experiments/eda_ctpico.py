@@ -93,7 +93,7 @@ class ExplorationCTPicoResults:
             for f in tqdm(files):
                 pmid = f.split('/')[-1].split('_')[0]
                 g = open(f, 'r')
-                for line in f:
+                for line in g:
                     line = line.split('\t')
                     if( len(line) > 1 ):
                         ent = line[1].split(' ')[0]

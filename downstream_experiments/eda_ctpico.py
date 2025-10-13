@@ -14,7 +14,10 @@ sys.path.append( root_path )
 
 class ExplorationCTPicoResults:
     def __init__(self, fout):
+        self.goldraw = "/aloy/home/ymartins/match_clinical_trial/experiments/data/"
         self.goldfolder = '/aloy/home/ymartins/match_clinical_trial/out_ss_choice_optimization/'
+        self.augdir = "/aloy/home/ymartins/match_clinical_trial/experiments/validation/augmented_data/"
+        
         self.infolder = '/aloy/home/ymartins/match_clinical_trial/experiments/validation/validation/'
         
         self.out = fout
@@ -75,9 +78,58 @@ class ExplorationCTPicoResults:
         opath = os.path.join( self.out, 'ssvalue_distribution.png')
         fig.write_image( opath )
 
+    def comparison_measure_augmentation(self):
+        data_dirs = { 
+        "gold": [ self.goldraw, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.goldraw) )) ], 
+        "augmented": [ self.augdir, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.augdir) )) 
+        ] }
+        d = {}
+        for k in data_dirs:
+            d[k] = {} 
+
+            pathdir = data_dirs[k][0]
+            files = data_dirs[k][1]
+            files = list( map( lambda x: os.path.join(pathdir, x) , files ))
+            for f in files:
+                pmid = f.split('_')[0]
+                g = open(f, 'r')
+                for line in f:
+                    ent = line.split('\t')[1].split(' ')[0]
+                    if( not ent in d[k] ):
+                        d[k][ent] = { 'papers': set(), 'annotations': 0 }
+                    d[k][ent]['annotations'] += 1
+                    d[k][ent]['papers'].add(pmid)
+                g.close()
+
+        lines = []
+        header = ["Dataset", "Entity", "Metric", "Count"]
+        lines.append( '\t'.join(header) )
+        body = []
+        for k in d:
+            for e in d[k]:
+                np = len( d[k][e]['papers'] )
+                na = d[k][e]['annotations']
+                body.append( [k, e, 'Papers', str(np) ] )
+                body.append( [k, e, 'Annotations', str(na) ] )
+
+        body = list( map( lambda x: '\t'.join(x), body ))
+        lines += body
+        opath = os.path.join( self.out, 'table_count_beforeGold_afterAugds.tsv')
+        f = open( opath, 'w')
+        f.write( '\n'.join(lines)+'\n' )
+        f.close()
+
+        df = pd.read_csv(opath, sep='\t')
+        for m in df.Metric.unique():
+            aux = df[ df['Metric'] == m ]
+            fig = px.bar( aux, x="Entity", y="Count", color='Dataset')
+            opath = os.path.join( self.out, f'count_{m}_augds_gold.png')
+            fig.write_image( opath )
+
     def run(self):
-        self.generate_table_pred_grouped_top()
-        self.generate_distribution_ssvalue()
+        #self.generate_table_pred_grouped_top()
+        #self.generate_distribution_ssvalue()
+        self.comparison_measure_augmentation()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_pico'

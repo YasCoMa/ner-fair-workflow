@@ -90,8 +90,8 @@ class ExplorationCTPicoResults:
             pathdir = data_dirs[k][0]
             files = data_dirs[k][1]
             files = list( map( lambda x: os.path.join(pathdir, x) , files ))
-            for f in files:
-                pmid = f.split('_')[0]
+            for f in tqdm(files):
+                pmid = f.split('/')[-1].split('_')[0]
                 g = open(f, 'r')
                 for line in f:
                     line = line.split('\t')

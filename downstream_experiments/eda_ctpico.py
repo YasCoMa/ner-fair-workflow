@@ -94,6 +94,7 @@ class ExplorationCTPicoResults:
                 pmid = f.split('_')[0]
                 g = open(f, 'r')
                 for line in f:
+                    print(line)
                     ent = line.split('\t')[1].split(' ')[0]
                     if( not ent in d[k] ):
                         d[k][ent] = { 'papers': set(), 'annotations': 0 }

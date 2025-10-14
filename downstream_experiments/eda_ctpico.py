@@ -1,6 +1,8 @@
 import os
 import re
 import sys
+import json
+import math
 import pickle
 
 import pandas as pd
@@ -83,36 +85,49 @@ class ExplorationCTPicoResults:
         "gold": [ self.goldraw, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.goldraw) )) ], 
         "augmented": [ self.augdir, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.augdir) )) 
         ] }
+        
         d = {}
-        for k in data_dirs:
-            d[k] = {} 
+        opath = os.path.join(self.out, 'compiled_comparison_gold_aug.json')
+        if( not os.path.isfile(opath) ):
+            for k in data_dirs:
+                d[k] = {} 
 
-            pathdir = data_dirs[k][0]
-            files = data_dirs[k][1]
-            files = list( map( lambda x: os.path.join(pathdir, x) , files ))
-            for f in tqdm(files):
-                pmid = f.split('/')[-1].split('_')[0]
-                g = open(f, 'r')
-                for line in g:
-                    line = line.split('\t')
-                    if( len(line) > 1 ):
-                        ent = line[1].split(' ')[0]
-                        if( not ent in d[k] ):
-                            d[k][ent] = { 'papers': set(), 'annotations': 0 }
-                        d[k][ent]['annotations'] += 1
-                        d[k][ent]['papers'].add(pmid)
-                g.close()
+                pathdir = data_dirs[k][0]
+                files = data_dirs[k][1]
+                files = list( map( lambda x: os.path.join(pathdir, x) , files ))
+                for f in tqdm(files):
+                    pmid = f.split('/')[-1].split('_')[0]
+                    g = open(f, 'r')
+                    for line in g:
+                        line = line.split('\t')
+                        if( len(line) > 1 ):
+                            ent = line[1].split(' ')[0]
+                            if( not ent in d[k] ):
+                                d[k][ent] = { 'papers': set(), 'annotations': 0 }
+                            d[k][ent]['annotations'] += 1
+                            d[k][ent]['papers'].add(pmid)
+                    g.close()
+
+            aux = {}
+            for k in d:
+                aux[k] = d[k]
+                for e in d[k]:
+                    aux[k][e]['papers'] = list( d[k][e]['papers'] )
+
+            json.dump( d, open(opath, 'w') )
+        else:
+            d = json.load( open(opath, 'r') )
 
         lines = []
-        header = ["Dataset", "Entity", "Metric", "Count"]
+        header = ["Dataset", "Entity", "Metric", "Count", "Count (log10)"]
         lines.append( '\t'.join(header) )
         body = []
         for k in d:
             for e in d[k]:
                 np = len( d[k][e]['papers'] )
                 na = d[k][e]['annotations']
-                body.append( [k, e, 'Papers', str(np) ] )
-                body.append( [k, e, 'Annotations', str(na) ] )
+                body.append( [k, e, 'Papers', str(np), str( math.log10(np) ) ] )
+                body.append( [k, e, 'Annotations', str(na), str( math.log10(na) ) ] )
 
         body = list( map( lambda x: '\t'.join(x), body ))
         lines += body
@@ -124,7 +139,7 @@ class ExplorationCTPicoResults:
         df = pd.read_csv(opath, sep='\t')
         for m in df.Metric.unique():
             aux = df[ df['Metric'] == m ]
-            fig = px.bar( aux, x="Entity", y="Count", color='Dataset')
+            fig = px.bar( aux, x="Entity", y="Count (log10)", text="Count", color='Dataset', title = f"{m} enrichment", barmode='group')
             opath = os.path.join( self.out, f'count_{m}_augds_gold.png')
             fig.write_image( opath )
 

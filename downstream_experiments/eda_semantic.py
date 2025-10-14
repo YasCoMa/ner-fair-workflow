@@ -114,7 +114,7 @@ group by ?c
         opath = os.path.join( self.out, 'nerfairwf_onto_extension.owl')
         gr = rdflib.Graph()
         gr.parse(inpath)
-        gr.serialize(format="xml")
+        gr.serialize( destination=opath, format="xml")
 
     def run(self):
         self.load_graphs()

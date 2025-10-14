@@ -88,9 +88,31 @@ class ExplorationSemanticResults:
         
         return res
 
+    def count_instances_per_class(self):
+        g = self.graph
+
+        res = {}
+        q = '''
+SELECT ( count( DISTINCT ?s ) as ?cnt, ?c )
+WHERE {
+    ?s rdf:type ?c .
+
+    filter( (?c != owl:Class) && (?c != owl:ObjectProperty) && (?c != owl:DatatypeProperty) ) . 
+}
+group by ?c
+        '''
+
+        qres = g.query(q, initNs={'rdf': RDF, 'owl': OWL})
+        for row in qres:
+            print( f"{row.cnt} {row.c}" )
+            res[row.c] = row.cnt
+        
+        return res
+
     def run(self):
         self.load_graphs()
         self.count_new_classes_properties()
+        self.count_instances_per_class()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

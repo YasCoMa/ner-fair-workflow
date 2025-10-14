@@ -93,7 +93,7 @@ class ExplorationSemanticResults:
 
         res = {}
         q = '''
-SELECT ( count( DISTINCT ?s ) as ?cnt, ?c )
+SELECT ( ?c (count( DISTINCT ?s ) as ?cnt) )
 WHERE {
     ?s rdf:type ?c .
 

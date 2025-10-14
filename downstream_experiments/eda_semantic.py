@@ -109,10 +109,18 @@ group by ?c
         
         return res
 
+    def convert_ttl_to_owl(self):
+        inpath = os.path.join( self.out, 'nerfairwf_onto_extension.ttl')
+        opath = os.path.join( self.out, 'nerfairwf_onto_extension.owl')
+        gr = rdflib.Graph()
+        gr.parse(inpath)
+        gr.serialize(format="xml")
+
     def run(self):
         self.load_graphs()
         self.count_new_classes_properties()
         self.count_instances_per_class()
+        self.convert_ttl_to_owl()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

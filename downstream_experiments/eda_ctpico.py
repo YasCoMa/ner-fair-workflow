@@ -26,6 +26,7 @@ class ExplorationCTPicoResults:
         self.rawinfolder = '/aloy/home/ymartins/match_clinical_trial/experiments/validation/process_ct/clinical_trials/'
 
         self.tag_file = '/aloy/home/ymartins/match_clinical_trial/experiments/tags.json'
+        self.tag_file = '/mnt/085dd464-7946-4395-acfd-e22026d52e9d/home/yasmmin/Dropbox/irbBCN_job/match_clinical_trial/paper_files/tags.json'
         self.tags = self.__remove_prefix_tags()
         
         self.out = fout
@@ -99,14 +100,13 @@ class ExplorationCTPicoResults:
         fig.write_image( opath )
 
     def comparison_measure_augmentation(self):
-        data_dirs = { 
-        "gold": [ self.goldraw, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.goldraw) )) ], 
-        "augmented": [ self.augdir, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.augdir) )) 
-        ] }
-        
         d = {}
         opath = os.path.join(self.out, 'compiled_comparison_gold_aug.json')
         if( not os.path.isfile(opath) ):
+            data_dirs = { 
+            "gold": [ self.goldraw, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.goldraw) )) ], 
+            "augmented": [ self.augdir, list( filter( lambda x: x.endswith('.ann'), os.listdir(self.augdir) )) 
+            ] }
             for k in data_dirs:
                 d[k] = {} 
 
@@ -235,5 +235,6 @@ class ExplorationCTPicoResults:
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_pico'
+    odir = '/mnt/085dd464-7946-4395-acfd-e22026d52e9d/home/yasmmin/Dropbox/irbBCN_job/match_clinical_trial/paper_files/out_eda_pico/'
     i = ExplorationCTPicoResults( odir )
     i.run()

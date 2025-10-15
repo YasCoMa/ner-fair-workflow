@@ -160,7 +160,7 @@ class ExplorationCTPicoResults:
             aux = df[ (df['Metric'] == m) & (df.Entity.isin(ents) ) ]
             fig = px.bar( aux, x="Entity", y="Count (log10)", text="Count", color='Dataset', title = f"{m} enrichment", barmode='group')
             opath = os.path.join( self.out, f'count_{m}_augds_gold.png')
-            fig.update_layout( width=1200)
+            fig.update_layout( autosize=False, width=1200, height=600)
             fig.write_image( opath )
 
     def _get_cts_with_result(self, ids):

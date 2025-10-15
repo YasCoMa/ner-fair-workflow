@@ -1,0 +1,85 @@
+INFO:validation:----------- Validation step started -----------
+INFO:validation:[Validation step] Task (Mapping predictions to pmid and CT ) started -----------
+INFO:validation:[Validation step] Task (Mapping predictions to pmid and CT ) ended -----------
+INFO:validation:[Validation step] Task (Parsing CT to extract target entity true values ) started -----------
+INFO:validation:[Validation step] Task (Parsing CT to extract target entity true values ) ended -----------
+INFO:validation:[Validation step] Task (Obtaining predictions ) started -----------
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:utils.hpc.sge.sge:Writing file /aloy/home/ymartins/match_clinical_trial/experiments/validation/validation/fast_prediction_parallel/job-fast_prediction_parallel.sh...
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:paramiko.transport:Connected (version 2.0, client OpenSSH_7.2p2)
+INFO:paramiko.transport:Authentication (publickey) successful!
+INFO:validation:[Validation step] Task (Obtaining predictions ) ended -----------
+INFO:validation:[Validation step] Task (Grouping predictions, ranking, and aggregating positional information ) started -----------
+INFO:validation:[Validation step] Task (Grouping predictions, ranking and aggregating positional information ) ended -----------
+INFO:validation:[Validation step] Task (Creating final annotated corpus and text files ) started -----------
+INFO:validation:[Validation step] Task (Creating final annotated corpus and text files ) ended -----------
+INFO:validation:----------- Validation ended -----------

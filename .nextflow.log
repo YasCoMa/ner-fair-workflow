@@ -1,79 +1,117 @@
-Oct-10 21:04:48.201 [main] DEBUG nextflow.cli.Launcher - $> nextflow run -bg /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/ --runningConfig /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_bc5cdr.json --mode metadata_enrichment
-Oct-10 21:04:48.291 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 25.04.6
-Oct-10 21:04:48.324 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/ymartins/.nextflow/plugins; core-plugins: nf-amazon@2.15.0,nf-azure@1.16.0,nf-cloudcache@0.4.3,nf-codecommit@0.2.3,nf-console@1.2.1,nf-google@1.21.1,nf-k8s@1.0.0,nf-tower@1.11.4,nf-wave@1.12.1
-Oct-10 21:04:48.359 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
-Oct-10 21:04:48.360 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
-Oct-10 21:04:48.364 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.12.0 in 'deployment' mode
-Oct-10 21:04:48.379 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
-Oct-10 21:04:48.407 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /aloy/home/ymartins/match_clinical_trial/ner_subproj/nextflow.config
-Oct-10 21:04:48.412 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /aloy/home/ymartins/match_clinical_trial/ner_subproj/nextflow.config
-Oct-10 21:04:48.463 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/ymartins/.nextflow/secrets/store.json
-Oct-10 21:04:48.470 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@29314cc9] - activable => nextflow.secret.LocalSecretsProvider@29314cc9
-Oct-10 21:04:48.495 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
-Oct-10 21:04:49.108 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 from script declaration
-Oct-10 21:04:49.128 [main] INFO  nextflow.cli.CmdRun - Launching `/aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf` [infallible_varahamihira] DSL2 - revision: 54782c8edf
-Oct-10 21:04:49.131 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
-Oct-10 21:04:49.131 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
-Oct-10 21:04:49.186 [main] DEBUG nextflow.Session - Session UUID: 01bfb72e-5885-42c4-a28d-108990bdcb6a
-Oct-10 21:04:49.187 [main] DEBUG nextflow.Session - Run name: infallible_varahamihira
-Oct-10 21:04:49.187 [main] DEBUG nextflow.Session - Executor pool size: 8
-Oct-10 21:04:49.198 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
-Oct-10 21:04:49.205 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=24; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
-Oct-10 21:04:49.233 [main] DEBUG nextflow.cli.CmdRun - 
+Oct-14 21:00:04.350 [main] DEBUG nextflow.cli.Launcher - $> nextflow run -bg /aloy/home/ymartins/match_clinical_trial/ctpico_validation_workflow/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/validation_trials/ --runningConfig /aloy/home/ymartins/match_clinical_trial/ctpico_validation_workflow/validation_config.json --mode validation
+Oct-14 21:00:04.648 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 25.04.6
+Oct-14 21:00:04.702 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/ymartins/.nextflow/plugins; core-plugins: nf-amazon@2.15.0,nf-azure@1.16.0,nf-cloudcache@0.4.3,nf-codecommit@0.2.3,nf-console@1.2.1,nf-google@1.21.1,nf-k8s@1.0.0,nf-tower@1.11.4,nf-wave@1.12.1
+Oct-14 21:00:04.837 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Oct-14 21:00:04.841 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Oct-14 21:00:04.846 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.12.0 in 'deployment' mode
+Oct-14 21:00:04.871 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Oct-14 21:00:04.906 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /aloy/home/ymartins/match_clinical_trial/ner_subproj/nextflow.config
+Oct-14 21:00:04.910 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /aloy/home/ymartins/match_clinical_trial/ner_subproj/nextflow.config
+Oct-14 21:00:04.967 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /home/ymartins/.nextflow/secrets/store.json
+Oct-14 21:00:04.974 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@5b5c0057] - activable => nextflow.secret.LocalSecretsProvider@5b5c0057
+Oct-14 21:00:04.993 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Oct-14 21:00:05.868 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 from script declaration
+Oct-14 21:00:05.927 [main] INFO  nextflow.cli.CmdRun - Launching `/aloy/home/ymartins/match_clinical_trial/ctpico_validation_workflow/main.nf` [scruffy_austin] DSL2 - revision: ad59aa92e8
+Oct-14 21:00:05.929 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Oct-14 21:00:05.929 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Oct-14 21:00:06.055 [main] DEBUG nextflow.Session - Session UUID: 048b411c-221d-4c0a-883a-cdd4ecaefe47
+Oct-14 21:00:06.055 [main] DEBUG nextflow.Session - Run name: scruffy_austin
+Oct-14 21:00:06.056 [main] DEBUG nextflow.Session - Executor pool size: 8
+Oct-14 21:00:06.078 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Oct-14 21:00:06.088 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=24; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-14 21:00:06.261 [main] DEBUG nextflow.cli.CmdRun - 
   Version: 25.04.6 build 5954
   Created: 01-07-2025 11:27 UTC (13:27 CEST)
   System: Linux 5.15.0-139-generic
   Runtime: Groovy 4.0.26 on OpenJDK 64-Bit Server VM 23.0.2-internal-adhoc.conda.src
   Encoding: UTF-8 (UTF-8)
-  Process: 746611@murakami [127.0.0.1]
-  CPUs: 8 - Mem: 15.5 GB (2.3 GB) - Swap: 16 GB (10.1 GB)
-Oct-10 21:04:49.269 [main] DEBUG nextflow.Session - Work-dir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work [nfs]
-Oct-10 21:04:49.269 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /aloy/home/ymartins/match_clinical_trial/ner_subproj/bin
-Oct-10 21:04:49.279 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
-Oct-10 21:04:49.289 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
-Oct-10 21:04:49.293 [main] DEBUG nextflow.Session - Observer factory (v2): LinObserverFactory
-Oct-10 21:04:49.331 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
-Oct-10 21:04:49.342 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 9; maxThreads: 1000
-Oct-10 21:04:49.423 [main] DEBUG nextflow.Session - Session start
-Oct-10 21:04:50.026 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
-Oct-10 21:04:50.042 [main] INFO  nextflow.Nextflow -  NER Fair workflow  -  P I P E L I N E
+  Process: 1643711@murakami [127.0.0.1]
+  CPUs: 8 - Mem: 15.5 GB (766.6 MB) - Swap: 16 GB (10.1 GB)
+Oct-14 21:00:06.378 [main] DEBUG nextflow.Session - Work-dir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work [nfs]
+Oct-14 21:00:06.380 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /aloy/home/ymartins/match_clinical_trial/ctpico_validation_workflow/bin
+Oct-14 21:00:06.406 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Oct-14 21:00:06.430 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Oct-14 21:00:06.434 [main] DEBUG nextflow.Session - Observer factory (v2): LinObserverFactory
+Oct-14 21:00:06.473 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Oct-14 21:00:06.553 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 9; maxThreads: 1000
+Oct-14 21:00:06.835 [main] DEBUG nextflow.Session - Session start
+Oct-14 21:00:07.378 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Oct-14 21:00:07.399 [main] INFO  nextflow.Nextflow -  PICO Augmentation workflow  -  P I P E L I N E
  ===================================
- dataDir       : /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/
- runningConfig : /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_bc5cdr.json
- mode       : metadata_enrichment
+ dataDir       : /aloy/home/ymartins/match_clinical_trial/validation_trials/
+ runningConfig : /aloy/home/ymartins/match_clinical_trial/ctpico_validation_workflow/validation_config.json
+ mode       : validation
  
-Oct-10 21:04:50.156 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
-Oct-10 21:04:50.157 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
-Oct-10 21:04:50.166 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
-Oct-10 21:04:50.174 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=8; memory=15.5 GB; capacity=8; pollInterval=100ms; dumpInterval=5m
-Oct-10 21:04:50.177 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: local)
-Oct-10 21:04:50.218 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'setEnvironment': maxForks=0; fair=false; array=0
-Oct-10 21:04:50.318 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
-Oct-10 21:04:50.318 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
-Oct-10 21:04:50.320 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'PROCESS_MetaEnrichmentTasks': maxForks=0; fair=false; array=0
-Oct-10 21:04:50.327 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: PROCESS_PreProcessTasks, PROCESS_SignificanceAnalysisTasks, PROCESS_MetaEnrichmentTasks, PROCESS_TrainTasks, PROCESS_TestTasks, PROCESS_PredictionTasks, setEnvironment
-Oct-10 21:04:50.330 [main] DEBUG nextflow.Session - Igniting dataflow network (2)
-Oct-10 21:04:50.330 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > setEnvironment
-Oct-10 21:04:50.331 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PROCESS_MetaEnrichmentTasks
-Oct-10 21:04:50.332 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
-  Script_ae93a10f079e7427: /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf
-Oct-10 21:04:50.332 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
-Oct-10 21:04:50.332 [main] DEBUG nextflow.Session - Session await
-Oct-10 21:04:50.512 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
-Oct-10 21:04:50.514 [Task submitter] INFO  nextflow.Session - [36/a0b6bd] Submitted process > setEnvironment
-Oct-10 21:04:50.544 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: setEnvironment; status: COMPLETED; exit: 0; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/36/a0b6bd96fe6419cdd0ef16a9e268ff]
-Oct-10 21:04:50.545 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'TaskFinalizer' minSize=10; maxSize=24; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
-Oct-10 21:04:50.608 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
-Oct-10 21:04:50.609 [Task submitter] INFO  nextflow.Session - [39/77a0a8] Submitted process > PROCESS_MetaEnrichmentTasks
-Oct-10 21:04:53.920 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: PROCESS_MetaEnrichmentTasks; status: COMPLETED; exit: 0; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/39/77a0a8da0bd845f148b6074b3c8665]
-Oct-10 21:04:53.922 [main] DEBUG nextflow.Session - Session await > all processes finished
-Oct-10 21:04:54.021 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: local) - terminating tasks monitor poll loop
-Oct-10 21:04:54.021 [main] DEBUG nextflow.Session - Session await > all barriers passed
-Oct-10 21:04:54.024 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'TaskFinalizer' shutdown completed (hard=false)
-Oct-10 21:04:54.030 [main] INFO  nextflow.Nextflow - 
+Oct-14 21:00:07.504 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-14 21:00:07.504 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-14 21:00:07.515 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Oct-14 21:00:07.531 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=8; memory=15.5 GB; capacity=8; pollInterval=100ms; dumpInterval=5m
+Oct-14 21:00:07.537 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: local)
+Oct-14 21:00:07.570 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'setEnvironment': maxForks=0; fair=false; array=0
+Oct-14 21:00:07.700 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-14 21:00:07.700 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-14 21:00:07.702 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'PROCESS_Validation': maxForks=0; fair=false; array=0
+Oct-14 21:00:07.712 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: PROCESS_PreprocessPubmed, PROCESS_Validation, setEnvironment, PROCESS_PreprocessCT
+Oct-14 21:00:07.716 [main] DEBUG nextflow.Session - Igniting dataflow network (2)
+Oct-14 21:00:07.717 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > setEnvironment
+Oct-14 21:00:07.718 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > PROCESS_Validation
+Oct-14 21:00:07.719 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Script_19a125aad466712f: /aloy/home/ymartins/match_clinical_trial/ctpico_validation_workflow/main.nf
+Oct-14 21:00:07.719 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Oct-14 21:00:07.719 [main] DEBUG nextflow.Session - Session await
+Oct-14 21:00:07.987 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-14 21:00:07.992 [Task submitter] INFO  nextflow.Session - [f8/96d8bb] Submitted process > setEnvironment
+Oct-14 21:00:08.039 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: setEnvironment; status: COMPLETED; exit: 0; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/f8/96d8bba595dd8473771126b4be8e96]
+Oct-14 21:00:08.040 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'TaskFinalizer' minSize=10; maxSize=24; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-14 21:00:08.128 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-14 21:00:08.129 [Task submitter] INFO  nextflow.Session - [75/37c99f] Submitted process > PROCESS_Validation
+Oct-14 21:05:07.686 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:10:07.755 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:15:07.809 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:20:07.836 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:25:07.926 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:30:07.981 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:35:08.040 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:40:08.147 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:45:08.161 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:50:08.210 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 21:55:08.218 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:00:08.247 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:05:08.306 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:10:08.331 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:15:08.408 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:20:08.421 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:25:08.466 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:30:08.449 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:35:08.500 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 2; name: PROCESS_Validation; status: RUNNING; exit: -; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:36:31.301 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: PROCESS_Validation; status: COMPLETED; exit: 0; error: -; workDir: /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/75/37c99fa951a6aef05defe453c624ed]
+Oct-14 22:36:32.144 [main] DEBUG nextflow.Session - Session await > all processes finished
+Oct-14 22:36:32.215 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: local) - terminating tasks monitor poll loop
+Oct-14 22:36:32.217 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Oct-14 22:36:32.286 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'TaskFinalizer' shutdown completed (hard=false)
+Oct-14 22:36:32.377 [main] INFO  nextflow.Nextflow - 
 Done! Models were trained and evaluated!
 
-Oct-10 21:04:54.039 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=2; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=26.3s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=8; peakMemory=0; ]
-Oct-10 21:04:54.051 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
-Oct-10 21:04:54.078 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
-Oct-10 21:04:54.078 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
+Oct-14 22:36:32.496 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=2; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=12h 51m 5s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=1; peakCpus=8; peakMemory=0; ]
+Oct-14 22:36:32.775 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Oct-14 22:36:33.110 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Oct-14 22:36:33.110 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

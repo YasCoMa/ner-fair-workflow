@@ -175,6 +175,9 @@ class SemanticDescription:
         g.add(( self.nerwf.ValidationSet, RDFS.label,   Literal("ValidationSet", lang="en")))
         g.add(( self.nerwf.ValidationSet, RDFS.comment,   Literal("Defines the third type of data split used during the training for the validation batch examples", lang="en")))
         
+        g.add(( self.nerwf.ValidationSet, OWL.disjointWith, self.xmlpo.TrainSet ) )
+        g.add(( self.nerwf.ValidationSet, OWL.disjointWith, self.xmlpo.TestSet ) )
+        
         g.add(( self.nerwf.TaggingFormat, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.TaggingFormat, RDFS.subClassOf, self.edam.format_3862 ) ) # NLP annotation format class from edam (format branch)
         g.add(( self.nerwf.TaggingFormat, RDFS.label,   Literal("TaggingFormat", lang="en")))
@@ -193,7 +196,7 @@ class SemanticDescription:
         # Defining LLM model as a sub class of the Predictive Learning Models class
         g.add( ( self.mesh.D000098342, RDFS.subClassOf, self.mesh.D000098412 ) ) 
         # Defining that Operation in EDAM has the same Meaning as in xmlpo
-        g.add(( self.xmlpo.Operation, OWL.sameAs,  self.edam.operation_0004 )) # stato statistic
+        g.add(( self.xmlpo.Operation, OWL.sameAs,  self.edam.operation_0004 )) # Operation class
         
         # --------- Object Properties
         g.add(( self.nerwf.hasDataset, RDF.type, OWL.ObjectProperty) )
@@ -239,7 +242,7 @@ class SemanticDescription:
         g.add(( self.nerwf.containsProcedure, RDFS.comment,   Literal("Specify an internal functionality of a workflow", lang="en")))
         
         g.add(( self.nerwf.applyTaggingFormat, RDF.type, OWL.ObjectProperty) )
-        g.add(( self.nerwf.applyTaggingFormat, RDFS.domain, self.edam.operation_0335 )) 
+        g.add(( self.nerwf.applyTaggingFormat, RDFS.domain, self.edam.operation_0335 )) # Data formatting
         g.add(( self.nerwf.applyTaggingFormat, RDFS.range,  self.nerwf.TaggingFormat))
         g.add(( self.nerwf.applyTaggingFormat, RDFS.label,   Literal("applyTaggingFormat", lang="en")))
         g.add(( self.nerwf.applyTaggingFormat, RDFS.comment,   Literal("Sets up a chunck style formatting (IO, IOB, BILOU, BIOES, etc)", lang="en")))
@@ -347,7 +350,7 @@ class SemanticDescription:
         subject_union = BNode()
         #g.add((subject_union, RDF.type, OWL.Class))
         #g.add((subject_union, OWL.unionOf, RDF.collection([ self.edam.topic_0218, self.edam.topic_0769 ]) ) )
-        Collection(g, subject_union, [ self.edam.topic_0218, self.edam.topic_0769 ])
+        Collection(g, subject_union, [ self.edam.topic_0218, self.edam.topic_0769 ]) # Natural language processing, workflows
         g.add( ( self.nerwf[_id], DCTERMS.subject, subject_union ) )
         
         self.graph = g
@@ -479,7 +482,7 @@ class SemanticDescription:
         flag, dataset_id = self.__describe_preproc_dataset()
         if(flag):
             proc1 = self.gen_id('wfoperation') # Data Handling => Parsing
-            g.add( ( self.nerwf[proc1], RDF.type, self.edam.operation_1812 ) )
+            g.add( ( self.nerwf[proc1], RDF.type, self.edam.operation_1812 ) ) # Data parsing
             g.add( ( self.nerwf[proc1], RDFS.label, Literal("Process texts and convert annotations to coNLL format", lang="en") ) )
             g.add( ( self.nerwf[self.wfid], self.nerwf.containsProcedure, self.nerwf[proc1] ) )
 
@@ -812,7 +815,7 @@ class SemanticDescription:
         flag = ( len(files) > 0 )
         if(flag):
             proc1 = self.gen_id('wfoperation') # edam - Prediction and recognition
-            g.add( ( self.nerwf[proc1], RDF.type, self.edam.operation_2423 ) )
+            g.add( ( self.nerwf[proc1], RDF.type, self.edam.operation_2423 ) ) # Prediction and recognition
             g.add( ( self.nerwf[proc1], RDFS.label, Literal("Prediction step on new data", lang="en") ) )
             
             # Declare input

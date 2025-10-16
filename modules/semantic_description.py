@@ -181,6 +181,8 @@ class SemanticDescription:
         g.add(( self.nerwf.hasDataset, RDFS.comment,   Literal("Datasets associated to an experiment", lang="en")))
 
         g.add(( self.nerwf.executedBy, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.executedBy, RDFS.domain, self.nerwf.NLPExperiment ))
+        g.add(( self.nerwf.executedBy, RDFS.range,  self.xmlpo.workflow ))
         g.add(( self.nerwf.executedBy, RDFS.label,   Literal("executedBy", lang="en")))
         g.add(( self.nerwf.executedBy, RDFS.comment,   Literal("Experiments executed by workflow, a step of workflow can also be executed by an algorithm", lang="en")))
 

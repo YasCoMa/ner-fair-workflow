@@ -98,7 +98,7 @@ class SemanticDescription:
     def _setup_namespaces(self):
         g = self.graph
 
-        self.nerwf = Namespace("http://example.org/")
+        self.nerwf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
         g.bind("nerwf", self.nerwf)
         self.xmlpo = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/") # https://github.com/OntoUML/ontouml-models/raw/refs/heads/master/models/xhani2023xmlpo/ontology.ttl
         g.bind("xmlpo", self.xmlpo)
@@ -139,30 +139,52 @@ class SemanticDescription:
         g = self.graph
         
         # Defining specific types of Experiment
+        g.add(( self.xmlpo.ClassPredictionEvaluationMeasure, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.ClassPredictionEvaluationMeasure, RDFS.label,   Literal("ClassPredictionEvaluationMeasure", lang="en")))
+        g.add(( self.xmlpo.ClassPredictionEvaluationMeasure, RDFS.comment,   Literal("Measure to evaluate the prediction", lang="en")))
+        
+        g.add(( self.edam.format_3862, RDF.type, OWL.Class) )
+        g.add(( self.edam.format_3862, RDFS.label,   Literal("NLP annotation format", lang="en")))
+        g.add(( self.edam.format_3862, RDFS.comment,   Literal("Defines the specific format for NLP", lang="en")))
+        
+        g.add(( self.xmlpo.Result, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.Result, RDFS.label,   Literal("Result", lang="en")))
+        g.add(( self.xmlpo.Result, RDFS.comment,   Literal("Refers to the experiment result", lang="en")))
+        
+        g.add(( self.xmlpo.PreprocessedData, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.PreprocessedData, RDFS.label,   Literal("PreprocessedData", lang="en")))
+        g.add(( self.xmlpo.PreprocessedData, RDFS.comment,   Literal("Refers to the data ready to enter in the model evaluation", lang="en")))
+        
         g.add(( self.nerwf.MLExperiment, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.MLExperiment, RDFS.subClassOf, self.xmlpo.Experiment ) )
         g.add(( self.nerwf.MLExperiment, RDFS.label,   Literal("MLExperiment", lang="en")))
+        g.add(( self.nerwf.MLExperiment, RDFS.comment,   Literal("Defines the specification of computational experiment related to machine learning", lang="en")))
         
         g.add(( self.nerwf.NLPExperiment, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.NLPExperiment, RDFS.subClassOf, self.nerwf.MLExperiment ) )
         g.add(( self.nerwf.NLPExperiment, RDFS.label,   Literal("NLPExperiment", lang="en")))
+        g.add(( self.nerwf.NLPExperiment, RDFS.comment,   Literal("Defines the specific computational experiment related to NLP", lang="en")))
         
         g.add(( self.nerwf.NEREvaluationMeasure, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.NEREvaluationMeasure, RDFS.subClassOf, self.xmlpo.ClassPredictionEvaluationMeasure ) )
         g.add(( self.nerwf.NEREvaluationMeasure, RDFS.label,   Literal("NEREvaluationMeasure", lang="en")))
+        g.add(( self.nerwf.NEREvaluationMeasure, RDFS.comment,   Literal("Mode of evaluation specific for NER tasks, like seqeval or scikit learn", lang="en")))
         
         g.add(( self.nerwf.ValidationSet, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.ValidationSet, RDFS.subClassOf, self.xmlpo.PreprocessedData ) )
         g.add(( self.nerwf.ValidationSet, RDFS.label,   Literal("ValidationSet", lang="en")))
+        g.add(( self.nerwf.ValidationSet, RDFS.comment,   Literal("Defines the third type of data split used during the training for the validation batch examples", lang="en")))
         
         g.add(( self.nerwf.TaggingFormat, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.TaggingFormat, RDFS.subClassOf, self.edam.format_3862 ) ) # NLP annotation format class from edam (format branch)
         g.add(( self.nerwf.TaggingFormat, RDFS.label,   Literal("TaggingFormat", lang="en")))
+        g.add(( self.nerwf.TaggingFormat, RDFS.comment,   Literal("Defines the style of annotating the prefixes of the NER entties assigned to the tokens in the text", lang="en")))
         self.__define_tagging_format_instances()
 
         g.add(( self.nerwf.SummaryPrediction, RDF.type, OWL.Class) )
         g.add( ( self.nerwf.SummaryPrediction, RDFS.subClassOf, self.xmlpo.Result ) )
         g.add(( self.nerwf.SummaryPrediction, RDFS.label,   Literal("SummaryPrediction", lang="en")))
+        g.add(( self.nerwf.SummaryPrediction, RDFS.comment,   Literal("Defines a specific type of result, in this case the one that summarizes the model replicate consensus", lang="en")))
         
         # Defining MLModel as a sub class of the general Model class
         g.add( ( self.xmlpo.MLModel, RDFS.subClassOf, self.ncit.C43383 ) ) 

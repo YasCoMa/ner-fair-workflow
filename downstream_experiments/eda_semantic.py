@@ -120,7 +120,7 @@ group by ?c
         self.load_graphs()
         self.count_new_classes_properties()
         self.count_instances_per_class()
-        self.convert_ttl_to_owl()
+        #self.convert_ttl_to_owl()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

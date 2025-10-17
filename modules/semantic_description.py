@@ -5,6 +5,7 @@ import glob
 import pandas as pd
 from uuid import uuid4
 from datasets import load_from_disk
+
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
 from rdflib.collection import Collection
@@ -108,8 +109,6 @@ class SemanticDescription:
         g.bind("ncit", self.ncit)
         self.mesh = Namespace("http://id.nlm.nih.gov/mesh/")
         g.bind("mesh", self.mesh)
-        self.slso = Namespace("http://purl.obolibrary.org/obo/SLSO_")
-        g.bind("slso", self.slso)
         self.vcard = Namespace("http://www.w3.org/2006/vcard/ns#")
         g.bind("vcard", self.vcard)
         self.edam = Namespace("http://edamontology.org/")
@@ -137,6 +136,12 @@ class SemanticDescription:
         self.logger.info("[Semantic description step] Task (Defining ontology elements) started -----------")
         
         g = self.graph
+        
+        # Declaring ontology and license
+        onto = URIRef("http://NERMachineLearningPipelineOntology")
+        g.add( ( onto, RDF.type, OWL.Ontology ) )
+        g.add( ( onto, DCTERMS.license, URIRef("http://creativecommons.org/licenses/by/4.0/") ) )
+        g.add(( onto, RDFS.comment, Literal("NER ML ontology is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).", lang="en") ) )
         
         # Defining specific types of Experiment
         g.add(( self.xmlpo.ClassPredictionEvaluationMeasure, RDF.type, OWL.Class) )
@@ -199,25 +204,32 @@ class SemanticDescription:
         g.add(( self.xmlpo.Operation, OWL.sameAs,  self.edam.operation_0004 )) # Operation class
         
         # --------- Object Properties
-        g.add(( self.nerwf.hasDataset, RDF.type, OWL.ObjectProperty) )
-        g.add(( self.nerwf.hasDataset, RDFS.domain, self.xmlpo.Experiment ))
-        g.add(( self.nerwf.hasDataset, RDFS.range,  self.xmlpo.Dataset))
-        g.add(( self.nerwf.hasDataset, RDFS.label,   Literal("hasDataset", lang="en")))
-        g.add(( self.nerwf.hasDataset, RDFS.comment,   Literal("Datasets associated to an experiment", lang="en")))
-
         g.add(( self.nerwf.executedBy, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.executedBy, RDFS.domain, self.nerwf.NLPExperiment ))
         g.add(( self.nerwf.executedBy, RDFS.range,  self.xmlpo.workflow ))
         g.add(( self.nerwf.executedBy, RDFS.label,   Literal("executedBy", lang="en")))
         g.add(( self.nerwf.executedBy, RDFS.comment,   Literal("Experiments executed by workflow, a step of workflow can also be executed by an algorithm", lang="en")))
 
+        g.add(( self.nerwf.executesExperiment, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.executesExperiment, OWL.inverseOf, self.nerwf.executedBy ) )
+        g.add(( self.nerwf.executesExperiment, RDFS.domain,  self.xmlpo.workflow ))
+        g.add(( self.nerwf.executesExperiment, RDFS.range, self.nerwf.NLPExperiment ))
+        g.add(( self.nerwf.executesExperiment, RDFS.label,   Literal("executesExperiment", lang="en")))
+        
         g.add(( self.nerwf.describedBy, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.describedBy, RDFS.domain, OWL.Class ))
         g.add(( self.nerwf.describedBy, RDFS.range,  self.xmlpo.Quality))
         g.add(( self.nerwf.describedBy, RDFS.label,   Literal("describedBy", lang="en")))
         g.add(( self.nerwf.describedBy, RDFS.comment,   Literal("Classes may be described by an object of Quality class of its subclasses that specify characteristics", lang="en")))
         
+        g.add(( self.nerwf.describesFeatureOf, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.describesFeatureOf, OWL.inverseOf, self.nerwf.describedBy ) )
+        g.add(( self.nerwf.describesFeatureOf, RDFS.domain,  self.xmlpo.Quality ))
+        g.add(( self.nerwf.describesFeatureOf, RDFS.range, OWL.Class ))
+        g.add(( self.nerwf.describesFeatureOf, RDFS.label,   Literal("describesFeatureOf", lang="en")))
+        
         g.add(( self.nerwf.finetunedFrom, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.finetunedFrom, RDF.type, OWL.TransitiveProperty) )
         g.add(( self.nerwf.finetunedFrom, RDFS.domain, self.mesh.D000098342 )) # LLM
         g.add(( self.nerwf.finetunedFrom, RDFS.range,  self.mesh.D000098342))
         g.add(( self.nerwf.finetunedFrom, RDFS.label,   Literal("finetunedFrom", lang="en")))
@@ -229,6 +241,12 @@ class SemanticDescription:
         g.add(( self.nerwf.hasParameter, RDFS.label,   Literal("hasParameter", lang="en")))
         g.add(( self.nerwf.hasParameter, RDFS.comment,   Literal("It can be used to specify the model parameters (hyper parameters)", lang="en")))
         
+        g.add(( self.nerwf.isParameterOf, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.isParameterOf, OWL.inverseOf, self.nerwf.hasParameter ) )
+        g.add(( self.nerwf.isParameterOf, RDFS.domain,  self.xmlpo.parameterSettings ))
+        g.add(( self.nerwf.isParameterOf, RDFS.range, self.ncit.C43383 ))
+        g.add(( self.nerwf.isParameterOf, RDFS.label,   Literal("isParameterOf", lang="en")))
+        
         g.add(( self.nerwf.fromEvaluationMetric, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.fromEvaluationMetric, RDFS.domain, self.nerwf.NEREvaluationMeasure )) # Model
         g.add(( self.nerwf.fromEvaluationMetric, RDFS.range,  self.stato["0000039"])) # stato statistic
@@ -237,11 +255,12 @@ class SemanticDescription:
         
         g.add(( self.nerwf.containsProcedure, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.containsProcedure, RDFS.domain, self.xmlpo.workflow )) # Model
-        g.add(( self.nerwf.containsProcedure, RDFS.range,  self.xmlpo.Operation)) # stato statistic
+        g.add(( self.nerwf.containsProcedure, RDFS.range,  self.xmlpo.Operation)) # a functional step of the workflow
         g.add(( self.nerwf.containsProcedure, RDFS.label,   Literal("containsProcedure", lang="en")))
         g.add(( self.nerwf.containsProcedure, RDFS.comment,   Literal("Specify an internal functionality of a workflow", lang="en")))
         
         g.add(( self.nerwf.applyTaggingFormat, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.applyTaggingFormat, RDF.type, OWL.FunctionalProperty) )
         g.add(( self.nerwf.applyTaggingFormat, RDFS.domain, self.edam.operation_0335 )) # Data formatting
         g.add(( self.nerwf.applyTaggingFormat, RDFS.range,  self.nerwf.TaggingFormat))
         g.add(( self.nerwf.applyTaggingFormat, RDFS.label,   Literal("applyTaggingFormat", lang="en")))
@@ -263,8 +282,6 @@ class SemanticDescription:
         g.add(( self.nerwf.useInputData, RDFS.domain, self.xmlpo.Operation )) 
         range_union = BNode()
         Collection(g, range_union, [ self.xmlpo.Dataset, self.xmlpo.Data ])
-        #g.add((range_union, RDF.type, OWL.Class))
-        #g.add((range_union, OWL.unionOf, RDF.collection([ self.xmlpo.Dataset, self.xmlpo.Data ]) ) )
         g.add(( self.nerwf.useInputData, RDFS.range,  range_union ))
         g.add(( self.nerwf.useInputData, RDFS.label,   Literal("useInputData", lang="en")))
         g.add(( self.nerwf.useInputData, RDFS.comment,   Literal("Correlates operation with some declared input data", lang="en")))
@@ -288,6 +305,7 @@ class SemanticDescription:
         g.add(( self.nerwf.hasSummaryPrediction, RDFS.comment,   Literal("Generation of a predictive model as a product of an operation execution", lang="en")))
         
         g.add(( self.nerwf.belongsToEntity, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.belongsToEntity, RDF.type, OWL.FunctionalProperty) )
         g.add(( self.nerwf.belongsToEntity, RDFS.domain, self.nerwf.NEREvaluationMeasure )) 
         g.add(( self.nerwf.belongsToEntity, RDFS.range,  self.nero.NamedEntity ))
         g.add(( self.nerwf.belongsToEntity, RDFS.label,   Literal("belongsToEntity", lang="en")))
@@ -302,13 +320,11 @@ class SemanticDescription:
         
         g.add(( self.nerwf.isAggregatedValue, RDF.type, OWL.DatatypeProperty) )
         domain_union = BNode()
-        #g.add((domain_union, RDF.type, OWL.Class))
-        #g.add((domain_union, OWL.unionOf, RDF.collection([ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ]) ) )
         Collection(g, domain_union, [ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ])
         g.add(( self.nerwf.isAggregatedValue, RDFS.domain, domain_union )) 
         g.add(( self.nerwf.isAggregatedValue, RDFS.range,  XSD.boolean))
         g.add(( self.nerwf.isAggregatedValue, RDFS.label,   Literal("isAggregatedValue", lang="en")))
-        g.add(( self.nerwf.isAggregatedValue, RDFS.comment,   Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
+        g.add(( self.nerwf.isAggregatedValue, RDFS.comment, Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
         
         g.add(( self.nerwf.aggregatedByStatsFunction, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.xmlpo.NEREvaluationMeasure )) 
@@ -334,6 +350,9 @@ class SemanticDescription:
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.label,   Literal("hasPredictedItemsCount", lang="en")))
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.comment,   Literal("Number of words predicted to belong to certain entity", lang="en")))
         
+        path = os.path.join( self.out, f'nerml_ontology.xml' )
+        g.serialize( destination = path, format = 'xml' )
+
         self.graph = g
 
         self.logger.info("[Semantic description step] Task (Defining ontology elements) ended -----------")
@@ -348,8 +367,6 @@ class SemanticDescription:
         g.add( ( self.nerwf[_id], DCTERMS.description, Literal( self.exp_metadata['description']) ) )
         
         subject_union = BNode()
-        #g.add((subject_union, RDF.type, OWL.Class))
-        #g.add((subject_union, OWL.unionOf, RDF.collection([ self.edam.topic_0218, self.edam.topic_0769 ]) ) )
         Collection(g, subject_union, [ self.edam.topic_0218, self.edam.topic_0769 ]) # Natural language processing, workflows
         g.add( ( self.nerwf[_id], DCTERMS.subject, subject_union ) )
         
@@ -841,7 +858,9 @@ class SemanticDescription:
         g = self.graph
         path = os.path.join( self.out, f'experiment_graph_{ self.exp_identifier }.ttl' )
         g.serialize( destination = path )
-
+        path = os.path.join( self.out, f'experiment_graph_{ self.exp_identifier }.xml' )
+        g.serialize( destination = path, format = 'xml' )
+        
         self.logger.info("[Semantic description step] Task (Exporting enrichment graph) ended -----------")
         
     def _mark_as_done(self):

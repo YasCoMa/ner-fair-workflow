@@ -320,13 +320,15 @@ class ExplorationSemanticResults:
 
         i = 1
         for cmd in cmds:
-            print(i, '/', len(dss))
+            print(i, '/', len(cmds))
             os.system(cmd)
 
     def _copy_rdf_files(self):
+        dss = [ "bc5cdr", "ncbi", "biored", "chiads"]
         configs = ["/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json", "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_merged_train.json"]
         for ds in dss:
             configs.append( "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_%s.json" %(ds) )
+            
         for c in configs:
             config = json.load( open(c, 'r') )
             task = 'ner'

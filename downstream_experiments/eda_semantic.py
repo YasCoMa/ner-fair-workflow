@@ -309,7 +309,40 @@ class ExplorationSemanticResults:
 
         self.graph = g
 
+    def rerun_meta_enrichment(self):
+        dss = [ "bc5cdr", "ncbi", "biored", "chiads"]
+        cmds = [
+        "nextflow run /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/ --runningConfig /aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json --mode 'metadata_enrichment'",
+        "nextflow run /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/ --runningConfig /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_merged_train.json --mode 'metadata_enrichment'"
+        ]
+        for ds in dss:
+            cmds.append( "nextflow run /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/ --runningConfig /aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_%s.json --mode 'metadata_enrichment'" %(ds) )
+
+        i = 1
+        for cmd in cmds:
+            print(i, '/', len(dss))
+            os.system(cmd)
+
+    def _copy_rdf_files(self):
+        configs = ["/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json", "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_merged_train.json"]
+        for ds in dss:
+            configs.append( "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_%s.json" %(ds) )
+        for c in configs:
+            config = json.load( open(c, 'r') )
+            task = 'ner'
+            model_checkpoint = config["pretrained_model"]
+            expid = config["identifier"]
+
+            model_name = model_checkpoint.split("/")[-1]
+            fout = config["outpath"]
+            outDir = os.path.join(fout, f"{expid}-{model_name}-finetuned-{task}" )
+            indir = os.path.join( outDir, "experiment_metadata" )
+            outdir = os.path.join(self.out, 'data')
+            os.system( "cp %s/* %s/" %(indir, outdir) )
+
     def load_graphs(self):
+        self._copy_rdf_files()
+
         g = self.graph
 
         indir = os.path.join(self.out, 'data')
@@ -584,6 +617,7 @@ group by ?c
         #self._define_new_onto_elements()
         #self.organize_onto_info_in_supp_tables()
         
+        self.rerun_meta_enrichment()
         self.load_graphs()
         #self.count_new_classes_properties()
         #self.count_instances_per_class()

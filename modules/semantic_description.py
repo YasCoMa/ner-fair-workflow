@@ -74,7 +74,7 @@ class SemanticDescription:
             os.makedirs( self.out )
 
     def gen_id(self, prefix):
-        _id = uuid4().hex
+        _id = uuid4()[:8]
         return f'{prefix}_{_id}'
 
     def _get_info_config(self):

@@ -311,6 +311,10 @@ class ExplorationSemanticResults:
         self.graph = g
 
     def rerun_meta_enrichment(self):
+        logs = ["/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/", "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/"]
+        for l in logs:
+            os.system( "rm %s/logs/*semantic_description.ready" %(l) )
+
         dss = [ "bc5cdr", "ncbi", "biored", "chiads"]
         cmds = [
         "nextflow run /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/ --runningConfig /aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json --mode 'metadata_enrichment'",
@@ -621,7 +625,7 @@ group by ?c
         #self._define_new_onto_elements()
         #self.organize_onto_info_in_supp_tables()
         
-        #self.rerun_meta_enrichment()
+        self.rerun_meta_enrichment()
         self.load_graphs()
 
         #self.count_new_classes_properties()

@@ -355,12 +355,12 @@ class ExplorationSemanticResults:
 
         indir = os.path.join(self.out, 'data')
         for f in os.listdir(indir):
-            if( f.endswith('xml') ):
+            if( f.endswith('ttl') ):
                 path = os.path.join(indir, f)
                 g.parse(path)
 
-        opath = os.path.join( self.out, 'all_nerfair_graph.rdf')
-        g.serialize( destination=opath, format="xml")
+        opath = os.path.join( self.out, 'all_nerfair_graph.ttl')
+        g.serialize( destination=opath )
 
         self.graph = g
 
@@ -413,7 +413,6 @@ group by ?c
         gr.parse(inpath)
         gr.serialize( destination=opath, format="xml")
 
-    
     def _write_table(self, lines, opath):
         lines = list( map( lambda x: '\t'.join( [ str(el) for el in x] ), lines ))
         
@@ -610,7 +609,7 @@ group by ?c
         onto.save( opath )
 
     def check_llm_queries(self):
-        inpath = os.path.join( self.out, 'all_nerfair_graph.rdf')
+        inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
 
         llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
         #llm = ChatOpenAI(temperature=0)

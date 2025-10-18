@@ -549,15 +549,18 @@ group by ?c
 
     def test_explanation_consistency_tec(self):
         inpath = os.path.join( self.out, 'complete_nerml_ontology.xml' )
-        onto = get_ontology( inpath ).load()
+        onto = owlready2.get_ontology( inpath ).load()
 
-        with onto: sync_reasoner()
+        with onto: owlready2.sync_reasoner()
         opath = os.path.join( self.out, "test_onto_tec.owl")
         onto.save( opath )
 
     def run(self):
         self._define_new_onto_elements()
         self.organize_onto_info_in_supp_tables()
+
+        self.test_explanation_consistency_tec()
+
         #self.load_graphs()
         #self.count_new_classes_properties()
         #self.count_instances_per_class()

@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import json
 import pickle
 
 import rdflib
@@ -322,13 +323,14 @@ class ExplorationSemanticResults:
         for cmd in cmds:
             print(i, '/', len(cmds))
             os.system(cmd)
+            i += 1
 
     def _copy_rdf_files(self):
         dss = [ "bc5cdr", "ncbi", "biored", "chiads"]
         configs = ["/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json", "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_merged_train.json"]
         for ds in dss:
             configs.append( "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/configs/config_%s.json" %(ds) )
-            
+
         for c in configs:
             config = json.load( open(c, 'r') )
             task = 'ner'
@@ -619,8 +621,9 @@ group by ?c
         #self._define_new_onto_elements()
         #self.organize_onto_info_in_supp_tables()
         
-        self.rerun_meta_enrichment()
+        #self.rerun_meta_enrichment()
         self.load_graphs()
+
         #self.count_new_classes_properties()
         #self.count_instances_per_class()
 

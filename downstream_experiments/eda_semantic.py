@@ -638,7 +638,7 @@ PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
 SELECT ?entity ?f1ScoreValue
 WHERE {
   ?evaluation nf:hasScore ?score .
-  ?evaluation nf:underContext "Test" .
+  ?evaluation nf:underContext "test" .
   ?score rdf:type nf:NEREvaluationMeasure .
   ?score rdfs:label "f1-score" .
   ?score nf:hasValue ?f1ScoreValue .

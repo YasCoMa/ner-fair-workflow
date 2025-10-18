@@ -625,13 +625,14 @@ group by ?c
         #self._define_new_onto_elements()
         #self.organize_onto_info_in_supp_tables()
         
-        #self.rerun_meta_enrichment()
-        self.load_graphs()
 
         #self.count_new_classes_properties()
         #self.count_instances_per_class()
 
         #self.convert_ttl_to_owl()
+        
+        #self.rerun_meta_enrichment()
+        #self.load_graphs()
         self.check_llm_queries()
 
 if( __name__ == "__main__" ):

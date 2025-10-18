@@ -648,7 +648,10 @@ WHERE {
   
 }
 """
+
+        inpath = os.path.join( '../paper_files/out_eda_semantic', 'all_nerfair_graph.ttl')
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
+        
         gr = rdflib.Graph()
         gr.parse(inpath)
 

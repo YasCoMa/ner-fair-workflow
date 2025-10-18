@@ -355,8 +355,9 @@ class ExplorationSemanticResults:
 
         indir = os.path.join(self.out, 'data')
         for f in os.listdir(indir):
-            path = os.path.join(indir, f)
-            g.parse(path)
+            if( f.endswith('xml') ):
+                path = os.path.join(indir, f)
+                g.parse(path)
 
         opath = os.path.join( self.out, 'all_nerfair_graph.rdf')
         g.serialize( destination=opath, format="xml")
@@ -625,7 +626,7 @@ group by ?c
         #self._define_new_onto_elements()
         #self.organize_onto_info_in_supp_tables()
         
-        self.rerun_meta_enrichment()
+        #self.rerun_meta_enrichment()
         self.load_graphs()
 
         #self.count_new_classes_properties()

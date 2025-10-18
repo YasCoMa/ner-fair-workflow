@@ -589,6 +589,7 @@ group by ?c
         #self.count_instances_per_class()
 
         #self.convert_ttl_to_owl()
+        self.check_llm_queries()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

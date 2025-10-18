@@ -655,7 +655,8 @@ WHERE {
         xhani = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/")
         nf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
         
-        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf } )
+        #qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf } )
+        qres = gr.query( hq )
         for row in qres:
             print( row )
 

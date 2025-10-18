@@ -18,6 +18,15 @@ from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
 from rdflib.collection import Collection
 
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
+os.environ["OPENAI_API_KEY"] = "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"
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
+from langchain.chains import GraphSparqlQAChain
+from langchain_community.graphs import RdfGraph
+
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
 sys.path.append( root_path )
 
@@ -308,6 +317,9 @@ class ExplorationSemanticResults:
             path = os.path.join(indir, f)
             g.parse(path)
 
+        opath = os.path.join( self.out, 'all_nerfair_graph.rdf')
+        g.serialize( destination=opath, format="xml")
+
         self.graph = g
 
     def count_new_classes_properties(self):
@@ -555,10 +567,24 @@ group by ?c
         opath = os.path.join( self.out, "test_onto_tec.owl")
         onto.save( opath )
 
+    def check_llm_queries(self):
+        inpath = os.path.join( self.out, 'all_nerfair_graph.rdf')
+
+        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+        #llm = ChatOpenAI(temperature=0)
+        graph = RdfGraph( source_file = inpath, standard='rdf')
+        graph.load_schema()
+        chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
+        #chain.invoke( "How many organisms have drug resistance?" )
+        chain.invoke( "what are the f1-score values aggregated by max per model in the test context?" )
+        print(f"SPARQL query: {result['sparql_query']}")
+        print(f"Final answer: {result['result']}")
+
     def run(self):
-        self._define_new_onto_elements()
-        self.organize_onto_info_in_supp_tables()
-        #self.load_graphs()
+        #self._define_new_onto_elements()
+        #self.organize_onto_info_in_supp_tables()
+        
+        self.load_graphs()
         #self.count_new_classes_properties()
         #self.count_instances_per_class()
 

@@ -23,10 +23,11 @@ os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
 os.environ["OPENAI_API_KEY"] = "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"
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-#from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
-from langchain.chains import GraphSparqlQAChain
 from langchain_community.graphs import RdfGraph
+from langchain.chains import GraphSparqlQAChain
+
+#from langchain_openai import ChatOpenAI
+#from langchain_core.messages import HumanMessage
 
 root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
 sys.path.append( root_path )
@@ -608,16 +609,64 @@ group by ?c
         opath = os.path.join( self.out, "test_onto_tec.owl")
         onto.save( opath )
 
+    def execute_humanBased_queries(self):
+        cq = "what are the f1-score values aggregated by max per model in the test context?"
+        llmq = """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
+PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
+
+SELECT ?f1ScoreValue
+WHERE {
+  ?evaluation nf:hasScore ?score .
+  ?score rdf:type nf:NEREvaluationMeasure .
+  ?score rdfs:label "f1-score" .
+  ?score nf:hasValue ?f1ScoreValue .
+  ?score nf:aggregatedByStatsFunction "max" .
+  ?score nf:underContext "Test" .
+  
+}
+"""
+        
+        hq = """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
+PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
+
+SELECT ?entity ?f1ScoreValue
+WHERE {
+  ?evaluation nf:hasScore ?score .
+  ?evaluation nf:underContext "Test" .
+  ?score rdf:type nf:NEREvaluationMeasure .
+  ?score rdfs:label "f1-score" .
+  ?score nf:hasValue ?f1ScoreValue .
+  ?score nf:aggregatedByStatsFunction "max" .
+  ?score nf:belongsToEntity ?ent .
+  ?ent rdfs:label ?entity .
+  
+}
+"""
+        xhani = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/")
+        nf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
+        qres = g.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf } )
+        for row in qres:
+            print( row )
+
+
     def check_llm_queries(self):
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
 
         llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
         #llm = ChatOpenAI(temperature=0)
+
         graph = RdfGraph( source_file = inpath, standard='rdf')
         graph.load_schema()
+
         chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
         #chain.invoke( "How many organisms have drug resistance?" )
-        chain.invoke( "what are the f1-score values aggregated by max per model in the test context?" )
+        result = chain( "what are the f1-score values aggregated by max per model in the test context?" )
         print(f"SPARQL query: {result['sparql_query']}")
         print(f"Final answer: {result['result']}")
 
@@ -633,7 +682,8 @@ group by ?c
         
         #self.rerun_meta_enrichment()
         #self.load_graphs()
-        self.check_llm_queries()
+        #self.check_llm_queries()
+        self.execute_humanBased_queries()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

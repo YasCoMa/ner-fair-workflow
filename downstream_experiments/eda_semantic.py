@@ -628,19 +628,22 @@ WHERE {
   
 }
 """
-        
-        hq = """
+        prefixes = '''
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
 PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
 
+
+'''        
+        hq = """
 SELECT ?entity ?f1ScoreValue
 WHERE {
   ?evaluation nf:hasScore ?score .
   ?evaluation nf:underContext "test" .
   ?score rdf:type nf:NEREvaluationMeasure .
-  ?score rdfs:label "f1-score" .
+  ?score rdfs:label stato:0000628.
+  ?score nf:fromEvaluationMetric  stato:0000628.
   ?score nf:hasValue ?f1ScoreValue .
   ?score nf:aggregatedByStatsFunction "max" .
   ?score nf:belongsToEntity ?ent .
@@ -657,9 +660,10 @@ WHERE {
 
         xhani = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/")
         nf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
+        stato = Namespace("http://purl.obolibrary.org/obo/STATO_")
         
-        #qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf } )
-        qres = gr.query( hq )
+        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato } )
+        #qres = gr.query( hq )
         for row in qres:
             print( row )
 

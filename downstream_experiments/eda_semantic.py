@@ -21,10 +21,11 @@ from rdflib.collection import Collection
 
 os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
 os.environ["OPENAI_API_KEY"] = "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"
-
+"""
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.graphs import RdfGraph
 from langchain.chains import GraphSparqlQAChain
+"""
 
 #from langchain_openai import ChatOpenAI
 #from langchain_core.messages import HumanMessage
@@ -633,16 +634,15 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
 PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
-
-
-'''        
-        hq = """
-SELECT ?entity ?f1ScoreValue
+SELECT *
 WHERE {
+  ?workflow nf:containsProcedure ?operation .
+  ?operation nf:generatesModel ?model .
+  ?operation nf:describedBy ?evaluation .
+  
   ?evaluation nf:hasScore ?score .
   ?evaluation nf:underContext "test" .
   ?score rdf:type nf:NEREvaluationMeasure .
-  ?score rdfs:label stato:0000628.
   ?score nf:fromEvaluationMetric  stato:0000628.
   ?score nf:hasValue ?f1ScoreValue .
   ?score nf:aggregatedByStatsFunction "max" .
@@ -650,19 +650,43 @@ WHERE {
   ?ent rdfs:label ?entity .
   
 }
+limit 4
+
+
+'''        
+        hq = """
+SELECT ?level ?technique ?entity ?f1ScoreValue
+WHERE {
+
+  ?evaluation nf:hasScore ?score .
+  ?evaluation nf:underContext ?ctx .
+  ?evaluation nf:reportLevel ?level .
+  ?evaluation xhani:MLEvaluationTechniqueName ?technique .
+
+  ?score rdf:type nf:NEREvaluationMeasure .
+  ?score nf:fromEvaluationMetric  stato:0000628 .
+  ?score vcard:hasValue ?f1ScoreValue .
+  ?score nf:aggregatedByStatsFunction ?agg .
+  ?score nf:belongsToEntity ?ent .
+  ?ent rdfs:label ?entity .
+  
+  filter(regex(?ctx, "test", "i" )) .
+  filter(regex(?agg, "max", "i" )) .
+}
+limit 4
 """
 
-        inpath = os.path.join( '../paper_files/out_eda_semantic', 'all_nerfair_graph.ttl')
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
         
         gr = rdflib.Graph()
         gr.parse(inpath)
 
+        vcard = Namespace("http://www.w3.org/2006/vcard/ns#")
         xhani = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/")
         nf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
         stato = Namespace("http://purl.obolibrary.org/obo/STATO_")
         
-        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato } )
+        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato, 'vcard': vcard } )
         #qres = gr.query( hq )
         for row in qres:
             print( row )
@@ -700,5 +724,6 @@ WHERE {
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
+    odir = '../paper_files/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

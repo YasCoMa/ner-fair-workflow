@@ -351,7 +351,7 @@ class ExplorationSemanticResults:
             os.system( "cp %s/* %s/" %(indir, outdir) )
 
     def load_graphs(self):
-        self._copy_rdf_files()
+        #self._copy_rdf_files()
 
         g = self.graph
 
@@ -363,6 +363,8 @@ class ExplorationSemanticResults:
 
         opath = os.path.join( self.out, 'all_nerfair_graph.ttl')
         g.serialize( destination=opath )
+        opath = os.path.join( self.out, 'all_nerfair_graph.xml')
+        g.serialize( destination=opath, format="xml" )
 
         self.graph = g
 
@@ -603,10 +605,11 @@ group by ?c
         self._write_properties_info(d, prop_obj, prop_dat)
 
     def test_explanation_consistency_tec(self):
+        inpath = os.path.join( self.out, 'all_nerfair_graph.xml')
         inpath = os.path.join( self.out, 'complete_nerml_ontology.xml' )
-        onto = get_ontology( inpath ).load()
+        onto = owlready2.get_ontology( inpath ).load()
 
-        with onto: sync_reasoner()
+        with onto: owlready2.sync_reasoner()
         opath = os.path.join( self.out, "test_onto_tec.owl")
         onto.save( opath )
 
@@ -720,7 +723,9 @@ limit 4
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         #self.check_llm_queries()
-        self.execute_humanBased_queries()
+        #self.execute_humanBased_queries()
+
+        self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

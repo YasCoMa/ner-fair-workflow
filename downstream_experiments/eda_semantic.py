@@ -56,6 +56,7 @@ class ExplorationSemanticResults:
         g = self.graph
 
         self.nerwf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#")
+        g.bind("", self.nerwf)
         g.bind("nerwf", self.nerwf)
         self.xmlpo = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/") # https://github.com/OntoUML/ontouml-models/raw/refs/heads/master/models/xhani2023xmlpo/ontology.ttl
         g.bind("xmlpo", self.xmlpo)
@@ -603,6 +604,8 @@ group by ?c
 
     def test_explanation_consistency_tec(self):
         inpath = os.path.join( self.out, 'complete_nerml_ontology.xml' )
+        inpath = os.path.join( self.out, 'all_nerfair_graph.xml' )
+        inpath = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic/data/experiment_graph_biobert-bc5cdr-hypersearch.xml'
         onto = get_ontology( inpath ).load()
 
         with onto: sync_reasoner()
@@ -696,7 +699,9 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         #self.check_llm_queries()
-        self.execute_humanBased_queries()
+        #self.execute_humanBased_queries()
+
+        self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'

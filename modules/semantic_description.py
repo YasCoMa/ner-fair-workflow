@@ -100,6 +100,7 @@ class SemanticDescription:
         g = self.graph
 
         self.nerwf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
+        g.bind("", self.nerwf)
         g.bind("nerwf", self.nerwf)
         self.xmlpo = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/") # https://github.com/OntoUML/ontouml-models/raw/refs/heads/master/models/xhani2023xmlpo/ontology.ttl
         g.bind("xmlpo", self.xmlpo)
@@ -314,7 +315,7 @@ class SemanticDescription:
         # --------- Datatype Properties
         g.add(( self.nerwf.hasReplicateNumber, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.hasReplicateNumber, RDFS.domain, OWL.Class )) 
-        g.add(( self.nerwf.hasReplicateNumber, RDFS.range,  XSD.integer))
+        g.add(( self.nerwf.hasReplicateNumber, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.label,   Literal("hasReplicateNumber", lang="en")))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.comment,   Literal("The replicate index of the asset (model or other output)", lang="en")))
         
@@ -322,31 +323,31 @@ class SemanticDescription:
         domain_union = BNode()
         Collection(g, domain_union, [ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ])
         g.add(( self.nerwf.isAggregatedValue, RDFS.domain, domain_union )) 
-        g.add(( self.nerwf.isAggregatedValue, RDFS.range,  XSD.boolean))
+        g.add(( self.nerwf.isAggregatedValue, RDFS.range,  RDFS.Literal ))
         g.add(( self.nerwf.isAggregatedValue, RDFS.label,   Literal("isAggregatedValue", lang="en")))
         g.add(( self.nerwf.isAggregatedValue, RDFS.comment, Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
         
         g.add(( self.nerwf.aggregatedByStatsFunction, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.xmlpo.NEREvaluationMeasure )) 
-        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.label,   Literal("aggregatedByStatsFunction", lang="en")))
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.comment,   Literal("Describes statistical function used to aggregate the model replicate values of evaluation metrics", lang="en")))
         
         g.add(( self.nerwf.reportLevel, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.reportLevel, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
-        g.add(( self.nerwf.reportLevel, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.reportLevel, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.reportLevel, RDFS.label,   Literal("reportLevel", lang="en")))
         g.add(( self.nerwf.reportLevel, RDFS.comment,   Literal("Describes the level that the score was computed (word or token)", lang="en")))
         
         g.add(( self.nerwf.underContext, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.underContext, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
-        g.add(( self.nerwf.underContext, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.underContext, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.underContext, RDFS.label,   Literal("underContext", lang="en")))
         g.add(( self.nerwf.underContext, RDFS.comment,   Literal("Describes stage of the workflow in which the scores were computed", lang="en")))
         
         g.add(( self.nerwf.hasPredictedItemsCount, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.domain, self.nerwf.SummaryPrediction )) 
-        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.range,  XSD.integer))
+        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.label,   Literal("hasPredictedItemsCount", lang="en")))
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.comment,   Literal("Number of words predicted to belong to certain entity", lang="en")))
         

@@ -153,9 +153,21 @@ class SemanticDescription:
         g.add(( self.edam.format_3862, RDFS.label,   Literal("NLP annotation format", lang="en")))
         g.add(( self.edam.format_3862, RDFS.comment,   Literal("Defines the specific format for NLP", lang="en")))
         
+        g.add(( self.edam.operation_0004, RDF.type, OWL.Class) )
+        g.add(( self.edam.operation_0004, RDFS.label,   Literal("Operation", lang="en")))
+        g.add(( self.edam.operation_0004, RDFS.comment,   Literal("Defines the certain execution procedure, it can be a function, a computational method, etc.", lang="en")))
+        
+        g.add(( self.xmlpo.Operation, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.Operation, RDFS.label,   Literal("Operation", lang="en")))
+        g.add(( self.xmlpo.Operation, RDFS.comment,   Literal("Defines a procedure inserted as part of a pipeline", lang="en")))
+        
         g.add(( self.xmlpo.Result, RDF.type, OWL.Class) )
         g.add(( self.xmlpo.Result, RDFS.label,   Literal("Result", lang="en")))
         g.add(( self.xmlpo.Result, RDFS.comment,   Literal("Refers to the experiment result", lang="en")))
+        
+        g.add(( self.xmlpo.Quality, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.Quality, RDFS.label,   Literal("Quality", lang="en")))
+        g.add(( self.xmlpo.Quality, RDFS.comment,   Literal("Refers to the parent class of the descriptive subclasses that characterizes dataset, model evaluation, parameters of operations, etc.", lang="en")))
         
         g.add(( self.xmlpo.PreprocessedData, RDF.type, OWL.Class) )
         g.add(( self.xmlpo.PreprocessedData, RDFS.label,   Literal("PreprocessedData", lang="en")))
@@ -328,7 +340,7 @@ class SemanticDescription:
         g.add(( self.nerwf.isAggregatedValue, RDFS.comment, Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
         
         g.add(( self.nerwf.aggregatedByStatsFunction, RDF.type, OWL.DatatypeProperty) )
-        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.xmlpo.NEREvaluationMeasure )) 
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.nerwf.NEREvaluationMeasure )) 
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.label,   Literal("aggregatedByStatsFunction", lang="en")))
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.comment,   Literal("Describes statistical function used to aggregate the model replicate values of evaluation metrics", lang="en")))

@@ -110,9 +110,21 @@ class ExplorationSemanticResults:
         g.add(( self.edam.format_3862, RDFS.label,   Literal("NLP annotation format", lang="en")))
         g.add(( self.edam.format_3862, RDFS.comment,   Literal("Defines the specific format for NLP", lang="en")))
         
+        g.add(( self.edam.operation_0004, RDF.type, OWL.Class) )
+        g.add(( self.edam.operation_0004, RDFS.label,   Literal("Operation", lang="en")))
+        g.add(( self.edam.operation_0004, RDFS.comment,   Literal("Defines the certain execution procedure, it can be a function, a computational method, etc.", lang="en")))
+        
+        g.add(( self.xmlpo.Operation, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.Operation, RDFS.label,   Literal("Operation", lang="en")))
+        g.add(( self.xmlpo.Operation, RDFS.comment,   Literal("Defines a procedure inserted as part of a pipeline", lang="en")))
+        
         g.add(( self.xmlpo.Result, RDF.type, OWL.Class) )
         g.add(( self.xmlpo.Result, RDFS.label,   Literal("Result", lang="en")))
         g.add(( self.xmlpo.Result, RDFS.comment,   Literal("Refers to the experiment result", lang="en")))
+        
+        g.add(( self.xmlpo.Quality, RDF.type, OWL.Class) )
+        g.add(( self.xmlpo.Quality, RDFS.label,   Literal("Quality", lang="en")))
+        g.add(( self.xmlpo.Quality, RDFS.comment,   Literal("Refers to the parent class of the descriptive subclasses that characterizes dataset, model evaluation, parameters of operations, etc.", lang="en")))
         
         g.add(( self.xmlpo.PreprocessedData, RDF.type, OWL.Class) )
         g.add(( self.xmlpo.PreprocessedData, RDFS.label,   Literal("PreprocessedData", lang="en")))
@@ -272,7 +284,7 @@ class ExplorationSemanticResults:
         # --------- Datatype Properties
         g.add(( self.nerwf.hasReplicateNumber, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.hasReplicateNumber, RDFS.domain, OWL.Class )) 
-        g.add(( self.nerwf.hasReplicateNumber, RDFS.range,  XSD.integer))
+        g.add(( self.nerwf.hasReplicateNumber, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.label,   Literal("hasReplicateNumber", lang="en")))
         g.add(( self.nerwf.hasReplicateNumber, RDFS.comment,   Literal("The replicate index of the asset (model or other output)", lang="en")))
         
@@ -280,31 +292,31 @@ class ExplorationSemanticResults:
         domain_union = BNode()
         Collection(g, domain_union, [ self.nerwf.SummaryPrediction, self.nerwf.NEREvaluationMeasure ])
         g.add(( self.nerwf.isAggregatedValue, RDFS.domain, domain_union )) 
-        g.add(( self.nerwf.isAggregatedValue, RDFS.range,  XSD.boolean))
+        g.add(( self.nerwf.isAggregatedValue, RDFS.range,  RDFS.Literal ))
         g.add(( self.nerwf.isAggregatedValue, RDFS.label,   Literal("isAggregatedValue", lang="en")))
         g.add(( self.nerwf.isAggregatedValue, RDFS.comment, Literal("Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)", lang="en")))
         
         g.add(( self.nerwf.aggregatedByStatsFunction, RDF.type, OWL.DatatypeProperty) )
-        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.xmlpo.NEREvaluationMeasure )) 
-        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.domain, self.nerwf.NEREvaluationMeasure )) 
+        g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.label,   Literal("aggregatedByStatsFunction", lang="en")))
         g.add(( self.nerwf.aggregatedByStatsFunction, RDFS.comment,   Literal("Describes statistical function used to aggregate the model replicate values of evaluation metrics", lang="en")))
         
         g.add(( self.nerwf.reportLevel, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.reportLevel, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
-        g.add(( self.nerwf.reportLevel, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.reportLevel, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.reportLevel, RDFS.label,   Literal("reportLevel", lang="en")))
         g.add(( self.nerwf.reportLevel, RDFS.comment,   Literal("Describes the level that the score was computed (word or token)", lang="en")))
         
         g.add(( self.nerwf.underContext, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.underContext, RDFS.domain, self.xmlpo.ModelEvaluationCharacteristic )) 
-        g.add(( self.nerwf.underContext, RDFS.range,  XSD.string))
+        g.add(( self.nerwf.underContext, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.underContext, RDFS.label,   Literal("underContext", lang="en")))
         g.add(( self.nerwf.underContext, RDFS.comment,   Literal("Describes stage of the workflow in which the scores were computed", lang="en")))
         
         g.add(( self.nerwf.hasPredictedItemsCount, RDF.type, OWL.DatatypeProperty) )
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.domain, self.nerwf.SummaryPrediction )) 
-        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.range,  XSD.integer))
+        g.add(( self.nerwf.hasPredictedItemsCount, RDFS.range, RDFS.Literal ))
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.label,   Literal("hasPredictedItemsCount", lang="en")))
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.comment,   Literal("Number of words predicted to belong to certain entity", lang="en")))
         
@@ -608,6 +620,7 @@ group by ?c
     def test_explanation_consistency_tec(self):
         inpath = os.path.join( self.out, 'all_nerfair_graph.xml')
         inpath = os.path.join( self.out, 'complete_nerml_ontology.xml' )
+        inpath = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic/data/experiment_graph_biobert-bc5cdr-hypersearch.xml'
 
         onto = owlready2.get_ontology( inpath ).load()
         with onto: owlready2.sync_reasoner()
@@ -729,7 +742,7 @@ limit 4
         self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
-    odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
     odir = '../paper_files/out_eda_semantic'
+    odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

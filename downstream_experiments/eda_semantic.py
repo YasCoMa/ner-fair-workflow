@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import json
+import time
 import pickle
 
 import rdflib
@@ -741,6 +742,7 @@ limit 4
             #print(f"Final answer: {result['result']}")
             #result['query'] = q
             dat.append( { 'q': q, 'result': result } )
+            time.sleep(60)
 
         opath = os.path.join( self.out, 'llm_query_results.json')
         json.dump( open(opath, 'w') )

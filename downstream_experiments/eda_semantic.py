@@ -21,11 +21,11 @@ from rdflib.collection import Collection
 
 os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
 os.environ["OPENAI_API_KEY"] = "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"
-"""
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.graphs import RdfGraph
 from langchain.chains import GraphSparqlQAChain
-"""
+
 
 #from langchain_openai import ChatOpenAI
 #from langchain_core.messages import HumanMessage
@@ -436,7 +436,6 @@ group by ?c
         f = open( opath, 'w')
         f.write( '\n'.join(lines)+'\n' )
         f.close()
-
     
     def _load_onto_definitions(self, pcode):
         start = " _define_new_onto_elements"
@@ -710,6 +709,20 @@ limit 4
 
 
     def check_llm_queries(self):
+        dat = []
+        cqs = [
+            "Get the distinct names of named entities used in each experiment",
+            "Retrieve the number of models and datasets by experiment",
+            "Get the distinct evaluation metrics used to evaluate the models",
+            "Get the distinct statistical functions used to aggregate the evaluation metrics",
+            "Get the distinct evaluation techniques used in the experiments",
+            "Retrieve he name and value of the hyperparameters used by each model",
+            "what is the largest dataset used in the train context",
+            "which evaluation technique is associated to the highest mcc values?",
+            "For each experiment, retrieve the evaluation technique and the level that obtained the highest mcc values for each entity",
+            "For each level, technique and entitty, retireve the f1-score values aggregated by max per model in the test context?"
+        ]
+
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
 
         llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
@@ -719,10 +732,17 @@ limit 4
         graph.load_schema()
 
         chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
-        #chain.invoke( "How many organisms have drug resistance?" )
-        result = chain( "what are the f1-score values aggregated by max per model in the test context?" )
-        print(f"SPARQL query: {result['sparql_query']}")
-        print(f"Final answer: {result['result']}")
+        # chain.invoke( "How many organisms have drug resistance?" )
+        # result = chain( "what are the f1-score values aggregated by max per model in the test context?" )
+        for q in tqdm(cqs):
+            result = chain( q )
+            print(f"SPARQL query: {result['sparql_query']}")
+            print(f"Final answer: {result['result']}")
+            result['query'] = q
+            dat.append(result)
+
+        opath = os.path.join( self.out, 'llm_query_results.json')
+        json.dump( open(opath, 'w') )
 
     def run(self):
         #self._define_new_onto_elements()
@@ -736,10 +756,10 @@ limit 4
         
         #self.rerun_meta_enrichment()
         #self.load_graphs()
-        #self.check_llm_queries()
+        self.check_llm_queries()
         #self.execute_humanBased_queries()
 
-        self.test_explanation_consistency_tec()
+        #self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
     odir = '../paper_files/out_eda_semantic'

@@ -745,7 +745,7 @@ limit 4
             time.sleep(60)
 
         opath = os.path.join( self.out, 'llm_query_results.json')
-        json.dump( open(opath, 'w') )
+        json.dump( dat, open(opath, 'w') )
 
     def run(self):
         #self._define_new_onto_elements()

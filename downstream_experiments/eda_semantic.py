@@ -736,10 +736,11 @@ limit 4
         # result = chain( "what are the f1-score values aggregated by max per model in the test context?" )
         for q in tqdm(cqs):
             result = chain( q )
-            print(f"SPARQL query: {result['sparql_query']}")
-            print(f"Final answer: {result['result']}")
-            result['query'] = q
-            dat.append(result)
+            print( result )
+            #print(f"SPARQL query: {result['sparql_query']}")
+            #print(f"Final answer: {result['result']}")
+            #result['query'] = q
+            dat.append( { 'q': q, 'result': result } )
 
         opath = os.path.join( self.out, 'llm_query_results.json')
         json.dump( open(opath, 'w') )

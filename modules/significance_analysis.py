@@ -221,7 +221,7 @@ class AnalysisStatisticalSignificance:
             for k in frivalues:
                 if( len( frivalues[k] ) >= 3 ):
                     entity, metric = k.split('#$@')
-                    res = friedmanchisquare( *( for x in frivalues[k] ) )
+                    res = friedmanchisquare( *( x for x in frivalues[k] ) )
                     body.append( '\t'.join( [ metric, entity, str(res.pvalue) ] ) )
             f.write( '\n'.join(body)+'\n' )
             
@@ -229,7 +229,7 @@ class AnalysisStatisticalSignificance:
             body = []
             for evalMetric in gbfrivalues:
                 if( len( gbfrivalues[evalMetric] ) >= 3 ):
-                    res = friedmanchisquare( *( for x in gbfrivalues[evalMetric] ) )
+                    res = friedmanchisquare( *( x for x in gbfrivalues[evalMetric] ) )
                     body.append( '\t'.join( [ evalMetric, entity, str(res.pvalue) ] ) )
             f.write( '\n'.join(body)+'\n' )
             f.close()

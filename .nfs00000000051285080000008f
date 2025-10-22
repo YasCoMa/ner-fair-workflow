@@ -266,3 +266,113 @@ Full Context:
 
 [1m> Finished chain.[0m
 {'query': 'For each level, technique and entitty, retireve the f1-score values aggregated by max per model in the test context?', 'result': 'I am sorry, I cannot provide an answer to this question because the provided information is empty.'}
+rm: cannot remove '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial//logs/*significance_analysis.ready': No such file or directory
+[33mNextflow 25.04.8 is available - Please consider updating your version to it(B[m
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `/aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf` [festering_cuvier] DSL2 - revision: 54782c8edf
+
+ NER Fair workflow  -  P I P E L I N E
+ ===================================
+ dataDir       : /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/
+ runningConfig : /aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json
+ mode       : significance_analysis
+ 
+[-        ] setEnvironment                    -
+[-        ] PROCESS_SignificanceAnalysisTasks -
+
+executor >  local (1)
+[28/a501de] setEnvironment                    [100%] 1 of 1 ✔
+[-        ] PROCESS_SignificanceAnalysisTasks [  0%] 0 of 1
+
+executor >  local (2)
+[28/a501de] setEnvironment                    [100%] 1 of 1 ✔
+[9c/9042f6] PROCESS_SignificanceAnalysisTasks [  0%] 0 of 1
+
+executor >  local (2)
+[28/a501de] setEnvironment                    [100%] 1 of 1 ✔
+[9c/9042f6] PROCESS_SignificanceAnalysisTasks [  0%] 0 of 1
+ERROR ~ Error executing process > 'PROCESS_SignificanceAnalysisTasks'
+
+Caused by:
+  Process `PROCESS_SignificanceAnalysisTasks` terminated with an error exit status (1)
+
+
+Command executed:
+
+  python3 /aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py -execDir biobert_trial -paramFile config_biobert_hypersearch.json
+
+Command exit status:
+  1
+
+Command output:
+  (empty)
+
+Command error:
+  Traceback (most recent call last):
+    File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 252, in <module>
+      i.run()
+    File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 247, in run
+      self.perform_stats_analysis_per_entity()
+    File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 224, in perform_stats_analysis_per_entity
+      entity, metric = k.split('#$@')
+  ValueError: not enough values to unpack (expected 2, got 1)
+
+Work dir:
+  /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/9c/9042f61a77f6a9d812084f7d29b936
+
+Tip: you can replicate the issue by changing to the process work dir and entering the command `bash .command.run`
+
+ -- Check '.nextflow.log' file for details
+Oops .. something went wrong
+
+executor >  local (2)
+[28/a501de] setEnvironment                    [100%] 1 of 1 ✔
+[9c/9042f6] PROCESS_SignificanceAnalysisTasks [  0%] 0 of 1 ✘
+ERROR ~ Error executing process > 'PROCESS_SignificanceAnalysisTasks'
+
+Caused by:
+  Process `PROCESS_SignificanceAnalysisTasks` terminated with an error exit status (1)
+
+
+Command executed:
+
+  python3 /aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py -execDir biobert_trial -paramFile config_biobert_hypersearch.json
+
+Command exit status:
+  1
+
+Command output:
+  (empty)
+
+Command error:
+  Traceback (most recent call last):
+    File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 252, in <module>
+      i.run()
+    File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 247, in run
+      self.perform_stats_analysis_per_entity()
+    File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 224, in perform_stats_analysis_per_entity
+      entity, metric = k.split('#$@')
+  ValueError: not enough values to unpack (expected 2, got 1)
+
+Work dir:
+  /aloy/home/ymartins/match_clinical_trial/ner_subproj/work/9c/9042f61a77f6a9d812084f7d29b936
+
+Tip: you can replicate the issue by changing to the process work dir and entering the command `bash .command.run`
+
+ -- Check '.nextflow.log' file for details
+
+rm: cannot remove '/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial//logs/*significance_analysis.ready': No such file or directory
+[33mNextflow 25.04.8 is available - Please consider updating your version to it(B[m
+
+ N E X T F L O W   ~  version 25.04.6
+
+Launching `/aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf` [kickass_ptolemy] DSL2 - revision: 54782c8edf
+
+ NER Fair workflow  -  P I P E L I N E
+ ===================================
+ dataDir       : /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/
+ runningConfig : /aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json
+ mode       : significance_analysis
+ 

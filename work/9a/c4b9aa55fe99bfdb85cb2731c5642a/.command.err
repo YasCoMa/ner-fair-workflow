@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 253, in <module>
+    i.run()
+  File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 248, in run
+    self.perform_stats_analysis_per_entity()
+  File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 214, in perform_stats_analysis_per_entity
+    fp.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
+NameError: name 'fp' is not defined. Did you mean: 'f'?

@@ -389,6 +389,12 @@ class ExplorationSemanticResults:
         opath = os.path.join( self.out, 'all_nerfair_graph.xml')
         g.serialize( destination=opath, format="xml" )
 
+        txt = open( opath ).read()
+        txt = txt.replace('<rdf:RDF','<rdf:RDF xmlns="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\nxml:base="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\n')
+        f = open( opath,'w')
+        f.write(txt)
+        f.close()
+
         self.graph = g
 
     def count_new_classes_properties(self):
@@ -788,10 +794,10 @@ WHERE {
 
         #self.convert_ttl_to_owl()
         
-        self.rerun_meta_enrichment()
+        #self.rerun_meta_enrichment()
         self.load_graphs()
-        #self.check_llm_queries()
-        
+        self.check_llm_queries()
+
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()

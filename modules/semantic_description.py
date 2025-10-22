@@ -372,6 +372,11 @@ class SemanticDescription:
         
         path = os.path.join( self.out, f'nerml_ontology.xml' )
         g.serialize( destination = path, format = 'xml' )
+        txt = open( path ).read()
+        txt = txt.replace('<rdf:RDF','<rdf:RDF xmlns="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\nxml:base="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\n')
+        f = open( path, 'w')
+        f.write(txt)
+        f.close()
 
         self.graph = g
 
@@ -911,7 +916,13 @@ class SemanticDescription:
         g.serialize( destination = path )
         path = os.path.join( self.out, f'experiment_graph_{ self.exp_identifier }.xml' )
         g.serialize( destination = path, format = 'xml' )
-        
+
+        txt = open( path ).read()
+        txt = txt.replace('<rdf:RDF','<rdf:RDF xmlns="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\nxml:base="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\n')
+        f = open( path, 'w')
+        f.write(txt)
+        f.close()
+
         self.logger.info("[Semantic description step] Task (Exporting enrichment graph) ended -----------")
         
     def _mark_as_done(self):

@@ -446,8 +446,11 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
             for ev in dat:
                 obj = { "identifier": ev, "level": "token", "results": {} }
                 for e in dat[ev]:
-                    obj["results"][e] = { "f1-score": float( dat[ev][e]['mean'] ) }
-                    cnf["external_eval_data"]["evaluators"].append(obj)
+                    try:
+                        obj["results"][e] = { "f1-score": float( dat[ev][e]['mean'] ) }
+                        cnf["external_eval_data"]["evaluators"].append(obj)
+                    except:
+                        pass
             json.dump(cnf, open(cpath, 'w') )
 
         l = "/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/"

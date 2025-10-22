@@ -13,6 +13,10 @@ from rdflib.collection import Collection
 import argparse
 import logging
 
+root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
+sys.path.append( root_path )
+from utils.utils_evaluation import *
+
 class SemanticDescription:
     
     def __init__(self):
@@ -56,6 +60,7 @@ class SemanticDescription:
             self.expid = self.config["identifier"]
             self.model_checkpoint = self.config["pretrained_model"]
             self.outDirRoot = self.config["outpath"]
+            self.target_tags = json.load( open( self.config["target_tags"], 'r') )
 
             self.logger.info("----------- Semantic description step started -----------")
         except:
@@ -217,6 +222,12 @@ class SemanticDescription:
         g.add(( self.xmlpo.Operation, OWL.sameAs,  self.edam.operation_0004 )) # Operation class
         
         # --------- Object Properties
+        g.add(( self.nerwf.containsTargetEntity, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.containsTargetEntity, RDFS.domain, self.nerwf.NLPExperiment ))
+        g.add(( self.nerwf.containsTargetEntity, RDFS.range,  self.nero.NamedEntity ))
+        g.add(( self.nerwf.containsTargetEntity, RDFS.label,   Literal("containsTargetEntity", lang="en")))
+        g.add(( self.nerwf.containsTargetEntity, RDFS.comment,   Literal("Defines the link between the NER task experiment and its target entities that the models will be trained to predict", lang="en")))
+
         g.add(( self.nerwf.executedBy, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.executedBy, RDFS.domain, self.nerwf.NLPExperiment ))
         g.add(( self.nerwf.executedBy, RDFS.range,  self.xmlpo.workflow ))
@@ -389,6 +400,26 @@ class SemanticDescription:
         
         self.logger.info("[Semantic description step] Task (Describing workflow) ended -----------")
         
+    def _describe_target_entities(self, expid):
+        g = self.graph
+
+        target_tags = self.target_tags
+        categories = __remove_prefix_tags(target_tags, remove_duplicates=True)
+        ents = target_tags + categories
+        mapp = {}
+        for entity in ents:
+            ent = self.gen_id('entity') 
+            g.add( ( self.nerwf[ent], RDF.type, self.nero.NamedEntity ) )
+            g.add( ( self.nerwf[ent], RDFS.label, Literal(entity) ) )
+            g.add( ( self.nerwf[expid], self.nerwf.containsTargetEntity, self.nerwf[ent] ) )
+            mapp[entity] = ent
+
+        self.mapp_entity_id = mapp
+
+        self.graph = g
+
+        return mapp
+
     def _describe_experiment(self):
         self.logger.info("[Semantic description step] Task (Describing experiment) started -----------")
         
@@ -418,6 +449,8 @@ class SemanticDescription:
 
         self.__describe_workflow()
         g.add( ( self.nerwf[_id], self.nerwf.executedBy, self.nerwf[self.wfid] ) )
+
+        self._describe_target_entities(_id)
 
         self.graph = g
 
@@ -653,9 +686,7 @@ class SemanticDescription:
                             statsMetric = df.loc[i, 'stats_agg_name']
                             value = df.loc[i, 'stats_agg_value']
 
-                            ent = self.gen_id('entity') 
-                            g.add( ( self.nerwf[ent], RDF.type, self.nero.NamedEntity ) )
-                            g.add( ( self.nerwf[ent], RDFS.label, Literal(entity) ) )
+                            ent = self.mapp_entity_id[entity]
 
                             score = self.gen_id('evalScore') 
                             g.add( ( self.nerwf[score], RDF.type, self.nerwf.NEREvaluationMeasure ) )

@@ -24,9 +24,9 @@ os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
 os.environ["OPENAI_API_KEY"] = "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"
 
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models.ollama import ChatOllama
 from langchain_community.graphs import RdfGraph
 from langchain.chains import GraphSparqlQAChain
-
 
 #from langchain_openai import ChatOpenAI
 #from langchain_core.messages import HumanMessage
@@ -36,6 +36,9 @@ sys.path.append( root_path )
 
 class ExplorationSemanticResults:
     def __init__(self, fout):
+        self.google_model = "gemini-2.0-flash"
+        self.llama_model ='llama3'
+
         self.graph = rdflib.Graph()
 
         self.out = fout
@@ -365,7 +368,7 @@ class ExplorationSemanticResults:
             os.system( "cp %s/* %s/" %(indir, outdir) )
 
     def load_graphs(self):
-        #self._copy_rdf_files()
+        self._copy_rdf_files()
 
         g = self.graph
 
@@ -710,7 +713,8 @@ limit 4
 
 
     def check_llm_queries(self):
-        dat = []
+        dat = {}
+
         cqs = [
             "Get the distinct names of named entities used in each experiment",
             "Retrieve the number of models and datasets by experiment",
@@ -721,28 +725,29 @@ limit 4
             "what is the largest dataset used in the train context",
             "which evaluation technique is associated to the highest mcc values?",
             "For each experiment, retrieve the evaluation technique and the level that obtained the highest mcc values for each entity",
-            "For each level, technique and entitty, retireve the f1-score values aggregated by max per model in the test context?"
+            "For each level, technique and entity, retrieve the f1-score values aggregated by max per model in the test context?"
         ]
 
+        llms = { 
+            'google': ChatGoogleGenerativeAI( model = self.google_model ), 
+            'llama': ChatOllama( model = self.llama_model ) 
+        }
+
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
-
-        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-        #llm = ChatOpenAI(temperature=0)
-
         graph = RdfGraph( source_file = inpath, standard='rdf')
         graph.load_schema()
 
-        chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
-        # chain.invoke( "How many organisms have drug resistance?" )
-        # result = chain( "what are the f1-score values aggregated by max per model in the test context?" )
-        for q in tqdm(cqs):
-            result = chain.invoke( q )
-            print( result )
-            #print(f"SPARQL query: {result['sparql_query']}")
-            #print(f"Final answer: {result['result']}")
-            #result['query'] = q
-            dat.append( { 'q': q, 'result': result } )
-            time.sleep(60)
+        for provider in llms:
+            print('--------> model type: ', provider)
+            llm = llms[provider]
+            chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
+            dat[provider] = {}
+            for q in tqdm(cqs):
+                print('\t question: ', q)
+                result = chain.invoke( q )
+                #dat.append( { 'q': q, 'result': result } )
+                dat[provider][q] = result
+                time.sleep(60)
 
         opath = os.path.join( self.out, 'llm_query_results.json')
         json.dump( dat, open(opath, 'w') )
@@ -777,9 +782,9 @@ WHERE {
 
         #self.convert_ttl_to_owl()
         
-        #self.rerun_meta_enrichment()
-        #self.load_graphs()
-        self.check_llm_queries()
+        self.rerun_meta_enrichment()
+        self.load_graphs()
+        #self.check_llm_queries()
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()

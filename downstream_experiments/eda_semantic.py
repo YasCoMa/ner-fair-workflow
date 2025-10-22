@@ -736,7 +736,7 @@ limit 4
         # chain.invoke( "How many organisms have drug resistance?" )
         # result = chain( "what are the f1-score values aggregated by max per model in the test context?" )
         for q in tqdm(cqs):
-            result = chain( q )
+            result = chain.invoke( q )
             print( result )
             #print(f"SPARQL query: {result['sparql_query']}")
             #print(f"Final answer: {result['result']}")
@@ -746,6 +746,26 @@ limit 4
 
         opath = os.path.join( self.out, 'llm_query_results.json')
         json.dump( dat, open(opath, 'w') )
+
+        hqs = [
+            """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
+PREFIX onto: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
+
+SELECT DISTINCT ?experiment ?entityName
+WHERE {
+  ?experiment rdf:type nf:NLPExperiment .
+  ?experiment onto:hasOutput ?dataset .
+  ?dataset onto:datasetHasData ?namedEntity .
+  ?namedEntity rdf:type <http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#NamedEntity> .
+  ?namedEntity rdfs:label ?entityName .
+}
+
+
+            """
+        ]
 
     def run(self):
         #self._define_new_onto_elements()

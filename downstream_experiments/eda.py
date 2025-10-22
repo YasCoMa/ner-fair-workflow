@@ -388,13 +388,81 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         df_highest_diffs = df[ df['Best']=='merged_train' ].sort_values(by='diff', ascending=False).head(30)
         '''
 
+    def test_significance_module(self):
+        cpath = '/aloy/home/ymartins/match_clinical_trial/experiments/config_biobert_hypersearch.json'
+        cnf = json.load( open( cpath, 'r') )
+
+        if( not 'external_eval_data' in cnf ):
+            ## Generate comparison table of f1-scores
+            sota = """Entity PICO-Reference Experiment-1 Experiment-2
+    total-participants 0.94 0.9065(+-0.0096) 0.9313(+-0.0048)
+    intervention-participants 0.85 0.7431(+-0.0123) 0.8177(+-0.0135)
+    control-participants 0.88 0.7846(+-0.0108) 0.8480(+-0.0124)
+    age 0.80 0.5638(+-0.0300) 0.5724(+-0.0731)
+    eligibility 0.74 0.6049(+-0.0131) 0.6382(+-0.0219)
+    ethinicity 0.88 0.7135(+-0.0433) 0.7163(+-0.0353)
+    condition 0.80 0.6412(+-0.0469) 0.7122(+-0.0421)
+    location 0.76 0.6156(+-0.0226) 0.6258(+-0.0363)
+    intervention 0.84 0.7805(+-0.0047) 0.7899(+-0.0095)
+    control 0.76 0.6780(+-0.0205) 0.6529(+-0.0190)
+    outcome 0.81 0.6321(+-0.0056) 0.6667(+-0.0151)
+    outcome-Measure 0.84 0.7441(+-0.0274) 0.8003(+-0.0240)
+    iv-bin-abs 0.80 0.6184(+-0.0278) 0.7640(+-0.0352)
+    cv-bin-abs 0.82 0.6557(+-0.0214) 0.8195(+-0.0219)
+    iv-bin-percent 0.87 0.6460(+-0.0174) 0.6731(+-0.0317)
+    cv-bin-percent 0.88 0.6919(+-0.0224) 0.7549(+-0.0233)
+    iv-cont-mean 0.81 0.5081(+-0.0352) 0.4271(+-0.0334)
+    cv-cont-mean 0.86 0.4711(+-0.0160) 0.4117(+-0.0297)
+    iv-cont-median 0.75 0.6630(+-0.0336) 0.7415(+-0.0216)
+    cv-cont-median 0.79 0.6937(+-0.0195) 0.7769(+-0.0373)
+    iv-cont-sd 0.83 0.4606(+-0.0424) 0.6274(+-0.0683)
+    cv-cont-sd 0.82 0.4711(+-0.0514) 0.7264(+-0.0826)
+    iv-cont-q1 0 0.0000(+-0.0000) *
+    cv-cont-q1 0 0.0000(+-0.0000) *
+    iv-cont-q3 0 0.0000(+-0.0000) *
+    cv-cont-q3 0 0.0000(+-0.0000) *
+    micro-avg - 0.6845(+-0.0032) 0.7261(+-0.0119)
+    macro-avg 0.6973 0.5495(+-0.0022) 0.7043(+-0.0138)
+    weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
+            dat = {}
+            lines = sota.split('\n')
+            exps = lines[0].split(' ')[1:]
+            for i,e in enumerate(exps):
+                dat[ exps[i] ] = {}
+            for l in lines[1:]:
+                els = l.split(' ')
+                for i,v in enumerate(els[1:]):
+                    parts = v.split('(+-')
+                    dat[ exps[i] ][ els[0] ] = { 'mean': parts[0], 'std': '' }
+                    if( len(parts) > 1 ):
+                        dat[ exps[i] ][ els[0] ]['std'] = parts[1].replace(')','')
+
+            cnf["external_eval_data"] = { 
+                "mode": "global",
+                "agg_function": "mean",
+                "evaluators": [ ] 
+            }
+            for ev in dat:
+                obj = { "identifier": ev, "level": "token", "results": {} }
+                for e in dat[ev]:
+                    obj["results"][e]["f1-score"] = float( dat[ev][e]['mean'] )
+                    cnf["external_eval_data"]["evaluators"].append(obj)
+            json.dump(cnf, open(cpath, 'w') )
+
+        l = "/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/"
+        os.system( "rm %s/logs/*significance_analysis.ready" %(l) )
+
+        cmd = f"nextflow run /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/ --runningConfig {cpath} --mode 'significance_analysis'"
+        os.system(cmd)
+
     def run(self):
         #self.wrap_picods_comp_metrics_reprod()
         #self.wrap_bench_dss_eval_metrics_reprod()
         #self.gen_suppTable_counts_annotations()
         #self._check_correlation_count_eval()
 
-        self.check_best_merged_individual_models()
+        #self.check_best_merged_individual_models()
+        self.test_significance_module()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/outnerwf'

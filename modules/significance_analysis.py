@@ -49,7 +49,7 @@ class AnalysisStatisticalSignificance:
             if( 'external_eval_data' in self.config ):
                 self.external_eval_data = self.config["external_eval_data"]
                 if( "agg_function" in  self.external_eval_data ):
-                self.external_eval_agg = self.external_eval_data["agg_function"]
+                    self.external_eval_agg = self.external_eval_data["agg_function"]
 
                 '''
 "external_eval_data": { 

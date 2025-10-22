@@ -187,15 +187,17 @@ class AnalysisStatisticalSignificance:
                 # Setup for wilcoxon
                 for j, model_compare in enumerate(dat):
                     if( i < j ):
-                        entity_metric = list(dat[model_base])[0]
-                        if( (entity_metric.find('#$@') != -1) ): # per entity mode
-                            for entity_metric in dat[model_base]:
+                        for k in dat[model_base]:
+                            if( (k.find('#$@') != -1) ): # per entity mode
+                                entity_metric = k
+
                                 if( entity_metric in dat[model_compare] ):
                                     entity, metric = entity_metric.split('#$@')
                                     pvalue_wil = ranksums( dat[model_base][entity_metric], dat[model_compare][entity_metric] )
                                     f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
-                        else: # global mode
-                            for evalMetric in dat[model_base]:
+                            else: # global mode
+                                evalMetric = k
+                                
                                 entsA = set(dat[model_base][evalMetric])
                                 entsB = set(dat[model_compare][evalMetric])
 

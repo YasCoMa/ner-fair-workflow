@@ -165,14 +165,16 @@ class AnalysisStatisticalSignificance:
             
             for i, model_base in enumerate(dat):
                 # Setup for friedmanchisquare
-                entity_metric = list(dat[model_base])[0]
-                if( (entity_metric.find('#$@') != -1) ): # per entity mode
-                    for entity_metric in dat[model_base]:
+                for k in dat[model_base]:
+                    if( (k.find('#$@') != -1) ): # per entity mode
+                        entity_metric = k
+
                         if( not entity_metric in frivalues ):
                             frivalues[entity_metric] = []
                         frivalues[entity_metric].append( dat[model_base][entity_metric] )
-                else:
-                    for evalMetric in dat[model_base]:
+                    else: # global mode
+                        evalMetric = k
+
                         if( len(ents) == 0 ):
                             ents.update( list(dat[model_base][evalMetric]) )
                         if( not evalMetric in gbfrivalues ):

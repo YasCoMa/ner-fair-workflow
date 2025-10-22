@@ -785,6 +785,7 @@ WHERE {
         self.rerun_meta_enrichment()
         self.load_graphs()
         #self.check_llm_queries()
+        
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()

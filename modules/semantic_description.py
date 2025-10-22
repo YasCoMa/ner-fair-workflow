@@ -13,10 +13,6 @@ from rdflib.collection import Collection
 import argparse
 import logging
 
-root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
-sys.path.append( root_path )
-from utils.utils_evaluation import *
-
 class SemanticDescription:
     
     def __init__(self):
@@ -399,12 +395,23 @@ class SemanticDescription:
         self.wfid = _id
         
         self.logger.info("[Semantic description step] Task (Describing workflow) ended -----------")
+
+    def __remove_prefix_tags(target_tags, remove_duplicates=False):
+        categories = list( map( lambda x: x[2:] if( x[:2].lower() in ['o-', 'b-', 'i-', 'e-', 's-', 'u-', 'l-']) else x, target_tags ) )
+        
+        if( remove_duplicates ):
+            aux = []
+            for j, c in enumerate(categories):
+                if( c not in aux ):
+                    aux.append(c)
+            categories = aux
+        return categories
         
     def _describe_target_entities(self, expid):
         g = self.graph
 
         target_tags = self.target_tags
-        categories = __remove_prefix_tags(target_tags, remove_duplicates=True)
+        categories = self.__remove_prefix_tags(target_tags, remove_duplicates=True)
         ents = target_tags + categories
         mapp = {}
         for entity in ents:

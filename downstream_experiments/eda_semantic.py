@@ -178,6 +178,12 @@ class ExplorationSemanticResults:
         g.add(( self.xmlpo.Operation, OWL.sameAs,  self.edam.operation_0004 )) # Operation class
         
         # --------- Object Properties
+        g.add(( self.nerwf.containsTargetEntity, RDF.type, OWL.ObjectProperty) )
+        g.add(( self.nerwf.containsTargetEntity, RDFS.domain, self.nerwf.NLPExperiment ))
+        g.add(( self.nerwf.containsTargetEntity, RDFS.range,  self.nero.NamedEntity ))
+        g.add(( self.nerwf.containsTargetEntity, RDFS.label,   Literal("containsTargetEntity", lang="en")))
+        g.add(( self.nerwf.containsTargetEntity, RDFS.comment,   Literal("Defines the link between the NER task experiment and its target entities that the models will be trained to predict", lang="en")))
+
         g.add(( self.nerwf.executedBy, RDF.type, OWL.ObjectProperty) )
         g.add(( self.nerwf.executedBy, RDFS.domain, self.nerwf.NLPExperiment ))
         g.add(( self.nerwf.executedBy, RDFS.range,  self.xmlpo.workflow ))

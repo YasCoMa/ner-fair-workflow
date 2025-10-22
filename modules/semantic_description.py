@@ -13,7 +13,7 @@ from rdflib.collection import Collection
 import argparse
 import logging
 
-root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-2] )
+root_path = (os.path.sep).join( os.path.dirname(os.path.realpath(__file__)).split( os.path.sep )[:-1] )
 sys.path.append( root_path )
 from utils.utils_evaluation import *
 

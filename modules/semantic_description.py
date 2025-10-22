@@ -396,7 +396,7 @@ class SemanticDescription:
         
         self.logger.info("[Semantic description step] Task (Describing workflow) ended -----------")
 
-    def __remove_prefix_tags(target_tags, remove_duplicates=False):
+    def __remove_prefix_tags(self, target_tags, remove_duplicates=False):
         categories = list( map( lambda x: x[2:] if( x[:2].lower() in ['o-', 'b-', 'i-', 'e-', 's-', 'u-', 'l-']) else x, target_tags ) )
         
         if( remove_duplicates ):

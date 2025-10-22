@@ -197,7 +197,7 @@ class AnalysisStatisticalSignificance:
                                     f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
                             else: # global mode
                                 evalMetric = k
-                                
+
                                 entsA = set(dat[model_base][evalMetric])
                                 entsB = set(dat[model_compare][evalMetric])
 
@@ -211,10 +211,9 @@ class AnalysisStatisticalSignificance:
                                 if(len(inter) > 1):
                                     entity = 'global'
                                     pvalue_wil = ranksums( valuesA, valuesB )
-                                    fp.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
+                                    f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
 
             f.close()
-            fp.close()
 
             opath = os.path.join( self.out, f'{key}_friedman_analysis.tsv' )
             f = open( opath, 'w' )

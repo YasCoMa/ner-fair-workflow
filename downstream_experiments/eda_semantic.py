@@ -42,7 +42,7 @@ sys.path.append( root_path )
 
 class ExplorationSemanticResults:
     def __init__(self, fout):
-        self.google_model = "gemini-2.0-flash"
+        self.google_model = "gemini-2.5-flash"
         self.llama_model ='llama3.2'
 
         self.graph = rdflib.Graph()
@@ -842,6 +842,18 @@ WHERE {
         f.write( '\n'.join(lines)+'\n' )
         f.close()
 
+    def analysis_llm_queries(self):
+        path = os.path.join( self.out, 'parsed_llm_results.json')
+        d = json.load( open( path ) )
+
+        ng = len( list( filter( lambda x: len(d['google'][x]['resq'])>0, d['google'] )) ) # 5
+        nl = len( list( filter( lambda x: len(d['google'][x]['resq'])>0, d['llama'] )) ) # 5
+
+        qganswered = list( filter( lambda x: len(d['google'][x]['resq'])>0, d['google'] ))
+        qlanswered = list( filter( lambda x: len(d['google'][x]['resq'])>0, d['llama'] ))
+
+        exl = d['llama']['Retrieve the name and value of the hyperparameters used by each model']['query']
+        exg = d['google']['Retrieve the name and value of the hyperparameters used by each model']['query']
 
     def run(self):
         #self._define_new_onto_elements()
@@ -857,6 +869,7 @@ WHERE {
         #self.load_graphs()
         #self.check_llm_queries()
         self.parse_llm_queries_result()
+        self.analysis_llm_queries()
 
         #self.execute_humanBased_queries()
 

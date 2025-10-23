@@ -24,9 +24,15 @@ os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
 os.environ["OPENAI_API_KEY"] = "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"
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.chat_models.ollama import ChatOllama
+from langchain_ollama import ChatOllama
 from langchain_community.graphs import RdfGraph
-from langchain.chains import GraphSparqlQAChain
+from langchain_community.chains.graph_qa.sparql import GraphSparqlQAChain
+
+'''
+dependencies:
+langchain==0.3.27
+langchain-ollama==0.3.10
+'''
 
 #from langchain_openai import ChatOpenAI
 #from langchain_core.messages import HumanMessage
@@ -37,7 +43,7 @@ sys.path.append( root_path )
 class ExplorationSemanticResults:
     def __init__(self, fout):
         self.google_model = "gemini-2.0-flash"
-        self.llama_model ='llama3'
+        self.llama_model ='llama3.2'
 
         self.graph = rdflib.Graph()
 
@@ -733,7 +739,7 @@ limit 4
             "Get the distinct evaluation metrics used to evaluate the models",
             "Get the distinct statistical functions used to aggregate the evaluation metrics",
             "Get the distinct evaluation techniques used in the experiments",
-            "Retrieve he name and value of the hyperparameters used by each model",
+            "Retrieve the name and value of the hyperparameters used by each model",
             "what is the largest dataset used in the train context",
             "which evaluation technique is associated to the highest mcc values?",
             "For each experiment, retrieve the evaluation technique and the level that obtained the highest mcc values for each entity",
@@ -741,8 +747,8 @@ limit 4
         ]
 
         llms = { 
-            'google': ChatGoogleGenerativeAI( model = self.google_model ), 
-            'llama': ChatOllama( model = self.llama_model ) 
+            'google': ChatGoogleGenerativeAI( model = self.google_model, temperature=0 ), 
+            'llama': ChatOllama( model = self.llama_model, temperature=0 ) 
         }
 
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
@@ -754,11 +760,14 @@ limit 4
             llm = llms[provider]
             chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
             dat[provider] = {}
-            for q in tqdm(cqs):
+            for q in cqs:
                 print('\t question: ', q)
-                result = chain.invoke( q )
-                #dat.append( { 'q': q, 'result': result } )
-                dat[provider][q] = result
+                try:
+                    result = chain.invoke( q )
+                    #dat.append( { 'q': q, 'result': result } )
+                    dat[provider][q] = result
+                except:
+                    dat[provider][q] = "sparql syntax error"
                 time.sleep(60)
 
         opath = os.path.join( self.out, 'llm_query_results.json')
@@ -784,6 +793,56 @@ WHERE {
             """
         ]
 
+    def parse_llm_queries_result(self):
+        path = os.path.join(self.out, 'stdout_sparql_llm-multiple_round1.txt')
+
+        dat = {}
+        flag = False
+        i = 0
+        lines = open(path, 'r').read().split('\n')[:-1]
+        for line in lines:
+            if(line.find('model type') != -1):
+                model = line.split(':')[1].strip()
+                dat[model] = {}
+
+            elif(line.find('question:') != -1):
+                cq = line.split(':')[1].replace(':','').strip()
+                dat[model][cq] = { 'query': '', 'resq': '' }
+                flag = False
+
+            elif(line.find('Full Context:') != -1):
+                content = lines[i+1].replace('[32;1m[1;3m','').replace('[0m','')
+                try:
+                    dat[model][cq]['resq'] = eval(content)
+                except:
+                    dat[model][cq]['resq'] = content
+
+                flag = False
+
+            elif( flag ):
+                dat[model][cq]['query'] += line.replace('[32;1m[1;3m','').replace('[0m','')+' '
+
+            elif(line.find('Generated SPARQL:') != -1):
+                flag = True
+
+            i += 1
+
+        opath = os.path.join( self.out, 'parsed_llm_results.json')
+        json.dump( dat, open(opath, 'w') )
+
+        lines = []
+        lines.append( ['model', 'cq', 'query'] )
+        for m in dat:
+            for cq in dat[m]:
+                q = dat[m][cq]['query']
+                lines.append( [m, cq, q] )
+        lines = list( map( lambda x: '\t'.join(x), lines ))
+        opath = os.path.join( self.out, 'table_llm_results.tsv')
+        f = open(opath, 'w')
+        f.write( '\n'.join(lines)+'\n' )
+        f.close()
+
+
     def run(self):
         #self._define_new_onto_elements()
         #self.organize_onto_info_in_supp_tables()
@@ -795,8 +854,9 @@ WHERE {
         #self.convert_ttl_to_owl()
         
         #self.rerun_meta_enrichment()
-        self.load_graphs()
-        self.check_llm_queries()
+        #self.load_graphs()
+        #self.check_llm_queries()
+        self.parse_llm_queries_result()
 
         #self.execute_humanBased_queries()
 

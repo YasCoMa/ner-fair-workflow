@@ -106,8 +106,8 @@ class AnalysisStatisticalSignificance:
                                     evalMetric = df.loc[i, 'evaluation_metric']
                                     entity = df.loc[i, 'Entity']
                                     agg = df.loc[i, "stats_agg_name"]
-                                    value = df.loc[i, "stats_agg_value"]
-                                    values = df.iloc[i, 4:].values
+                                    value = float( df.loc[i, "stats_agg_value"] )
+                                    values = [ float(x) for x in df.iloc[i, 4:].values ]
 
                                     key = f"{stage}_{mode}_{level}"
                                     if( not key in data ):
@@ -145,7 +145,7 @@ class AnalysisStatisticalSignificance:
 
         return dat
 
-    def perform_stats_analysis_per_entity(self):
+    def perform_stats_analysis(self):
         self.logger.info("[Significance analysis step] Task (Performing statistical significance analysis) started -----------")
         
         data = self._acquire_data()
@@ -153,6 +153,7 @@ class AnalysisStatisticalSignificance:
         for key in data:
             stage, mode, level = key.split('_')
             dat = data[key]
+            dat = self._get_external_evaluation(level, dat)
             
             opath = os.path.join( self.out, f'{key}_wilcoxon_analysis.tsv' )
             f = open( opath, 'w' )
@@ -180,7 +181,9 @@ class AnalysisStatisticalSignificance:
                         if( not evalMetric in gbfrivalues ):
                             gbfrivalues[evalMetric] = []
 
-                        elements = [ dat[model_base][evalMetric][e] for e in ents ]
+                        cur_ents = set( dat[model_base][evalMetric] )
+                        inter = ents.intersection(cur_ents)
+                        elements = [ dat[model_base][evalMetric][e] for e in inter ]
                         if( ref is None ):
                             ref = elements
                         if( len(ref) == len(elements) ):
@@ -195,26 +198,35 @@ class AnalysisStatisticalSignificance:
 
                                 if( entity_metric in dat[model_compare] ):
                                     entity, metric = entity_metric.split('#$@')
-                                    pvalue_wil = ranksums( dat[model_base][entity_metric], dat[model_compare][entity_metric] )
-                                    f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
+                                    valuesA = dat[model_base][entity_metric]
+                                    valuesB = dat[model_compare][entity_metric]
+                                    
+                                    try:
+                                        pvalue_wil = ranksums( valuesA, valuesB )
+                                        f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
+                                    except:
+                                        pass
                             else: # global mode
                                 evalMetric = k
 
-                                entsA = set(dat[model_base][evalMetric])
-                                entsB = set(dat[model_compare][evalMetric])
+                                if( evalMetric in dat[model_compare]):
+                                    entsA = set(dat[model_base][evalMetric])
+                                    entsB = set(dat[model_compare][evalMetric])
 
-                                valuesA = []
-                                valuesB = []
-                                inter = entsA.intersection(entsB)
-                                for e in inter:
-                                    valuesA.append( dat[model_base][evalMetric][e] )
-                                    valuesB.append( dat[model_compare][evalMetric][e] )
-                                
-                                if(len(inter) > 1):
-                                    entity = 'global'
-                                    pvalue_wil = ranksums( valuesA, valuesB )
-                                    f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
-
+                                    valuesA = []
+                                    valuesB = []
+                                    inter = entsA.intersection(entsB)
+                                    for e in inter:
+                                        valuesA.append( dat[model_base][evalMetric][e] )
+                                        valuesB.append( dat[model_compare][evalMetric][e] )
+                                    
+                                    if(len(inter) > 1):
+                                        entity = 'global'
+                                        try:
+                                            pvalue_wil = ranksums( valuesA, valuesB )
+                                            f.write(f"{model_base}\t{model_compare}\t{metric}\t{entity}\t{ pvalue_wil.pvalue }\n")
+                                        except:
+                                            pass
             f.close()
 
             opath = os.path.join( self.out, f'{key}_friedman_analysis.tsv' )
@@ -224,16 +236,22 @@ class AnalysisStatisticalSignificance:
             for k in frivalues:
                 if( len( frivalues[k] ) >= 3 ):
                     entity, metric = k.split('#$@')
-                    res = friedmanchisquare( *( x for x in frivalues[k] ) )
-                    body.append( '\t'.join( [ metric, entity, str(res.pvalue) ] ) )
+                    try:
+                        res = friedmanchisquare( *( x for x in frivalues[k] ) )
+                        body.append( '\t'.join( [ metric, entity, str(res.pvalue) ] ) )
+                    except:
+                        pass
             f.write( '\n'.join(body)+'\n' )
             
             entity = 'global'
             body = []
             for evalMetric in gbfrivalues:
                 if( len( gbfrivalues[evalMetric] ) >= 3 ):
-                    res = friedmanchisquare( *( x for x in gbfrivalues[evalMetric] ) )
-                    body.append( '\t'.join( [ evalMetric, entity, str(res.pvalue) ] ) )
+                    try:
+                        res = friedmanchisquare( *( x for x in gbfrivalues[evalMetric] ) )
+                        body.append( '\t'.join( [ evalMetric, entity, str(res.pvalue) ] ) )
+                    except:
+                        pass
             f.write( '\n'.join(body)+'\n' )
             f.close()
 
@@ -246,7 +264,7 @@ class AnalysisStatisticalSignificance:
         self.logger.info("----------- Significance analysis step ended -----------")
     
     def run(self):
-        self.perform_stats_analysis_per_entity()
+        self.perform_stats_analysis()
  
 if( __name__ == "__main__" ):
     i = AnalysisStatisticalSignificance( )

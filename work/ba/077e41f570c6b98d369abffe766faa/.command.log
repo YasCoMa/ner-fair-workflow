@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 252, in <module>
-    i.run()
-  File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 247, in run
-    self.perform_stats_analysis_per_entity()
-  File "/aloy/home/ymartins/match_clinical_trial/ner_subproj/modules/significance_analysis.py", line 224, in perform_stats_analysis_per_entity
-    entity, metric = k.split('#$@')
-ValueError: not enough values to unpack (expected 2, got 1)

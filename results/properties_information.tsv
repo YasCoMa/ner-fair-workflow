@@ -1,0 +1,25 @@
+Property ID	Type	Label	Description	Domain	Range	Inverse Property
+nerwf.containsTargetEntity	Relationship	containsTargetEntity	Defines the link between the NER task experiment and its target entities that the models will be trained to predict	nerwf.NLPExperiment	nero.NamedEntity	-
+nerwf.executedBy	Relationship	executedBy	Experiments executed by workflow	nerwf.NLPExperiment	xmlpo.workflow	-
+nerwf.predictedByModel	Relationship	predictedByModel	Generation of a predictive model as a product of an operation execution	nerwf.SummaryPrediction	mesh.D000098412	-
+nerwf.generatesModel	Relationship	generatesModel	Generation of a predictive model as a product of an operation execution	edam.operation_0335	mesh.D000098412	-
+nerwf.describesFeatureOf	Relationship	describesFeatureOf	-	xmlpo.Quality	OWL.Class	nerwf.describedBy
+nerwf.executesExperiment	Relationship	executesExperiment	-	xmlpo.workflow	nerwf.NLPExperiment	nerwf.executedBy
+nerwf.hasScore	Relationship	hasScore	Correlates the model evaluation settings with the scores	xmlpo.ModelEvaluationCharacteristic	nerwf.NEREvaluationMeasure	-
+nerwf.hasSummaryPrediction	Relationship	hasSummaryPrediction	Generation of a predictive model as a product of an operation execution	edam.operation_0335	nerwf.SummaryPrediction	-
+nerwf.describedBy	Relationship	describedBy	Classes may be described by an object of Quality class of its subclasses that specify characteristics	OWL.Class	xmlpo.Quality	-
+nerwf.isParameterOf	Relationship	isParameterOf	-	xmlpo.parameterSettings	ncit.C43383	nerwf.hasParameter
+nerwf.applyTaggingFormat	Relationship	applyTaggingFormat	Sets up a chunck style formatting IO	edam.operation_0335  # Data formatting	nerwf.TaggingFormat	-
+nerwf.generatesDataset	Relationship	generatesDataset	Generation of a dataset as a product of an operation execution	edam.operation_0004	xmlpo.Dataset	-
+nerwf.belongsToEntity	Relationship	belongsToEntity	Specify the name of the entity related to the score instance	nerwf.NEREvaluationMeasure	nero.NamedEntity	-
+nerwf.fromEvaluationMetric	Relationship	fromEvaluationMetric	It can be used to specify the model parameters hyper parameters	nerwf.NEREvaluationMeasure  # Model	stato["0000039"] # stato statistic	-
+nerwf.finetunedFrom	Relationship	finetunedFrom	Specify whether a new produced ML model was refined from an LLM model	mesh.D000098342  # LLM	mesh.D000098342	-
+nerwf.hasParameter	Relationship	hasParameter	It can be used to specify the model parameters hyper parameters	ncit.C43383  # Model	xmlpo.parameterSettings	-
+nerwf.containsProcedure	Relationship	containsProcedure	Specify an internal functionality of a workflow	xmlpo.workflow  # Model	xmlpo.Operation # a functional step of the workflow	-
+nerwf.useInputData	Relationship	useInputData	Correlates operation with some declared input data	xmlpo.Operation	 xmlpo.Dataset, xmlpo.Data )	-
+nerwf.underContext	Attribute	underContext	Describes stage of the workflow in which the scores were computed	xmlpo.ModelEvaluationCharacteristic	RDFS.Literal	-
+nerwf.hasReplicateNumber	Attribute	hasReplicateNumber	The replicate index of the asset model or other output	OWL.Class	RDFS.Literal	-
+nerwf.aggregatedByStatsFunction	Attribute	aggregatedByStatsFunction	Describes statistical function used to aggregate the model replicate values of evaluation metrics	nerwf.NEREvaluationMeasure	RDFS.Literal	-
+nerwf.hasPredictedItemsCount	Attribute	hasPredictedItemsCount	Number of words predicted to belong to certain entity	nerwf.SummaryPrediction	RDFS.Literal	-
+nerwf.isAggregatedValue	Attribute	isAggregatedValue	Describes whether the value of the score instance is a result of an statistical aggregation function min	 nerwf.SummaryPrediction, nerwf.NEREvaluationMeasure )	RDFS.Literal	-
+nerwf.reportLevel	Attribute	reportLevel	Describes the level that the score was computed word or token	xmlpo.ModelEvaluationCharacteristic	RDFS.Literal	-

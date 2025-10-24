@@ -1,0 +1,17 @@
+Class ID	Label	Description	Parent class
+nerwf.hasReplicateNumber	hasReplicateNumber	The replicate index of the asset model or other output	-
+xmlpo.Result	Result	Refers to the experiment result	-
+xmlpo.PreprocessedData	PreprocessedData	Refers to the data ready to enter in the model evaluation	-
+nerwf.NLPExperiment	NLPExperiment	Defines the specific computational experiment related to NLP	nerwf.MLExperiment
+edam.format_3862	NLP annotation format	Defines the specific format for NLP	-
+nerwf.SummaryPrediction	SummaryPrediction	Defines a specific type of result	xmlpo.Result
+nerwf.describesFeatureOf	describesFeatureOf	-	-
+xmlpo.Quality	Quality	Refers to the parent class of the descriptive subclasses that characterizes dataset	-
+nerwf.NEREvaluationMeasure	NEREvaluationMeasure	Mode of evaluation specific for NER tasks	xmlpo.ClassPredictionEvaluationMeasure
+nerwf.ValidationSet	ValidationSet	Defines the third type of data split used during the training for the validation batch examples	xmlpo.PreprocessedData
+nerwf.describedBy	describedBy	Classes may be described by an object of Quality class of its subclasses that specify characteristics	-
+nerwf.TaggingFormat	TaggingFormat	Defines the style of annotating the prefixes of the NER entties assigned to the tokens in the text	edam.format_3862   # NLP annotation format class from edam format branch
+edam.operation_0004	Operation	Defines the certain execution procedure	-
+nerwf.MLExperiment	MLExperiment	Defines the specification of computational experiment related to machine learning	xmlpo.Experiment
+xmlpo.ClassPredictionEvaluationMeasure	ClassPredictionEvaluationMeasure	Measure to evaluate the prediction	-
+xmlpo.Operation	Operation	Defines a procedure inserted as part of a pipeline	-

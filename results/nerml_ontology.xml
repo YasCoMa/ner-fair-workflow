@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"
+xml:base="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"
+
+   xmlns:dcterms="http://purl.org/dc/terms/"
+   xmlns:owl="http://www.w3.org/2002/07/owl#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#hasPredictedItemsCount">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#SummaryPrediction"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:label xml:lang="en">hasPredictedItemsCount</rdfs:label>
+    <rdfs:comment xml:lang="en">Number of words predicted to belong to certain entity</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#underContext">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/ModelEvaluationCharacteristic"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:label xml:lang="en">underContext</rdfs:label>
+    <rdfs:comment xml:lang="en">Describes stage of the workflow in which the scores were computed</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#aggregatedByStatsFunction">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NEREvaluationMeasure"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:label xml:lang="en">aggregatedByStatsFunction</rdfs:label>
+    <rdfs:comment xml:lang="en">Describes statistical function used to aggregate the model replicate values of evaluation metrics</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#finetunedFrom">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#TransitiveProperty"/>
+    <rdfs:domain rdf:resource="http://id.nlm.nih.gov/mesh/D000098342"/>
+    <rdfs:range rdf:resource="http://id.nlm.nih.gov/mesh/D000098342"/>
+    <rdfs:label xml:lang="en">finetunedFrom</rdfs:label>
+    <rdfs:comment xml:lang="en">Specify whether a new produced ML model was refined from an LLM model</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#hasScore">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/ModelEvaluationCharacteristic"/>
+    <rdfs:range rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NEREvaluationMeasure"/>
+    <rdfs:label xml:lang="en">hasScore</rdfs:label>
+    <rdfs:comment xml:lang="en">Correlates the model evaluation settings with the scores</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#belongsToEntity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NEREvaluationMeasure"/>
+    <rdfs:range rdf:resource="http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#NamedEntity"/>
+    <rdfs:label xml:lang="en">belongsToEntity</rdfs:label>
+    <rdfs:comment xml:lang="en">Specify the name of the entity related to the score instance</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#hasSummaryPrediction">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://edamontology.org/operation_0335"/>
+    <rdfs:range rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#SummaryPrediction"/>
+    <rdfs:label xml:lang="en">hasSummaryPrediction</rdfs:label>
+    <rdfs:comment xml:lang="en">Generation of a predictive model as a product of an operation execution</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#useInputData">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Operation"/>
+    <rdfs:range rdf:nodeID="N030c05db252e4b42becf81a9204e2b8a"/>
+    <rdfs:label xml:lang="en">useInputData</rdfs:label>
+    <rdfs:comment xml:lang="en">Correlates operation with some declared input data</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#generatesDataset">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://edamontology.org/operation_0004"/>
+    <rdfs:range rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Dataset"/>
+    <rdfs:label xml:lang="en">generatesDataset</rdfs:label>
+    <rdfs:comment xml:lang="en">Generation of a dataset as a product of an operation execution</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#generatesModel">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://edamontology.org/operation_0335"/>
+    <rdfs:range rdf:resource="http://id.nlm.nih.gov/mesh/D000098412"/>
+    <rdfs:label xml:lang="en">generatesModel</rdfs:label>
+    <rdfs:comment xml:lang="en">Generation of a predictive model as a product of an operation execution</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#isAggregatedValue">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:domain rdf:nodeID="N77c74a1e315b44438be784636efb1614"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:label xml:lang="en">isAggregatedValue</rdfs:label>
+    <rdfs:comment xml:lang="en">Describes whether the value of the score instance is a result of an statistical aggregation function (min, max, mean, etc)</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="N77c74a1e315b44438be784636efb1614">
+    <rdf:first rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#SummaryPrediction"/>
+    <rdf:rest rdf:nodeID="Nb91215b84f5749ca9432f99ad7fbe6dc"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#describedBy">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:range rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Quality"/>
+    <rdfs:label xml:lang="en">describedBy</rdfs:label>
+    <rdfs:comment xml:lang="en">Classes may be described by an object of Quality class of its subclasses that specify characteristics</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#nlpformat_io">
+    <rdf:type rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#TaggingFormat"/>
+    <rdfs:label>IO</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#describesFeatureOf">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <owl:inverseOf rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#describedBy"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Quality"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">describesFeatureOf</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#executedBy">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NLPExperiment"/>
+    <rdfs:range rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/workflow"/>
+    <rdfs:label xml:lang="en">executedBy</rdfs:label>
+    <rdfs:comment xml:lang="en">Experiments executed by workflow, a step of workflow can also be executed by an algorithm</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NEREvaluationMeasure">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/ClassPredictionEvaluationMeasure"/>
+    <rdfs:label xml:lang="en">NEREvaluationMeasure</rdfs:label>
+    <rdfs:comment xml:lang="en">Mode of evaluation specific for NER tasks, like seqeval or scikit learn</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#predictedByModel">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#SummaryPrediction"/>
+    <rdfs:range rdf:resource="http://id.nlm.nih.gov/mesh/D000098412"/>
+    <rdfs:label xml:lang="en">predictedByModel</rdfs:label>
+    <rdfs:comment xml:lang="en">Generation of a predictive model as a product of an operation execution</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://edamontology.org/format_3862">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">NLP annotation format</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the specific format for NLP</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#reportLevel">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/ModelEvaluationCharacteristic"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:label xml:lang="en">reportLevel</rdfs:label>
+    <rdfs:comment xml:lang="en">Describes the level that the score was computed (word or token)</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="Nb91215b84f5749ca9432f99ad7fbe6dc">
+    <rdf:first rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NEREvaluationMeasure"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Result">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">Result</rdfs:label>
+    <rdfs:comment xml:lang="en">Refers to the experiment result</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#ValidationSet">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/PreprocessedData"/>
+    <rdfs:label xml:lang="en">ValidationSet</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the third type of data split used during the training for the validation batch examples</rdfs:comment>
+    <owl:disjointWith rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/TrainSet"/>
+    <owl:disjointWith rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/TestSet"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#hasReplicateNumber">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+    <rdfs:label xml:lang="en">hasReplicateNumber</rdfs:label>
+    <rdfs:comment xml:lang="en">The replicate index of the asset (model or other output)</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://w3id.org/ontouml-models/model/xhani2023xmlpo/MLModel">
+    <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/NCIT_C43383"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#SummaryPrediction">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Result"/>
+    <rdfs:label xml:lang="en">SummaryPrediction</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines a specific type of result, in this case the one that summarizes the model replicate consensus</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#hasParameter">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="http://purl.obolibrary.org/obo/NCIT_C43383"/>
+    <rdfs:range rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/parameterSettings"/>
+    <rdfs:label xml:lang="en">hasParameter</rdfs:label>
+    <rdfs:comment xml:lang="en">It can be used to specify the model parameters (hyper parameters)</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#fromEvaluationMetric">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NEREvaluationMeasure"/>
+    <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/STATO_0000039"/>
+    <rdfs:label xml:lang="en">fromEvaluationMetric</rdfs:label>
+    <rdfs:comment xml:lang="en">It can be used to specify the model parameters (hyper parameters)</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Quality">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">Quality</rdfs:label>
+    <rdfs:comment xml:lang="en">Refers to the parent class of the descriptive subclasses that characterizes dataset, model evaluation, parameters of operations, etc.</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#executesExperiment">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <owl:inverseOf rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#executedBy"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/workflow"/>
+    <rdfs:range rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NLPExperiment"/>
+    <rdfs:label xml:lang="en">executesExperiment</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Operation">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">Operation</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines a procedure inserted as part of a pipeline</rdfs:comment>
+    <owl:sameAs rdf:resource="http://edamontology.org/operation_0004"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#containsProcedure">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/workflow"/>
+    <rdfs:range rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Operation"/>
+    <rdfs:label xml:lang="en">containsProcedure</rdfs:label>
+    <rdfs:comment xml:lang="en">Specify an internal functionality of a workflow</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#isParameterOf">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <owl:inverseOf rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#hasParameter"/>
+    <rdfs:domain rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/parameterSettings"/>
+    <rdfs:range rdf:resource="http://purl.obolibrary.org/obo/NCIT_C43383"/>
+    <rdfs:label xml:lang="en">isParameterOf</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#TaggingFormat">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="http://edamontology.org/format_3862"/>
+    <rdfs:label xml:lang="en">TaggingFormat</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the style of annotating the prefixes of the NER entties assigned to the tokens in the text</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#MLExperiment">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Experiment"/>
+    <rdfs:label xml:lang="en">MLExperiment</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the specification of computational experiment related to machine learning</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#applyTaggingFormat">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:domain rdf:resource="http://edamontology.org/operation_0335"/>
+    <rdfs:range rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#TaggingFormat"/>
+    <rdfs:label xml:lang="en">applyTaggingFormat</rdfs:label>
+    <rdfs:comment xml:lang="en">Sets up a chunck style formatting (IO, IOB, BILOU, BIOES, etc)</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://edamontology.org/operation_0004">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">Operation</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the certain execution procedure, it can be a function, a computational method, etc.</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#nlpformat_bioes">
+    <rdf:type rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#TaggingFormat"/>
+    <rdfs:label>BIOES</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="N74c104d3f14b469491ec0b4a61bd8b61">
+    <rdf:first rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Data"/>
+    <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://NERMachineLearningPipelineOntology">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+    <dcterms:license rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+    <rdfs:comment xml:lang="en">NER ML ontology is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NLPExperiment">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#MLExperiment"/>
+    <rdfs:label xml:lang="en">NLPExperiment</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the specific computational experiment related to NLP</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#containsTargetEntity">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:domain rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#NLPExperiment"/>
+    <rdfs:range rdf:resource="http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#NamedEntity"/>
+    <rdfs:label xml:lang="en">containsTargetEntity</rdfs:label>
+    <rdfs:comment xml:lang="en">Defines the link between the NER task experiment and its target entities that the models will be trained to predict</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#nlpformat_iob">
+    <rdf:type rdf:resource="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfairwf_ontology.owl#TaggingFormat"/>
+    <rdfs:label>IOB</rdfs:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://w3id.org/ontouml-models/model/xhani2023xmlpo/PreprocessedData">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">PreprocessedData</rdfs:label>
+    <rdfs:comment xml:lang="en">Refers to the data ready to enter in the model evaluation</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="https://w3id.org/ontouml-models/model/xhani2023xmlpo/ClassPredictionEvaluationMeasure">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">ClassPredictionEvaluationMeasure</rdfs:label>
+    <rdfs:comment xml:lang="en">Measure to evaluate the prediction</rdfs:comment>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://id.nlm.nih.gov/mesh/D000098342">
+    <rdfs:subClassOf rdf:resource="http://id.nlm.nih.gov/mesh/D000098412"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://id.nlm.nih.gov/mesh/D000098412">
+    <rdfs:subClassOf rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/MLModel"/>
+  </rdf:Description>
+  <rdf:Description rdf:nodeID="N030c05db252e4b42becf81a9204e2b8a">
+    <rdf:first rdf:resource="https://w3id.org/ontouml-models/model/xhani2023xmlpo/Dataset"/>
+    <rdf:rest rdf:nodeID="N74c104d3f14b469491ec0b4a61bd8b61"/>
+  </rdf:Description>
+</rdf:RDF>

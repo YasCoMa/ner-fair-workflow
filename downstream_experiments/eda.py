@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import json
+import glob
 import pickle
 import optuna
 import pandas as pd
@@ -459,6 +460,31 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         cmd = f"nextflow run /aloy/home/ymartins/match_clinical_trial/ner_subproj/main.nf --dataDir /aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/ --runningConfig {cpath} --mode 'significance_analysis'"
         os.system(cmd)
 
+    def compile_results_significance(self):
+        fs = glob.glob("/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/significance_analysis/*token*wilco*")
+        evals_nerwf = ["biobert-original-hypersearch-biobert-base-cased-v1.2-finetuned-ner"]
+        evals_external = ["PICO-Reference", "Experiment-1", "Experiment-2"]
+        
+        opath = os.path.join(self.out, 'supp-table-2_compiled_significance analysis.tsv')
+        lines = []
+        header = ["context", "evaluation mode", "evaluator_1", "evaluator_2", "p-value"]
+        lines.append(header)
+        for f in fs:
+            context, evmode = f.split('/')[-1].split('_')[:2]
+            df = pd.read_csv(f, sep='\t')
+            for i in df.index:
+                m1 = df.loc[i, 'model_base']
+                m2 = df.loc[i, 'model_comparison']
+                pv = df.loc[i, 'p_value_wilcoxon']
+
+                if( ((m1 in evals_nerwf) and (m2 in evals_external)) or ((m2 in evals_nerwf) and (m1 in evals_external)) ):
+                    lines.append( [context, evmode, m1, m2, pv] )
+
+        lines = list( map( lambda x: '\t'.join([ str(el) for el in x]), lines))
+        f = open(opath, 'w')
+        f.write( '\n'.join(lines) )
+        f.close()
+
     def run(self):
         #self.wrap_picods_comp_metrics_reprod()
         #self.wrap_bench_dss_eval_metrics_reprod()
@@ -466,7 +492,8 @@ weighted-avg 0.8282 0.6872(+-0.0031) 0.7273(+-0.0118)"""
         #self._check_correlation_count_eval()
 
         #self.check_best_merged_individual_models()
-        self.test_significance_module()
+        #self.test_significance_module()
+        self.compile_results_significance()
 
 if( __name__ == "__main__" ):
     odir = '/aloy/home/ymartins/match_clinical_trial/outnerwf'

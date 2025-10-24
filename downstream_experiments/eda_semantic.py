@@ -336,8 +336,13 @@ class ExplorationSemanticResults:
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.label,   Literal("hasPredictedItemsCount", lang="en")))
         g.add(( self.nerwf.hasPredictedItemsCount, RDFS.comment,   Literal("Number of words predicted to belong to certain entity", lang="en")))
         
-        path = os.path.join( self.out, f'complete_nerml_ontology.xml' )
+        path = os.path.join( self.out, f'nerml_ontology.xml' )
         g.serialize( destination = path, format = 'xml' )
+        txt = open( path ).read()
+        txt = txt.replace('<rdf:RDF','<rdf:RDF xmlns="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\nxml:base="https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#"\n')
+        f = open( path, 'w')
+        f.write(txt)
+        f.close()
 
         self.graph = g
 
@@ -856,10 +861,9 @@ WHERE {
         exg = d['google']['Retrieve the name and value of the hyperparameters used by each model']['query']
 
     def run(self):
-        #self._define_new_onto_elements()
-        #self.organize_onto_info_in_supp_tables()
+        self._define_new_onto_elements()
+        self.organize_onto_info_in_supp_tables()
         
-
         #self.count_new_classes_properties()
         #self.count_instances_per_class()
 
@@ -868,7 +872,7 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         #self.check_llm_queries()
-        self.parse_llm_queries_result()
+        #self.parse_llm_queries_result()
         self.analysis_llm_queries()
 
         #self.execute_humanBased_queries()

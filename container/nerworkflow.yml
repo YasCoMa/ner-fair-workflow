@@ -33,6 +33,7 @@ dependencies:
   - azure-storage-blobs-cpp=12.14.0=hb1c9500_1
   - azure-storage-common-cpp=12.10.0=hebae86a_2
   - azure-storage-files-datalake-cpp=12.12.0=h8b27e44_3
+  - bottleneck=1.6.0=py310hf779ad0_0
   - brotli-python=1.1.0=py310hf71b8c6_3
   - bzip2=1.0.8=h4bc722e_7
   - c-ares=1.34.5=hb9d3cd8_0
@@ -146,11 +147,11 @@ dependencies:
   - nlohmann_json=3.12.0=h3f2d84a_0
   - numpy=2.2.6=py310hefbff90_0
   - openjdk=23.0.2=h53dfc1b_2
-  - openssl=3.5.1=h7b32b05_0
+  - openssl=3.5.3=h26f9b46_0
   - optuna=4.4.0=pyhd8ed1ab_0
   - orc=2.1.3=h61e0c1e_0
   - packaging=25.0=pyh29332c3_1
-  - pandas=2.3.1=py310h0158d43_0
+  - pandas=2.3.2=py310h0158d43_0
   - pcre2=10.45=hc749103_0
   - pip=25.2=pyh8b19718_0
   - pixman=0.46.4=h537e5f6_0
@@ -230,6 +231,7 @@ dependencies:
       - biopython==1.85
       - bleach==6.2.0
       - blis==1.3.0
+      - cachetools==5.5.2
       - catalogue==2.0.10
       - choreographer==1.0.9
       - click==8.2.1
@@ -248,8 +250,15 @@ dependencies:
       - executing==2.2.0
       - faiss-cpu==1.11.0.post1
       - fastjsonschema==2.21.1
+      - filetype==1.2.0
       - fonttools==4.59.0
       - fqdn==1.5.1
+      - google-ai-generativelanguage==0.6.18
+      - google-api-core==2.25.1
+      - google-auth==2.40.3
+      - googleapis-common-protos==1.70.0
+      - grpcio==1.74.0
+      - grpcio-status==1.74.0
       - h11==0.16.0
       - httpcore==1.0.9
       - httpx==0.28.1
@@ -283,10 +292,15 @@ dependencies:
       - kiwisolver==1.4.8
       - langchain==0.3.27
       - langchain-community==0.3.27
-      - langchain-core==0.3.72
-      - langchain-ollama==0.3.6
+      - langchain-core==0.3.79
+      - langchain-google-genai==2.1.10
+      - langchain-ollama==0.3.10
       - langchain-text-splitters==0.3.9
       - langcodes==3.5.0
+      - langgraph==1.0.1
+      - langgraph-checkpoint==3.0.0
+      - langgraph-prebuilt==1.0.1
+      - langgraph-sdk==0.2.9
       - langsmith==0.4.13
       - language-data==1.3.0
       - lark==1.2.2
@@ -325,9 +339,11 @@ dependencies:
       - nvidia-nccl-cu12==2.26.2
       - nvidia-nvjitlink-cu12==12.6.85
       - nvidia-nvtx-cu12==12.6.77
-      - ollama==0.5.3
+      - ollama==0.6.0
       - orjson==3.11.1
+      - ormsgpack==1.11.0
       - overrides==7.7.0
+      - owlready2==0.48
       - pandocfilters==1.5.1
       - paramiko==4.0.0
       - parso==0.8.4
@@ -338,9 +354,13 @@ dependencies:
       - preshed==3.0.10
       - prometheus-client==0.22.1
       - prompt-toolkit==3.0.51
+      - proto-plus==1.26.1
+      - protobuf==6.32.0
       - psutil==7.0.0
       - ptyprocess==0.7.0
       - pure-eval==0.2.3
+      - pyasn1==0.6.1
+      - pyasn1-modules==0.4.2
       - pydantic==2.11.7
       - pydantic-core==2.33.2
       - pydantic-settings==2.10.1
@@ -361,6 +381,7 @@ dependencies:
       - rfc3987-syntax==1.1.0
       - rich==14.1.0
       - rpds-py==0.27.0
+      - rsa==4.9.1
       - seaborn==0.13.2
       - send2trash==1.8.3
       - shellingham==1.5.4
@@ -373,10 +394,12 @@ dependencies:
       - spacy-loggers==1.0.5
       - srsly==2.5.1
       - stack-data==0.6.3
+      - strsimpy==0.2.1
       - sympy==1.14.0
       - tenacity==9.1.2
       - terminado==0.18.1
       - thinc==8.3.6
+      - tiktoken==0.11.0
       - tinycss2==1.4.0
       - torch==2.7.1
       - torchmetrics==1.8.1

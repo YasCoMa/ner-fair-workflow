@@ -836,12 +836,14 @@ WHERE {
         json.dump( dat, open(opath, 'w') )
 
         lines = []
-        lines.append( ['model', 'cq', 'query'] )
+        lines.append( ['model', 'cq', 'query', 'length_results'] )
         for m in dat:
             for cq in dat[m]:
                 q = dat[m][cq]['query']
-                lines.append( [m, cq, q] )
-        lines = list( map( lambda x: '\t'.join(x), lines ))
+                nr = len( dat[m][cq]['resq'] )
+
+                lines.append( [m, cq, q, nr ] )
+        lines = list( map( lambda x: '\t'.join( [ str(el) for el in x] ), lines ))
         opath = os.path.join( self.out, 'table_llm_results.tsv')
         f = open(opath, 'w')
         f.write( '\n'.join(lines)+'\n' )
@@ -861,8 +863,8 @@ WHERE {
         exg = d['google']['Retrieve the name and value of the hyperparameters used by each model']['query']
 
     def run(self):
-        self._define_new_onto_elements()
-        self.organize_onto_info_in_supp_tables()
+        #self._define_new_onto_elements()
+        #self.organize_onto_info_in_supp_tables()
         
         #self.count_new_classes_properties()
         #self.count_instances_per_class()
@@ -872,7 +874,7 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         #self.check_llm_queries()
-        #self.parse_llm_queries_result()
+        self.parse_llm_queries_result()
         self.analysis_llm_queries()
 
         #self.execute_humanBased_queries()

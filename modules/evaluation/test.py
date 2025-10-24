@@ -107,6 +107,14 @@ class Test:
             if( "key" in self.config["test_data"] ):
                 if( self.config["test_data"]["key"] is not None and self.config["test_data"]["key"] != ""):
                     testkey = self.config["test_data"]["key"]
+        '''
+        "report_summary_stats_metric": "median",
+        "test_data": { 
+            "identifier": "merged-test", 
+            "path": "/aloy/home/ymartins/match_clinical_trial/nerfairwf_experiments/trials/biobert-merged_test-hypersearch-biobert-base-cased-v1.2-finetuned-ner/preprocessing/dataset_full_nosplit_v0.1", 
+            "key": null 
+        }
+        '''
 
         self.label_list = json.load( open( self.config["target_tags"], 'r') )
 

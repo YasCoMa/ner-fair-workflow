@@ -70,6 +70,12 @@ class Training:
     datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('training')
 
+        '''
+        "do_hyperparameter_search": false,
+        "hyperparameter_path": "/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-original-hypersearch-biobert-base-cased-v1.2-finetuned-ner/training/best_params.pkl",
+        "optimization_metric": "f1"
+        '''
+
         try:
             self.expid = self.config["identifier"]
             self.model_checkpoint = self.config["pretrained_model"]

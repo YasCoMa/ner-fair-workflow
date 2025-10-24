@@ -43,6 +43,11 @@ class Preprocessing:
     datefmt='%Y-%m-%d %H:%M:%S' )
         self.logger = logging.getLogger('preprocessing')
 
+        '''
+        "data_text_path": "/aloy/home/ymartins/match_clinical_trial/experiments/data/",
+        "eliminate_overlappings": true
+        '''
+
         try:
             self.model_checkpoint = self.config["pretrained_model"]
             self.dataDir = self.config["data_text_path"]

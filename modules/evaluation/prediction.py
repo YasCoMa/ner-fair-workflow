@@ -73,6 +73,11 @@ class Prediction:
         else:
             flag_prediction = False
 
+        '''
+        "config_hpc": "/aloy/home/ymartins/match_clinical_trial/config_hpc_sge.json",
+        "input_prediction": "/aloy/home/ymartins/match_clinical_trial/experiments/validation/input_prediction/"
+        '''
+
         if( not flag_prediction ):
             self._mark_as_done()
         else:

@@ -97,6 +97,16 @@ class SemanticDescription:
         if( 'source' not in self.exp_metadata):
             self.exp_metadata['source'] = ''
 
+        '''
+        "experiment_metadata": { 
+            "name": "NER for PICO entities - Augmentation dataset", 
+            "domain": "NER for PICO entities in texts concerning clinical trials", 
+            "description": "Finetuning of the biobert LLM model for NER task applied to identification of entities on pubmed abstracts regarding clinical trials. These entities are related to participants characterization, interventions, control vectors and outcomes." ,
+            "source": "The original input data comprises 1011 pubmed abstracts annotated by human curators concerning entities related to clinical trials. The link for the data is https://github.com/sociocom/PICO-Corpus/tree/main/pico_corpus_brat_annotated_files"
+            }
+        }
+        '''
+
     def _setup_namespaces(self):
         g = self.graph
 

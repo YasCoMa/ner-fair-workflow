@@ -37,21 +37,19 @@ We have developed a comprehensive workflow with six functionalities: (1) Data tr
 
 2. Modes of execution:
 	- **Run All:**
-		- ````nextflow run main.nf```` or ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode train --execution_step 0````
-	- **Run Data Selection:**
-		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode test --execution_step 1````
-	- **Run Feature extraction:**
-		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode test --execution_step 2````
-		- Or ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode train --execution_step 2````
-	- **Run Evaluation:**
-		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode train --execution_step 3````
+		- ````nextflow run main.nf```` or ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode all ````
+	- **Run Pre-processing:**
+		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode preprocess ````
+	- **Run Training:**
+		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode training````
+	- **Run Test:**
+		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode test````
 	- **Run Prediction:**
-		- In the chosen dataDir, uncompress the trained model folders in the link https://www.dropbox.com/scl/fi/jfxkdp423lm2cs72ljm1z/models_data.tar.xz?rlkey=2ggl1jagkg5qlh6yf40brcniy&st=c40ru97j&dl=0
-		- in the best_trained_models folder, adjust the model_path key in each json file to add the prefix with dataDir path.
-		- Or run the training step before the prediction
-		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode test --execution_step 3````
-	- **Run AD Analysis (It assumes that the selected datasets finished the evaluation step):**
-		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode ada ````
+		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode prediction````
+	- **Run Metadata Enrichment:**
+		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode metadata_enrichment````
+	- **Run Significance analysis:**
+		- ````nextflow run main.nf --dataDir /path/to/paprec_data --runningConfig /path/to/running_config.json --mode significance_analysis````
 
 ## Reference
 

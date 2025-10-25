@@ -85,7 +85,7 @@ We have developed a comprehensive workflow with six functionalities: (1) Data tr
 		            "results": { "age": { "f1-score": [0.8, 0.8, 0.8, 0.8], "accuracy": [0.9, 0.9, 0.9, 0.9, 0.9] }, "outcome": { "f1-score": [0.8, 0.8, 0.8, 0.8], "accuracy": [0.9, 0.9, 0.9, 0.9, 0.9] } } 
 		        } 
 		    ] 
-		}` or  `"external_eval_data": { 
+		}` or `"external_eval_data": { 
 		    "mode": "global",
 		    "agg_function": "median",
 		    "evaluators": [ 

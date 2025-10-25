@@ -38,7 +38,7 @@ class IntegrateExperimentKnowledgeGraphs:
         dss = self.dss
         configs = []
         for ds in dss:
-            configs.append( "%s/configs/config_%s.json" %(root_path, ds) )
+            configs.append( "%s/configs/config_%s.json" %(self.exp_folder, ds) )
 
         for c in configs:
             config = json.load( open(c, 'r') )
@@ -80,9 +80,12 @@ class IntegrateExperimentKnowledgeGraphs:
         self.load_graphs()
 
 if( __name__ == "__main__" ):
-    exp_folder = "./preprocessed_datasets_for_workflow"
     fout = "./merged_experiment_graphs"
+    exp_folder = "./preprocessed_datasets_for_workflow"
     if( len(sys.argv) > 1 ):
         fout = sys.argv[1]
+        if( len(sys.argv) > 2 ):
+            exp_folder = sys.argv[2]
+
     i = IntegrateExperimentKnowledgeGraphs( exp_folder, fout )
     i.run()

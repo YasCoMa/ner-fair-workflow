@@ -171,11 +171,12 @@ class PreprocessBenchmarkDatasets:
         self._prepare_tags('merged', tags)
 
     def make_config(self):
+        rootpath = self.fout
         exec_path = os.path.join( self.fout, 'trials')
         tout = os.path.join( self.fout, 'tags')
         fout = os.path.join( self.fout, 'configs')
         hpath = self.hyperparams
-        cmdpath = 
+        cmdpath = os.path.join( self.fout, 'commands.json')
             
         commands = {}
         dss = [ "bc5cdr", "ncbi", "biored", "chia_without_scope", "chia_without_scope", "merged_train", "merged_test" ]

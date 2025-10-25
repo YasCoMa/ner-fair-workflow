@@ -1,0 +1,16 @@
+{
+    "PATH": {
+        "TMP": "'_tmpDir_'",
+        "SINGULARITY_IMAGE": "'_pathToImage_'"
+    },
+    "HPC": {
+        "system" : "'_hpcEnv_'",
+        "host": "'_hostIp_'",
+        "queue": "'_queueId_'",
+        "nodelist": "''",
+        "username": "'_sshUser_'",
+        "password": "'_sshPass_'",
+        "partition": "''"
+    }
+
+}

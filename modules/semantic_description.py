@@ -89,7 +89,7 @@ class SemanticDescription:
         _id = self.gen_id('exp')
         self.exp_metadata['id'] = _id
         if( 'name' not in self.exp_metadata):
-            self.exp_metadata['name'] = f'NLP Experiment for namd entity recognition - identifier {_id}'
+            self.exp_metadata['name'] = f'NLP Experiment for named entity recognition - identifier {_id}'
         if( 'description' not in self.exp_metadata):
             self.exp_metadata['description'] = ''
         if( 'domain' not in self.exp_metadata):

@@ -74,6 +74,7 @@ class Training:
         "do_hyperparameter_search": false,
         "hyperparameter_path": "/aloy/home/ymartins/match_clinical_trial/experiments/biobert_trial/biobert-original-hypersearch-biobert-base-cased-v1.2-finetuned-ner/training/best_params.pkl",
         "optimization_metric": "f1"
+        "report_summary_stats_metric": "median"
         '''
 
         try:

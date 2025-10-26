@@ -715,7 +715,7 @@ WHERE {
         }
         llms = { 
             'google': ["gemini-2.0-flash"], 
-            'llama': ["llama3.2","deepseek-r1"]
+            'llama': ["llama3.2","deepseek-r1", "mistral"]
         }
 
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')

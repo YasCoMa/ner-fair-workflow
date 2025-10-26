@@ -655,48 +655,7 @@ group by ?c
 
     def execute_humanBased_queries(self):
         cq = "what are the f1-score values aggregated by max per model in the test context?"
-        llmq = """
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
-PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
-
-SELECT ?f1ScoreValue
-WHERE {
-  ?evaluation nf:hasScore ?score .
-  ?score rdf:type nf:NEREvaluationMeasure .
-  ?score rdfs:label "f1-score" .
-  ?score nf:hasValue ?f1ScoreValue .
-  ?score nf:aggregatedByStatsFunction "max" .
-  ?score nf:underContext "Test" .
-  
-}
-"""
-        prefixes = '''
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
-PREFIX xhani: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
-SELECT *
-WHERE {
-  ?workflow nf:containsProcedure ?operation .
-  ?operation nf:generatesModel ?model .
-  ?operation nf:describedBy ?evaluation .
-  
-  ?evaluation nf:hasScore ?score .
-  ?evaluation nf:underContext "test" .
-  ?score rdf:type nf:NEREvaluationMeasure .
-  ?score nf:fromEvaluationMetric  stato:0000628 .
-  ?score nf:hasValue ?f1ScoreValue .
-  ?score nf:aggregatedByStatsFunction "max" .
-  ?score nf:belongsToEntity ?ent .
-  ?ent rdfs:label ?entity .
-  
-}
-limit 4
-
-Retrieve the number of models and datasets by experiment
-'''        
+        
         hq = """
 SELECT ?level ?technique ?entity ?f1ScoreValue
 WHERE {
@@ -861,7 +820,8 @@ WHERE {
         nero = Namespace("http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#")
         
         qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato, 'vcard': vcard, "nero": nero } )
-        return qres
+        lres = [ row for row in qres ]
+        return lres
 
     def parse_human_gold_queries(self):
         flag = False
@@ -915,19 +875,19 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         
-        self.check_llm_queries()
-        self.parse_llm_queries_result()
+        #self.check_llm_queries()
+        #self.parse_llm_queries_result()
         
         #self.analysis_llm_queries()
 
-        #self.parse_human_gold_queries()
+        self.parse_human_gold_queries()
 
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
-    odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
     odir = '../paper_files/out_eda_semantic'
+    odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

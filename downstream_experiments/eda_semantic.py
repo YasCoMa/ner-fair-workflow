@@ -809,7 +809,7 @@ WHERE {
         ]
 
     def parse_llm_queries_result(self):
-        path = os.path.join(self.out, 'stdout_sparql_llm-multiple_round1.txt')
+        path = os.path.join(self.out, 'stdout_sparql_llm-multiple_round2.txt')
 
         dat = {}
         flag = False
@@ -884,7 +884,7 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         self.check_llm_queries()
-        #self.parse_llm_queries_result()
+        self.parse_llm_queries_result()
         #self.analysis_llm_queries()
 
         #self.execute_humanBased_queries()

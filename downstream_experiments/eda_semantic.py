@@ -764,12 +764,14 @@ WHERE {
         graph.load_schema()
 
         for provider in llms:
-            print('--------> model type: ', provider)
             dat[provider] = {}
             models = llms[provider]
 
             for m in models:
+                k = provider + '|' + m
+                print('--------> model type: ', k)
                 dat[provider][m] = {}
+
                 if(provider == 'google'):
                     llm = ChatGoogleGenerativeAI( model = m, temperature=0 )
                 if(provider == 'llama'):
@@ -826,12 +828,15 @@ WHERE {
                 flag = False
 
             elif(line.find('Full Context:') != -1):
-                content = lines[i+1].replace('[32;1m[1;3m','').replace('[0m','')
                 try:
-                    dat[model][cq]['resq'] = eval(content)
+                    content = lines[i+1].replace('[32;1m[1;3m','').replace('[0m','')
+                    try:
+                        dat[model][cq]['resq'] = eval(content)
+                    except:
+                        dat[model][cq]['resq'] = content
                 except:
-                    dat[model][cq]['resq'] = content
-
+                    print(i, line)
+                    
                 flag = False
 
             elif( flag ):

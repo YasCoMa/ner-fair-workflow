@@ -686,7 +686,7 @@ WHERE {
   ?evaluation nf:hasScore ?score .
   ?evaluation nf:underContext "test" .
   ?score rdf:type nf:NEREvaluationMeasure .
-  ?score nf:fromEvaluationMetric  stato:0000628.
+  ?score nf:fromEvaluationMetric  stato:0000628 .
   ?score nf:hasValue ?f1ScoreValue .
   ?score nf:aggregatedByStatsFunction "max" .
   ?score nf:belongsToEntity ?ent .
@@ -695,7 +695,7 @@ WHERE {
 }
 limit 4
 
-
+Retrieve the number of models and datasets by experiment
 '''        
         hq = """
 SELECT ?level ?technique ?entity ?f1ScoreValue
@@ -713,10 +713,8 @@ WHERE {
   ?score nf:belongsToEntity ?ent .
   ?ent rdfs:label ?entity .
   
-  filter(regex(?ctx, "test", "i" )) .
   filter(regex(?agg, "max", "i" )) .
 }
-limit 4
 """
 
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
@@ -728,8 +726,9 @@ limit 4
         xhani = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/")
         nf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
         stato = Namespace("http://purl.obolibrary.org/obo/STATO_")
+        nero = Namespace("http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#")
         
-        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato, 'vcard': vcard } )
+        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato, 'vcard': vcard, "nero": nero } )
         #qres = gr.query( hq )
         for row in qres:
             print( row )
@@ -745,15 +744,19 @@ limit 4
             "Get the distinct statistical functions used to aggregate the evaluation metrics",
             "Get the distinct evaluation techniques used in the experiments",
             "Retrieve the name and value of the hyperparameters used by each model",
-            "what is the largest dataset used in the train context",
-            "which evaluation technique is associated to the highest mcc values?",
+            "what is the number of features and instances of the largest dataset",
+            "which evaluation technique is associated to the highest mcc values",
             "For each experiment, retrieve the evaluation technique and the level that obtained the highest mcc values for each entity",
-            "For each level, technique and entity, retrieve the f1-score values aggregated by max per model in the test context?"
+            "For each level, technique and entity, retrieve the f1-score values aggregated by max in the test context?"
         ]
 
         llms = { 
             'google': ChatGoogleGenerativeAI( model = self.google_model, temperature=0 ), 
             'llama': ChatOllama( model = self.llama_model, temperature=0 ) 
+        }
+        llms = { 
+            'google': ["gemini-2.0-flash", "gemini-2.5-flash"], 
+            'llama': ["llama3.2","deepseek-r1"]
         }
 
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
@@ -762,18 +765,26 @@ limit 4
 
         for provider in llms:
             print('--------> model type: ', provider)
-            llm = llms[provider]
-            chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
             dat[provider] = {}
-            for q in cqs:
-                print('\t question: ', q)
-                try:
-                    result = chain.invoke( q )
-                    #dat.append( { 'q': q, 'result': result } )
-                    dat[provider][q] = result
-                except:
-                    dat[provider][q] = "sparql syntax error"
-                time.sleep(60)
+            models = llms[provider]
+
+            for m in models:
+                dat[provider][m] = {}
+                if(provider == 'google'):
+                    llm = ChatGoogleGenerativeAI( model = m, temperature=0 )
+                if(provider == 'llama'):
+                    llm = ChatOllama( model = self.llama_model, temperature=0 ) 
+                chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
+
+                for q in cqs:
+                    print('\t question: ', q)
+                    try:
+                        result = chain.invoke( q )
+                        #dat.append( { 'q': q, 'result': result } )
+                        dat[provider][m][q] = result
+                    except:
+                        dat[provider][m][q] = "sparql syntax error"
+                    time.sleep(60)
 
         opath = os.path.join( self.out, 'llm_query_results.json')
         json.dump( dat, open(opath, 'w') )
@@ -793,7 +804,6 @@ WHERE {
   ?namedEntity rdf:type <http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#NamedEntity> .
   ?namedEntity rdfs:label ?entityName .
 }
-
 
             """
         ]
@@ -873,16 +883,16 @@ WHERE {
         
         #self.rerun_meta_enrichment()
         #self.load_graphs()
-        #self.check_llm_queries()
-        self.parse_llm_queries_result()
-        self.analysis_llm_queries()
+        self.check_llm_queries()
+        #self.parse_llm_queries_result()
+        #self.analysis_llm_queries()
 
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
-    odir = '../paper_files/out_eda_semantic'
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
+    odir = '../paper_files/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

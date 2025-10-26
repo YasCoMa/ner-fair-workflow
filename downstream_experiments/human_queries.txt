@@ -1,0 +1,166 @@
+question: what are the f1-score values for each level, evaluation mode and entity?
+sparql:
+SELECT ?level ?technique ?entity ?f1ScoreValue
+WHERE {
+
+  ?evaluation nf:hasScore ?score .
+  ?evaluation nf:underContext ?ctx .
+  ?evaluation nf:reportLevel ?level .
+  ?evaluation xhani:MLEvaluationTechniqueName ?technique .
+
+  ?score rdf:type nf:NEREvaluationMeasure .
+  ?score nf:fromEvaluationMetric  stato:0000628 .
+  ?score vcard:hasValue ?f1ScoreValue .
+  ?score nf:aggregatedByStatsFunction ?agg .
+  ?score nf:belongsToEntity ?ent .
+  ?ent rdfs:label ?entity .
+  
+  filter(regex(?ctx, "test", "i" )) .
+  filter(regex(?agg, "max", "i" )) .
+}
+
+question: Get the distinct names of named entities used in each experiment
+sparql:
+select distinct ?exp_name ?entity
+where {
+    ?exp nf:containsTargetEntity ?ent . 
+    ?exp rdfs:label ?exp_name . 
+    ?ent a nero:NamedEntity . 
+    ?ent rdfs:label ?entity . 
+}
+order by ?exp_name
+
+question: Retrieve the number of models and datasets by experiment
+sparql:
+select ?exp_name (count(?model) as ?n_models) (count(?dataset) as ?n_datasets)
+where {
+    ?exp nf:executedBy ?wf . 
+    ?exp rdfs:label ?exp_name . 
+    ?wf nf:containsProcedure ?op. 
+    optional { ?op nf:generatesDataset ?dataset . } .
+    optional { ?op nf:generatesModel ?model . } .
+}
+group by ?exp_name
+
+question: Get the distinct evaluation metrics used to evaluate the models
+sparql:
+select distinct ?metric
+where {
+    ?score a nf:NEREvaluationMeasure . 
+    ?score nf:fromEvaluationMetric ?metric . 
+}
+
+question: Get the distinct statistical functions used to aggregate the evaluation metrics
+sparql:
+select distinct ?stats_func
+where {
+    ?score a nf:NEREvaluationMeasure . 
+    ?score nf:aggregatedByStatsFunction ?stats_func . 
+}
+
+question: Get the distinct evaluation techniques used in the experiments
+sparql:
+select distinct ?exp_name ?technique
+where {
+    ?exp nf:executedBy ?wf . 
+    ?exp rdfs:label ?exp_name . 
+    ?wf nf:containsProcedure ?op . 
+    ?op nf:describedBy ?desc .
+	?desc a xmlpo:ModelEvaluationCharacteristic . 
+	?desc xmlpo:MLEvaluationTechniqueName ?technique . 
+}
+order by ?exp_name
+
+question: Retrieve the name and value of the hyperparameters used by each model
+sparql:
+select distinct ?exp_name ?model ?param_name ?param_value
+where {
+    ?exp nf:executedBy ?wf . 
+    ?exp rdfs:label ?exp_name . 
+    ?wf nf:containsProcedure ?op . 
+    optional { ?op nf:generatesModel ?model . } . 
+    ?op xhani:HasParameter ?paramConfig . 
+    ?paramConfig xhani:hasParameterCharacteristic ?param . 
+
+    ?param a xhani:ParameterCharacteristic . 
+    ?param xhani:ParameterName ?param_name . 
+    ?param xhani:ParameterValue ?param_value . 
+}
+order by ?exp_name ?model
+
+question: what is the number of features and instances of the largest dataset?
+sparql:
+select distinct ?dtname ?dtrain ?n_features ?n_instances
+where {
+    ?dtrain nf:describedBy ?datc . 
+    ?dtrain rdfs:label ?dtname . 
+    ?datc a xhani:DatasetCharacteristic . 
+    ?datc xhani:NumberOfFeatures ?n_features . 
+    ?datc xhani:NumberOfInstances ?n_instances . 
+
+}
+order by desc( ?n_instances )
+limit 1
+
+question: which evaluation technique is associated to the highest mcc values?
+sparql:
+select distinct ?technique ?mcc_value
+where {
+    ?datc nf:hasScore ?score . 
+    ?datc xhani:MLEvaluationTechniqueName ?technique . 
+    ?datc nf:reportLevel ?level . 
+
+    ?score rdf:type nf:NEREvaluationMeasure .
+    ?score nf:fromEvaluationMetric  stato:0000524 .
+    ?score vcard:hasValue ?mcc_value .
+    ?score nf:aggregatedByStatsFunction ?agg .
+    ?score nf:belongsToEntity ?ent .
+    ?ent rdfs:label ?entity .
+
+}
+order by desc( ?mcc_value )
+limit 1
+
+question: For each experiment, retrieve the evaluation technique and the level that obtained the highest mcc values for each entity
+sparql:
+select distinct ?exp_name ?level ?entity ?technique ?mcc_value
+where {
+     ?exp nf:executedBy ?wf . 
+    ?exp rdfs:label ?exp_name . 
+    ?wf nf:containsProcedure ?op . 
+    ?op nf:describedBy ?datc .
+    ?datc a xmlpo:ModelEvaluationCharacteristic . 
+
+    ?datc nf:hasScore ?score . 
+    ?datc xhani:MLEvaluationTechniqueName ?technique . 
+    ?datc nf:reportLevel ?level . 
+
+    ?score rdf:type nf:NEREvaluationMeasure .
+    ?score nf:fromEvaluationMetric  stato:0000524 .
+    ?score vcard:hasValue ?mcc_value .
+    ?score nf:belongsToEntity ?ent .
+    ?ent rdfs:label ?entity .
+
+}
+order by desc( ?mcc_value )
+
+question: For each level, technique and entity, retrieve the f1-score values aggregated by max per model in the test context?
+sparql:
+SELECT ?level ?technique ?entity ?f1ScoreValue
+WHERE {
+
+  ?evaluation nf:hasScore ?score .
+  ?evaluation nf:underContext ?ctx .
+  ?evaluation nf:reportLevel ?level .
+  ?evaluation xhani:MLEvaluationTechniqueName ?technique .
+
+  ?score rdf:type nf:NEREvaluationMeasure .
+  ?score nf:fromEvaluationMetric  stato:0000628 .
+  ?score vcard:hasValue ?f1ScoreValue .
+  ?score nf:aggregatedByStatsFunction ?agg .
+  ?score nf:belongsToEntity ?ent .
+  ?ent rdfs:label ?entity .
+  
+  filter(regex(?ctx, "test", "i" )) .
+  filter(regex(?agg, "max", "i" )) .
+}

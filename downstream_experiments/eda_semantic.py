@@ -734,7 +734,7 @@ WHERE {
                 if(provider == 'google'):
                     llm = ChatGoogleGenerativeAI( model = m, temperature=0 )
                 if(provider == 'llama'):
-                    llm = ChatOllama( model = self.llama_model, temperature=0 ) 
+                    llm = ChatOllama( model = m, temperature=0 ) 
                 chain = GraphSparqlQAChain.from_llm( llm, graph=graph, verbose=True, allow_dangerous_requests=True )
 
                 for q in cqs:

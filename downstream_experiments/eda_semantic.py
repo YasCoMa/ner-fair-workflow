@@ -875,12 +875,12 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         
-        #self.check_llm_queries()
-        #self.parse_llm_queries_result()
+        self.check_llm_queries()
+        self.parse_llm_queries_result()
         
         #self.analysis_llm_queries()
 
-        self.parse_human_gold_queries()
+        #self.parse_human_gold_queries()
 
         #self.execute_humanBased_queries()
 

@@ -66,8 +66,8 @@ where {
     ?exp rdfs:label ?exp_name . 
     ?wf nf:containsProcedure ?op . 
     ?op nf:describedBy ?desc .
-	?desc a xmlpo:ModelEvaluationCharacteristic . 
-	?desc xmlpo:MLEvaluationTechniqueName ?technique . 
+	?desc a xhani:ModelEvaluationCharacteristic . 
+	?desc xhani:MLEvaluationTechniqueName ?technique . 
 }
 order by ?exp_name
 
@@ -129,7 +129,7 @@ where {
     ?exp rdfs:label ?exp_name . 
     ?wf nf:containsProcedure ?op . 
     ?op nf:describedBy ?datc .
-    ?datc a xmlpo:ModelEvaluationCharacteristic . 
+    ?datc a xhani:ModelEvaluationCharacteristic . 
 
     ?datc nf:hasScore ?score . 
     ?datc xhani:MLEvaluationTechniqueName ?technique . 

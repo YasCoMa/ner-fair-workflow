@@ -755,7 +755,7 @@ WHERE {
             'llama': ChatOllama( model = self.llama_model, temperature=0 ) 
         }
         llms = { 
-            'google': ["gemini-2.0-flash", "gemini-2.5-flash"], 
+            'google': ["gemini-2.0-flash"], 
             'llama': ["llama3.2","deepseek-r1"]
         }
 
@@ -791,25 +791,6 @@ WHERE {
         opath = os.path.join( self.out, 'llm_query_results.json')
         json.dump( dat, open(opath, 'w') )
 
-        hqs = [
-            """
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX nf: <https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#>
-PREFIX onto: <https://w3id.org/ontouml-models/model/xhani2023xmlpo/>
-
-SELECT DISTINCT ?experiment ?entityName
-WHERE {
-  ?experiment rdf:type nf:NLPExperiment .
-  ?experiment onto:hasOutput ?dataset .
-  ?dataset onto:datasetHasData ?namedEntity .
-  ?namedEntity rdf:type <http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#NamedEntity> .
-  ?namedEntity rdfs:label ?entityName .
-}
-
-            """
-        ]
-
     def parse_llm_queries_result(self):
         path = os.path.join(self.out, 'stdout_sparql_llm-multiple_round2.txt')
 
@@ -836,7 +817,7 @@ WHERE {
                         dat[model][cq]['resq'] = content
                 except:
                     print(i, line)
-                    
+
                 flag = False
 
             elif( flag ):
@@ -864,6 +845,51 @@ WHERE {
         f.write( '\n'.join(lines)+'\n' )
         f.close()
 
+    def _load_graph(self):
+        inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
+        
+        gr = rdflib.Graph()
+        gr.parse(inpath)
+
+        return gr
+
+    def _load_sparql_result(self, gr, hq):
+        vcard = Namespace("http://www.w3.org/2006/vcard/ns#")
+        xhani = Namespace("https://w3id.org/ontouml-models/model/xhani2023xmlpo/")
+        nf = Namespace("https://raw.githubusercontent.com/YasCoMa/ner-fair-workflow/refs/heads/master/nerfair_onto_extension.owl#")
+        stato = Namespace("http://purl.obolibrary.org/obo/STATO_")
+        nero = Namespace("http://www.cs.man.ac.uk/~stevensr/ontology/ner.owl#")
+        
+        qres = gr.query( hq, initNs = { 'rdf': RDF, 'rdfs': RDFS, 'xhani': xhani, 'nf': nf, 'stato': stato, 'vcard': vcard, "nero": nero } )
+        return qres
+
+    def parse_human_gold_queries(self):
+        flag = False
+        hqs = {}
+        f = open('/mnt/085dd464-7946-4395-acfd-e22026d52e9d/home/yasmmin/Dropbox/irbBCN_job/match_clinical_trial/ner-fair-workflow/downstream_experiments/human_queries.txt', 'r')
+        for line in f:
+            if( line.startswith('question:') ):
+                q = line.split(': ')[1].strip().replace('\n','')
+                hqs[q] = { 'query': '', 'resq': '' }
+                flag = False
+
+            if( flag ):
+                hqs[q]['query'] += line
+
+            if( line.startswith('sparql:') ):
+                flag = True
+        f.close()
+
+        gr = self._load_graph()
+        for qu in tqdm(hqs):
+            q = hqs[qu]["query"]
+            print(qu, q)
+            hqs[qu]["resq"] = self._load_sparql_result(gr, q)
+
+        dat = { 'human': hqs }
+        opath = os.path.join( self.out, 'sparql_human_results.json')
+        json.dump( dat, open(opath,'w') )
+
     def analysis_llm_queries(self):
         path = os.path.join( self.out, 'parsed_llm_results.json')
         d = json.load( open( path ) )
@@ -888,16 +914,20 @@ WHERE {
         
         #self.rerun_meta_enrichment()
         #self.load_graphs()
+        
         self.check_llm_queries()
         self.parse_llm_queries_result()
+        
         #self.analysis_llm_queries()
+
+        #self.parse_human_gold_queries()
 
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
-    odir = '../paper_files/out_eda_semantic'
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
+    odir = '../paper_files/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

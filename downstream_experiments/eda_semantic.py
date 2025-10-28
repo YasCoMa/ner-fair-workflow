@@ -781,20 +781,31 @@ WHERE {
 
             elif( flag ):
                 dat[model][cq]['query'] += line.replace('[32;1m[1;3m','').replace('[0m','')+' '
-
+                try:
+                    if( len(line[i+1])==0 and len(line[i+2])==0 ):
+                        flag = False
+                except:
+                    pass
             elif(line.find('Generated SPARQL:') != -1):
                 flag = True
 
             i += 1
-
-        opath = os.path.join( self.out, 'parsed_llm_results.json')
-        json.dump( dat, open(opath, 'w') )
 
         lines = []
         lines.append( ['model', 'cq', 'query', 'length_results'] )
         for m in dat:
             for cq in dat[m]:
                 q = dat[m][cq]['query']
+                if( q.find('PREFIX') !=-1 ):
+                    term = q[:q.find('PREFIX')]
+                    if( len(term) > 2 ):
+                        q = q.replace( term, '')
+                else:
+                    term = q[:q.find('SELECT')]
+                    if( len(term) > 2 ):
+                        q = q.replace( term, '')
+                dat[m][cq]['query'] = q
+
                 nr = len( dat[m][cq]['resq'] )
 
                 lines.append( [m, cq, q, nr ] )
@@ -803,6 +814,10 @@ WHERE {
         f = open(opath, 'w')
         f.write( '\n'.join(lines)+'\n' )
         f.close()
+
+        opath = os.path.join( self.out, 'parsed_llm_results.json')
+        json.dump( dat, open(opath, 'w') )
+
 
     def _load_graph(self):
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
@@ -875,7 +890,7 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         
-        self.check_llm_queries()
+        #self.check_llm_queries()
         self.parse_llm_queries_result()
         
         #self.analysis_llm_queries()

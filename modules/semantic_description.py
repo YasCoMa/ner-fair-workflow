@@ -717,6 +717,7 @@ class SemanticDescription:
                             g.add( ( self.nerwf[score], self.vcard.hasValue, Literal( value ) ) )
                             g.add( ( self.nerwf[score], self.nerwf.aggregatedByStatsFunction, Literal( statsMetric, lang="en" ) ) )
                             if( evalMetric in eval_links ):
+                                g.add( ( eval_links[evalMetric], RDFS.label, Literal( evalMetric, lang="en") ) )
                                 g.add( ( self.nerwf[score], self.nerwf.fromEvaluationMetric, eval_links[evalMetric] ) )
                             g.add( ( self.nerwf[datc], self.nerwf.hasScore, self.nerwf[score] ) )
 

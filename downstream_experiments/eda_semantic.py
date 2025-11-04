@@ -804,6 +804,8 @@ WHERE {
                     term = q[:q.find('SELECT')]
                     if( len(term) > 2 ):
                         q = q.replace( term, '')
+                last = q.split('}')[-1]
+                q = q.replace(last, '')
                 dat[m][cq]['query'] = q
 
                 nr = len( dat[m][cq]['resq'] )
@@ -814,6 +816,8 @@ WHERE {
         f = open(opath, 'w')
         f.write( '\n'.join(lines)+'\n' )
         f.close()
+
+        self.aggregate_human_results_to_table()
 
         opath = os.path.join( self.out, 'parsed_llm_results.json')
         json.dump( dat, open(opath, 'w') )
@@ -865,10 +869,43 @@ WHERE {
         opath = os.path.join( self.out, 'sparql_human_results.json')
         json.dump( dat, open(opath,'w') )
 
+    def aggregate_human_results_to_table(self):
+        path = os.path.join( self.out, 'sparql_human_results.json')
+        h = json.load( open( path, 'r') )
+        h = h['human']
+        lines = []
+        for qu in h:
+            lines.append( '\t'.join(['human', qu, h[qu]['query'].replace('\n',' ').strip(), str( len( h[qu]['resq'])) ]) )
+
+        opath = os.path.join( self.out, 'table_llm_results.tsv')
+        f = open(opath, 'a')
+        f.write( '\n'.join(lines)+'\n' )
+        f.close()
+
     def analysis_llm_queries(self):
         path = os.path.join( self.out, 'parsed_llm_results.json')
         d = json.load( open( path ) )
 
+        # Checking syntax on executing
+        errors = { 'syntax': 0 }
+        gr = self._load_graph()
+        for m in d:
+            errors[m] = 0
+            for qu in tqdm(d[m]):
+                q = d[m][qu]["query"]
+                q = q.replace('PREFIX', '\nPREFIX')
+                q = q.replace('SELECT', '\nSELECT')
+                last = q.split('}')[-1]
+                q = q.replace(last, '')
+                try:
+                    rs = self._load_sparql_result(gr, q)
+                except Exception as e:
+                    print(m, qu, str(e) )
+                    errors[m] += 1
+
+        print(errors)
+
+        '''
         ng = len( list( filter( lambda x: len(d['google'][x]['resq'])>0, d['google'] )) ) # 5
         nl = len( list( filter( lambda x: len(d['google'][x]['resq'])>0, d['llama'] )) ) # 5
 
@@ -877,6 +914,7 @@ WHERE {
 
         exl = d['llama']['Retrieve the name and value of the hyperparameters used by each model']['query']
         exg = d['google']['Retrieve the name and value of the hyperparameters used by each model']['query']
+        '''
 
     def run(self):
         #self._define_new_onto_elements()
@@ -891,9 +929,11 @@ WHERE {
         #self.load_graphs()
         
         #self.check_llm_queries()
-        self.parse_llm_queries_result()
-        
-        #self.analysis_llm_queries()
+        #self.parse_llm_queries_result()
+
+        #self.aggregate_human_results_to_table() # it is not inside parse_llm_queries_results
+
+        self.analysis_llm_queries()
 
         #self.parse_human_gold_queries()
 

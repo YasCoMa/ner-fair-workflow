@@ -942,7 +942,7 @@ WHERE {
         #self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
-    odir = '../paper_files/out_eda_semantic'
     odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
+    odir = '../paper_files/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

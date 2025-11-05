@@ -843,9 +843,11 @@ WHERE {
         return lres
 
     def parse_human_gold_queries(self):
+        folder = "/mnt/085dd464-7946-4395-acfd-e22026d52e9d/home/yasmmin/Dropbox/irbBCN_job/match_clinical_trial/ner-fair-workflow/"
+        folder = "/aloy/home/ymartins/match_clinical_trial/ner_subproj/"
         flag = False
         hqs = {}
-        f = open('/mnt/085dd464-7946-4395-acfd-e22026d52e9d/home/yasmmin/Dropbox/irbBCN_job/match_clinical_trial/ner-fair-workflow/downstream_experiments/human_queries.txt', 'r')
+        f = open( f'{folder}/downstream_experiments/human_queries.txt', 'r')
         for line in f:
             if( line.startswith('question:') ):
                 q = line.split(': ')[1].strip().replace('\n','')
@@ -928,7 +930,7 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         
-        self.check_llm_queries()
+        #self.check_llm_queries()
         self.parse_human_gold_queries()
         self.parse_llm_queries_result() # human queries have to go first because it fuses in the same table the generated sparql queries
 

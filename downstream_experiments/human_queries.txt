@@ -146,7 +146,7 @@ order by desc( ?mcc_value )
 
 question: For each level, technique and entity, retrieve the f1-score values aggregated by max per model in the test context?
 sparql:
-SELECT ?level ?technique ?entity ?f1ScoreValue
+SELECT ?level ?technique ?entity (max(?f1ScoreValue) as ?max_f1)
 WHERE {
 
   ?evaluation nf:hasScore ?score .
@@ -164,3 +164,4 @@ WHERE {
   filter(regex(?ctx, "test", "i" )) .
   filter(regex(?agg, "max", "i" )) .
 }
+group by ?level ?technique ?entity

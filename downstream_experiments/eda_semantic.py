@@ -715,7 +715,7 @@ WHERE {
         }
         llms = { 
             'google': ["gemini-2.0-flash"], 
-            'llama': ["llama3.2","deepseek-r1", "mistral"]
+            'llama': ["llama3.2", "mistral", "qwen3", "gemma3"]
         }
 
         inpath = os.path.join( self.out, 'all_nerfair_graph.ttl')
@@ -751,7 +751,7 @@ WHERE {
         json.dump( dat, open(opath, 'w') )
 
     def parse_llm_queries_result(self):
-        path = os.path.join(self.out, 'stdout_sparql_llm-multiple_round3.txt')
+        path = os.path.join(self.out, 'stdout_sparql_llm-multiple_round4.txt')
 
         dat = {}
         flag = False
@@ -928,21 +928,21 @@ WHERE {
         #self.rerun_meta_enrichment()
         #self.load_graphs()
         
-        #self.check_llm_queries()
-        #self.parse_llm_queries_result()
+        self.check_llm_queries()
+        self.parse_human_gold_queries()
+        self.parse_llm_queries_result() # human queries have to go first because it fuses in the same table the generated sparql queries
 
         #self.aggregate_human_results_to_table() # it is not inside parse_llm_queries_results
 
         self.analysis_llm_queries()
 
-        #self.parse_human_gold_queries()
 
         #self.execute_humanBased_queries()
 
         #self.test_explanation_consistency_tec()
 
 if( __name__ == "__main__" ):
-    odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
     odir = '../paper_files/out_eda_semantic'
+    odir = '/aloy/home/ymartins/match_clinical_trial/out_eda_semantic'
     i = ExplorationSemanticResults( odir )
     i.run()

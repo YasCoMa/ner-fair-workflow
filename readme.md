@@ -1,4 +1,4 @@
-# NER Fair wf - Workflow to perform end-to-end named entity recognition experiments
+# NERFAIR wf - Workflow to perform end-to-end named entity recognition experiments
 
 Nextflow workflow to perform named entity recognition experiments handling since the dataset preparation step, the training by finetunning large language models, test, prediction and metadata enrichment describing all available about both the experiment itself and data generated/processed along the pipeline. It also allows for the models comparison across related experiments through p-value computation.
 

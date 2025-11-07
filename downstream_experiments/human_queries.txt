@@ -88,7 +88,7 @@ where {
 }
 order by ?exp_name ?model
 
-question: what is the number of features and instances of the largest dataset?
+question: what is the number of features and instances of the largest dataset
 sparql:
 select distinct ?dtname ?dtrain ?n_features ?n_instances
 where {
@@ -102,7 +102,7 @@ where {
 order by desc( ?n_instances )
 limit 1
 
-question: which evaluation technique is associated to the highest mcc values?
+question: which evaluation technique is associated to the highest mcc values
 sparql:
 select distinct ?technique ?mcc_value
 where {
@@ -144,7 +144,7 @@ where {
 }
 order by desc( ?mcc_value )
 
-question: For each level, technique and entity, retrieve the f1-score values aggregated by max per model in the test context?
+question: For each level, technique and entity, retrieve the f1-score values aggregated by max in the test context
 sparql:
 SELECT ?level ?technique ?entity (max(?f1ScoreValue) as ?max_f1)
 WHERE {

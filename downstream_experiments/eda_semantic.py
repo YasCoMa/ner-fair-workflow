@@ -28,6 +28,9 @@ from langchain_ollama import ChatOllama
 from langchain_community.graphs import RdfGraph
 from langchain_community.chains.graph_qa.sparql import GraphSparqlQAChain
 
+from rouge import Rouge
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+
 '''
 dependencies:
 langchain==0.3.27
@@ -706,7 +709,7 @@ WHERE {
             "what is the number of features and instances of the largest dataset",
             "which evaluation technique is associated to the highest mcc values",
             "For each experiment, retrieve the evaluation technique and the level that obtained the highest mcc values for each entity",
-            "For each level, technique and entity, retrieve the f1-score values aggregated by max in the test context?"
+            "For each level, technique and entity, retrieve the f1-score values aggregated by max per model in the test context"
         ]
 
         llms = { 
@@ -763,7 +766,7 @@ WHERE {
                 dat[model] = {}
 
             elif(line.find('question:') != -1):
-                cq = line.split(':')[1].replace(':','').strip()
+                cq = line.split(':')[1].replace(':','').strip().lower().replace('?','')
                 dat[model][cq] = { 'query': '', 'resq': '' }
                 flag = False
 
@@ -850,7 +853,7 @@ WHERE {
         f = open( f'{folder}/downstream_experiments/human_queries.txt', 'r')
         for line in f:
             if( line.startswith('question:') ):
-                q = line.split(': ')[1].strip().replace('\n','')
+                q = line.split(': ')[1].strip().replace('\n','').lower().replace('?','')
                 hqs[q] = { 'query': '', 'resq': '' }
                 flag = False
 
@@ -889,10 +892,10 @@ WHERE {
         d = json.load( open( path ) )
 
         # Checking syntax on executing
-        errors = { 'syntax': 0 }
+        errors = { }
         gr = self._load_graph()
         for m in d:
-            errors[m] = 0
+            errors[m] = {}
             for qu in tqdm(d[m]):
                 q = d[m][qu]["query"]
                 q = q.replace('PREFIX', '\nPREFIX')
@@ -903,9 +906,10 @@ WHERE {
                     rs = self._load_sparql_result(gr, q)
                 except Exception as e:
                     print(m, qu, str(e) )
-                    errors[m] += 1
+                    errors[m][qu] = str(e)
 
-        print(errors)
+        path = os.path.join( self.out, 'errors_llm.json')
+        json.dump( errors, open( path, 'w') )
 
         '''
         ng = len( list( filter( lambda x: len(d['google'][x]['resq'])>0, d['google'] )) ) # 5
@@ -917,6 +921,44 @@ WHERE {
         exl = d['llama']['Retrieve the name and value of the hyperparameters used by each model']['query']
         exg = d['google']['Retrieve the name and value of the hyperparameters used by each model']['query']
         '''
+
+    def _get_llm_scores(self, ref, hyp):
+        smooth = SmoothingFunction().method1
+        bleu = sentence_bleu( [ref.split()], hyp.split(), weights = (0.25, 0.25, 0.25, 0.25), smoothing_function = smooth)
+        rouge = Rouge().get_scores(hyp, ref, avg=True)
+        r1 = rouge['rouge-1']['f']
+        r2 = rouge['rouge-2']['f']
+        rl = rouge['rouge-l']['f']
+        ks = ['bleu', 'rouge-1', 'rouge-2', 'rouge-l']
+        scores = {}
+        for k in ks:
+            scores[k] = eval(k.replace('ouge-', ''))
+
+        return scores
+
+    def evaluate_human_llm_pairs(self):
+        path = os.path.join( self.out, 'sparql_human_results.json')
+        h = json.load( open( path, 'r') )
+
+        path = os.path.join( self.out, 'parsed_llm_results.json')
+        d = json.load( open( path ) )
+
+        header = '\t'.join(["model", "question", "bleu", "rouge-1", "rouge-2", "rouge-l"])
+        lines = [ header ]
+        llm_scores = {}
+        for m in d:
+            for qu in tqdm(d[m]):
+                ref = h['human'][qu]['query']
+                hyp = d[m][qu]['query']
+                if(hyp != ''):
+                    scores = self._get_llm_scores( ref, hyp)
+                    ll = '\t'.join([m, qu] + [ str(v) for v in scores.values() ])
+                    lines.append(ll)
+
+        path = os.path.join( self.out, 'llm_metrics_eval.tsv')
+        f = open(path, 'w')
+        f.write( '\n'.join(lines)+'\n' )
+        f.close()
 
     def run(self):
         #self._define_new_onto_elements()
@@ -931,13 +973,13 @@ WHERE {
         #self.load_graphs()
         
         #self.check_llm_queries()
-        self.parse_human_gold_queries()
-        self.parse_llm_queries_result() # human queries have to go first because it fuses in the same table the generated sparql queries
+        #self.parse_human_gold_queries()
+        #self.parse_llm_queries_result() # human queries have to go first because it fuses in the same table the generated sparql queries
 
-        #self.aggregate_human_results_to_table() # it is not inside parse_llm_queries_results
+        #self.aggregate_human_results_to_table() # it is not inside 
 
-        self.analysis_llm_queries()
-
+        #self.analysis_llm_queries()
+        self.evaluate_human_llm_pairs()
 
         #self.execute_humanBased_queries()
 

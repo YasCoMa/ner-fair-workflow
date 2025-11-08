@@ -146,6 +146,7 @@ For those terms that you want to leave empty just remove the replacer and let it
 The build of the singularity image is mandatory to use the workflow in a cluster.
 
 ## Reference
+A complete report applying this tool in experiments can be found at https://github.com/YasCoMa/ner-fair-workflow/tree/master/experiment_report 
 
 ## Bug Report
 Please, use the [Issues](https://github.com/YasCoMa/ner-fair-workflow/issues) tab to report any bug.

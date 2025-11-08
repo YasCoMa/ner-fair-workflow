@@ -7,8 +7,6 @@ from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
 from rdflib.collection import Collection
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
-os.environ["OPENAI_API_KEY"] = "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"
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
@@ -158,39 +156,39 @@ class EdaSemanticLLM:
         print(result)
 
     def test_llama_agexec(self):
-        scheme = 'http'
-        ollama_host = 'localhost'
-        ollama_port = '11434'
-        model = 'llama3.2:latest'
+scheme = 'http'
+ollama_host = 'localhost'
+ollama_port = '11434'
+model = 'llama3.2:latest'
 
-        PREFIXES = f"""
-        PREFIX franzOption_llmVendor: <franz:ollama>  
-        PREFIX franzOption_llmScheme: <franz:{scheme}>  
-        PREFIX franzOption_llmHost: <franz:{ollama_host}>  
-        PREFIX franzOption_llmPort: <franz:{ollama_port}>  
-        PREFIX franzOption_llmChatModel: <franz:{model}>  
-         
-        PREFIX llm: <http://franz.com/ns/allegrograph/8.0.0/llm/>   
-        """
+PREFIXES = f"""
+PREFIX franzOption_llmVendor: <franz:ollama>  
+PREFIX franzOption_llmScheme: <franz:{scheme}>  
+PREFIX franzOption_llmHost: <franz:{ollama_host}>  
+PREFIX franzOption_llmPort: <franz:{ollama_port}>  
+PREFIX franzOption_llmChatModel: <franz:{model}>  
+ 
+PREFIX llm: <http://franz.com/ns/allegrograph/8.0.0/llm/>   
+"""
 
-        conn = ag_connect(
-            REPO,
-            clear=True,
-            user=AGRAPH_USER,
-            password=AGRAPH_PASSWORD,
-            host=AGRAPH_HOST,
-            port=AGRAPH_PORT
-        )
-        opath = os.path.join( self.out, 'all_nerfair_graph.ttl')
-        conn.addFile( opath, None, format=RDFFormat.TURTLE, context=None)
+conn = ag_connect(
+    REPO,
+    clear=True,
+    user=AGRAPH_USER,
+    password=AGRAPH_PASSWORD,
+    host=AGRAPH_HOST,
+    port=AGRAPH_PORT
+)
+opath = os.path.join( self.out, 'all_nerfair_graph.ttl')
+conn.addFile( opath, None, format=RDFFormat.TURTLE, context=None)
 
-        query_string = f"""
-            {PREFIXES}
+query_string = f"""
+    {PREFIXES}
 
-            SELECT ?entity WHERE {{
-                ?entity llm:response "Get the distinct names of named entities used in each experiment" }}"""
-        res = conn.executeTupleQuery(query_string)
-        print(res)
+    SELECT ?entity WHERE {{
+        ?entity llm:response "Get the distinct names of named entities used in each experiment" }}"""
+res = conn.executeTupleQuery(query_string)
+print(res)
 
     def run(self):
         #self.rerun_meta_enrichment()

@@ -20,9 +20,6 @@ from rdflib import Graph, Namespace, URIRef, Literal, RDF, XSD, BNode
 from rdflib.namespace import DCTERMS, FOAF, PROV, RDFS, XSD, OWL
 from rdflib.collection import Collection
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDV66WrLSzULt9PHN2gvqnx0qPmZsBHniI"
-os.environ["OPENAI_API_KEY"] = "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"
-
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_community.graphs import RdfGraph
